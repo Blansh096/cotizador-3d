@@ -1,0 +1,1193 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cotizador 3D</title>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Quicksand:wght@400;500;600;700&display=swap');
+
+:root{
+  --bg:#FFB6C1;
+  --panel:#FFF6F8;
+  --panel-alt:#FFE3EC;
+  --line:#F2A8C0;
+  --line-soft:#F7CBDA;
+  --accent:#D6336C;
+  --accent-dim:#E8749A;
+  --money:#C9962E;
+  --text:#5B2E42;
+  --muted:#A2677E;
+  --danger:#E0457B;
+  --ok:#5FBF95;
+  --radius:16px;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:
+    radial-gradient(circle at 18px 18px, rgba(214,51,108,0.07) 2px, transparent 2.5px),
+    radial-gradient(circle at 46px 46px, rgba(214,51,108,0.05) 2px, transparent 2.5px),
+    var(--bg);
+  background-size: 64px 64px, 64px 64px, auto;
+  color:var(--text);
+  font-family:'Quicksand', sans-serif;
+  min-height:100vh;
+  padding-bottom:76px;
+}
+h1,h2,h3,.headline{font-family:'Fredoka', sans-serif;}
+
+.app{max-width:640px; margin:0 auto; padding:18px 16px 8px;}
+
+.topbar{
+  display:flex; align-items:baseline; justify-content:space-between;
+  margin-bottom:18px; padding-bottom:14px; border-bottom:1px solid var(--line);
+}
+.topbar .logo{font-family:'Fredoka'; font-weight:700; font-size:20px; letter-spacing:0.3px;}
+.topbar .logo span{color:var(--accent);}
+.topbar .sub{font-size:11px; color:var(--muted);}
+
+.view{display:none;}
+.view.active{display:block;}
+
+.card{
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:16px;
+  margin-bottom:14px;
+  box-shadow:0 4px 14px rgba(214,51,108,0.10);
+}
+.section-head{
+  display:flex; align-items:center; gap:10px; margin-bottom:12px;
+}
+.section-num{
+  font-family:'Fredoka'; font-weight:700; font-size:13px;
+  color:var(--bg); background:var(--accent);
+  width:24px; height:24px; border-radius:6px;
+  display:flex; align-items:center; justify-content:center; flex-shrink:0;
+}
+.section-title{font-family:'Fredoka'; font-weight:600; font-size:15px;}
+
+label{display:block; font-size:11.5px; color:var(--muted); margin-bottom:4px; margin-top:10px;}
+label:first-child{margin-top:0;}
+input[type=text], input[type=number], select{
+  width:100%; background:var(--panel-alt); border:1px solid var(--line);
+  color:var(--text); border-radius:12px; padding:9px 10px; font-size:14px;
+  font-family:'Quicksand', sans-serif;
+}
+input:focus, select:focus{outline:none; border-color:var(--accent);}
+input:disabled{opacity:0.6;}
+.row{display:flex; gap:10px;}
+.row > div{flex:1;}
+.row > button{flex:1;}
+
+.filament-row{
+  border:1px solid var(--line-soft); border-radius:12px; padding:10px; margin-bottom:10px;
+  background:rgba(214,51,108,0.035);
+}
+.filament-row .fr-top{display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;}
+.fr-label{font-size:11.5px; color:var(--accent); font-weight:600;}
+.remove-btn{
+  background:none; border:none; color:var(--muted); font-size:12px; cursor:pointer; padding:2px 6px;
+}
+.remove-btn:hover{color:var(--danger);}
+
+.btn{
+  border:1px solid var(--line); background:var(--panel-alt); color:var(--text);
+  padding:9px 14px; border-radius:12px; font-size:13px; cursor:pointer;
+  font-family:'Quicksand', sans-serif;
+}
+.btn:hover{border-color:var(--accent);}
+.btn-accent{background:var(--accent); color:var(--bg); border-color:var(--accent); font-weight:600;}
+.btn-accent:hover{opacity:0.9;}
+.btn-danger{color:var(--danger); border-color:var(--danger); background:none;}
+.btn-block{width:100%;}
+.btn-small{padding:6px 10px; font-size:12px;}
+
+.summary-line{
+  display:flex; justify-content:space-between; padding:6px 0; font-size:13.5px;
+  border-bottom:1px dashed var(--line-soft);
+}
+.summary-line.total{
+  border-bottom:none; border-top:1px solid var(--line); margin-top:6px; padding-top:10px;
+  font-family:'Fredoka'; font-weight:600; font-size:16px; color:var(--money);
+}
+.summary-line .lbl{color:var(--muted);}
+.summary-line.total .lbl{color:var(--text);}
+.summary-line input{width:70px; text-align:right; padding:3px 6px; font-size:13px;}
+
+.tag{font-size:10px; padding:2px 6px; border-radius:4px; background:var(--panel-alt); color:var(--muted); border:1px solid var(--line-soft);}
+
+.tabbar{
+  position:fixed; bottom:0; left:0; right:0; background:var(--panel);
+  border-top:1px solid var(--line); display:flex; z-index:10;
+}
+.tabbar button{
+  flex:1; background:none; border:none; color:var(--muted); padding:12px 4px 10px;
+  font-family:'Fredoka'; font-size:11px; font-weight:600; cursor:pointer;
+  display:flex; flex-direction:column; align-items:center; gap:3px;
+}
+.tabbar button.active{color:var(--accent);}
+.tabbar .dot{width:5px; height:5px; border-radius:50%; background:transparent;}
+.tabbar button.active .dot{background:var(--accent);}
+
+.empty-state{
+  text-align:center; padding:40px 20px; color:var(--muted); font-size:13px;
+}
+
+.quote-item{
+  background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
+  padding:14px; margin-bottom:10px;
+}
+.quote-item .qi-top{display:flex; justify-content:space-between; align-items:flex-start;}
+.quote-item .qi-name{font-family:'Fredoka'; font-weight:600; font-size:14.5px;}
+.quote-item .qi-date{font-size:10.5px; color:var(--muted); margin-top:2px;}
+.quote-item .qi-price{font-family:'Fredoka'; font-weight:700; color:var(--money); font-size:16px;}
+.quote-item .qi-actions{display:flex; gap:8px; margin-top:10px;}
+
+.ml-toggle-wrap{display:flex; justify-content:space-between; align-items:center; cursor:pointer;}
+.switch{width:38px; height:20px; border-radius:20px; background:var(--line); position:relative; transition:0.2s; flex-shrink:0;}
+.switch.on{background:var(--accent);}
+.switch::after{content:''; position:absolute; width:16px; height:16px; border-radius:50%; background:var(--text); top:2px; left:2px; transition:0.2s;}
+.switch.on::after{left:20px; background:var(--bg);}
+
+.ml-body{margin-top:12px; padding-top:12px; border-top:1px dashed var(--line-soft); display:none;}
+.ml-body.show{display:block;}
+
+.tier-row{display:flex; gap:8px; align-items:center; margin-bottom:6px;}
+.tier-row input{padding:6px 8px; font-size:12.5px;}
+.cat-row{display:flex; gap:8px; align-items:center; margin-bottom:6px;}
+.cat-row input[type=text]{flex:2; padding:6px 8px; font-size:12.5px;}
+.cat-row input[type=number]{flex:1; padding:6px 8px; font-size:12.5px;}
+.hint{font-size:10.5px; color:var(--muted); margin-top:6px; line-height:1.5;}
+
+.toast{
+  position:fixed; bottom:80px; left:50%; transform:translateX(-50%);
+  background:var(--panel-alt); border:1px solid var(--accent); color:var(--text);
+  padding:10px 18px; border-radius:8px; font-size:13px; z-index:50;
+  opacity:0; pointer-events:none; transition:opacity 0.25s;
+}
+.toast.show{opacity:1;}
+
+textarea{
+  width:100%; background:var(--panel-alt); border:1px solid var(--line); color:var(--text);
+  border-radius:12px; padding:9px 10px; font-size:13px; font-family:'Quicksand', sans-serif;
+  resize:vertical; min-height:50px;
+}
+
+.fil-cat-item{
+  background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
+  padding:12px 14px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;
+}
+.fil-cat-item .fc-main{font-family:'Fredoka'; font-weight:600; font-size:14px;}
+.fil-cat-item .fc-sub{font-size:11px; color:var(--muted); margin-top:2px;}
+.fil-cat-item .fc-price{font-family:'Fredoka'; color:var(--money); font-weight:600; font-size:14px; margin-right:10px;}
+.fil-cat-actions{display:flex; gap:6px; align-items:center;}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="topbar">
+    <div>
+      <div class="logo">cotiza<span>3D</span></div>
+      <div class="sub">calculadora de costos &amp; precio</div>
+    </div>
+    <div style="text-align:right;">
+      <div class="sub" id="settingsGlance"></div>
+      <div class="sub" id="driveStatusTop" style="margin-top:2px;">☁ Drive: sin conectar</div>
+    </div>
+  </div>
+
+  <!-- NUEVA COTIZACION -->
+  <div class="view active" id="view-new">
+
+    <div class="card">
+      <label>Nombre del producto / cotización</label>
+      <input type="text" id="qName" placeholder="ej. Maceta hexagonal 10cm">
+      <label>Notas (opcional)</label>
+      <textarea id="qNotes" placeholder="detalles, cliente, variante..."></textarea>
+    </div>
+
+    <div class="card">
+      <div class="section-head">
+        <div class="section-num">1</div>
+        <div class="section-title">Consumo de materiales</div>
+        <span class="tag" style="margin-left:auto">máx. 4 colores</span>
+      </div>
+      <div id="filamentList"></div>
+      <button class="btn btn-block" id="addFilamentBtn">+ agregar filamento</button>
+      <div class="hint" id="noCatalogHint" style="display:none;">Aún no tienes filamentos en tu catálogo. Ve a la pestaña "Filamentos" para agregarlos, o usa "Personalizado" aquí mismo.</div>
+    </div>
+
+    <div class="card">
+      <div class="section-head">
+        <div class="section-num">2</div>
+        <div class="section-title">Tiempo de impresión y energía</div>
+      </div>
+      <div class="row">
+        <div>
+          <label>Horas de impresión</label>
+          <input type="number" step="0.1" id="printHours" value="0">
+        </div>
+        <div>
+          <label>Potencia impresora (W)</label>
+          <input type="number" step="1" id="printWatts">
+        </div>
+      </div>
+      <label>Precio por kWh ($)</label>
+      <input type="number" step="0.01" id="kwhPrice">
+    </div>
+
+    <div class="card">
+      <div class="section-head">
+        <div class="section-num">3</div>
+        <div class="section-title">Mano de obra</div>
+      </div>
+      <label>Costo operativo / mano de obra ($, monto fijo)</label>
+      <input type="number" step="1" id="laborCost" value="0">
+    </div>
+
+    <div class="card">
+      <div class="section-head">
+        <div class="section-num">4</div>
+        <div class="section-title">Resumen y precio de venta</div>
+      </div>
+      <div class="summary-line"><span class="lbl">Subtotal materiales</span><span id="s-mat">$0.00</span></div>
+      <div class="summary-line"><span class="lbl">Subtotal energía</span><span id="s-energy">$0.00</span></div>
+      <div class="summary-line"><span class="lbl">Subtotal costo directo</span><span id="s-direct">$0.00</span></div>
+      <div class="summary-line"><span class="lbl">Mano de obra</span><span id="s-labor">$0.00</span></div>
+      <div class="summary-line"><span class="lbl">= Costo base producción</span><span id="s-base">$0.00</span></div>
+      <div class="summary-line">
+        <span class="lbl">Margen de riesgo / fallas (%)</span>
+        <input type="number" step="0.5" id="riskPct" value="8">
+      </div>
+      <div class="summary-line"><span class="lbl">= Costo total estimado</span><span id="s-total-est">$0.00</span></div>
+      <div class="summary-line">
+        <span class="lbl">Margen de ganancia (%)</span>
+        <input type="number" step="1" id="profitPct" value="30">
+      </div>
+      <div class="summary-line"><span class="lbl">Precio de venta (sin IVA)</span><span id="s-price-noiva">$0.00</span></div>
+      <div class="summary-line">
+        <span class="lbl">IVA (%)</span>
+        <input type="number" step="0.5" id="ivaPct" value="16">
+      </div>
+      <div class="summary-line total"><span class="lbl">= PRECIO FINAL SUGERIDO</span><span id="s-final">$0.00</span></div>
+    </div>
+
+    <div class="card">
+      <div class="ml-toggle-wrap" id="mlToggleWrap">
+        <div class="section-head" style="margin-bottom:0">
+          <div class="section-num">5</div>
+          <div class="section-title">Mercado Libre (opcional)</div>
+        </div>
+        <div class="switch" id="mlSwitch"></div>
+      </div>
+      <div class="ml-body" id="mlBody">
+        <label>Categoría del producto (define la comisión)</label>
+        <select id="mlCategory"></select>
+
+        <div class="row">
+          <div>
+            <label>Peso real (g)</label>
+            <input type="number" step="1" id="mlWeight">
+          </div>
+          <div>
+            <label>Modalidad de envío</label>
+            <select id="mlMode">
+              <option value="normal">Envío por mí</option>
+              <option value="full">FULL</option>
+            </select>
+          </div>
+        </div>
+        <label>Dimensiones del paquete (cm) — largo × ancho × alto</label>
+        <div class="row">
+          <div><input type="number" step="0.1" id="mlL" placeholder="largo"></div>
+          <div><input type="number" step="0.1" id="mlA" placeholder="ancho"></div>
+          <div><input type="number" step="0.1" id="mlH" placeholder="alto"></div>
+        </div>
+        <div class="summary-line"><span class="lbl">Peso volumétrico</span><span id="ml-volw">0.00 kg</span></div>
+        <div class="summary-line"><span class="lbl">Peso facturable (mayor de los dos)</span><span id="ml-billw">0.00 kg</span></div>
+        <div class="summary-line"><span class="lbl">Comisión ML (<span id="ml-feepct-view">-</span>%)</span><span id="ml-fee">$0.00</span></div>
+        <div class="summary-line"><span class="lbl">Retención ISR (<span id="ml-isr-view">-</span>%)</span><span id="ml-isr">$0.00</span></div>
+        <div class="summary-line"><span class="lbl">Retención IVA (<span id="ml-ivaret-view">-</span>%)</span><span id="ml-ivaret">$0.00</span></div>
+        <div class="summary-line"><span class="lbl">Costo de envío estimado</span><span id="ml-ship">$0.00</span></div>
+        <div class="summary-line"><span class="lbl">Neto si publicas al precio sugerido</span><span id="ml-net">$0.00</span></div>
+        <div class="summary-line total"><span class="lbl">Precio a publicar en ML para conservar margen</span><span id="ml-listprice">$0.00</span></div>
+        <div class="hint">Comisión según categoría, envío según tabla de peso — ambas editables en Ajustes. ISR e IVA son retenciones estimadas que Mercado Libre aplica como plataforma digital; confírmalas con tu contador si tu régimen fiscal cambia. FULL sigue sin costo de envío calculado aquí hasta que tengamos sus tablas.</div>
+      </div>
+    </div>
+
+    <button class="btn btn-accent btn-block" id="saveQuoteBtn" style="padding:13px; font-size:14px;">Guardar cotización</button>
+    <button class="btn btn-block" id="newQuoteBtn" style="margin-top:8px;">Limpiar / nueva cotización</button>
+  </div>
+
+  <!-- FILAMENTOS -->
+  <div class="view" id="view-filaments">
+    <div class="card">
+      <div class="section-title" style="margin-bottom:12px;">Agregar filamento al catálogo</div>
+      <div class="row">
+        <div>
+          <label>Marca</label>
+          <input type="text" id="fc-marca" placeholder="ej. eSUN">
+        </div>
+        <div>
+          <label>Color</label>
+          <input type="text" id="fc-color" placeholder="ej. Negro">
+        </div>
+      </div>
+      <label>Precio por kg ($)</label>
+      <input type="number" step="0.1" id="fc-precio">
+      <div class="hint" id="fc-preview" style="margin-top:8px;"></div>
+      <button class="btn btn-accent btn-block" id="addFilCatBtn" style="margin-top:12px;">Agregar a mi catálogo</button>
+    </div>
+    <div id="filCatList"></div>
+  </div>
+
+  <!-- HISTORIAL -->
+  <div class="view" id="view-history">
+    <div class="card" style="padding:12px 16px;">
+      <input type="text" id="searchQuotes" placeholder="Buscar por nombre...">
+    </div>
+    <div id="historyList"></div>
+  </div>
+
+  <!-- AJUSTES -->
+  <div class="view" id="view-settings">
+    <div class="card">
+      <div class="section-title" style="margin-bottom:12px;">Valores por defecto</div>
+      <label>Precio por kWh ($)</label>
+      <input type="number" step="0.01" id="def-kwh">
+      <label>Potencia de impresora por defecto (W)</label>
+      <input type="number" step="1" id="def-watts">
+      <label>Margen de riesgo / fallas por defecto (%)</label>
+      <input type="number" step="0.5" id="def-risk">
+      <label>Margen de ganancia por defecto (%)</label>
+      <input type="number" step="1" id="def-profit">
+      <label>IVA por defecto (%)</label>
+      <input type="number" step="0.5" id="def-iva">
+    </div>
+
+    <div class="card">
+      <div class="section-title" style="margin-bottom:6px;">Mercado Libre — retenciones fijas</div>
+      <label>Retención de ISR (%)</label>
+      <input type="number" step="0.1" id="def-isr">
+      <label>Retención de IVA (%)</label>
+      <input type="number" step="0.1" id="def-ivaret">
+      <label style="margin-top:14px;">Divisor volumétrico (ML usa 5000 o 6000 según categoría)</label>
+      <input type="number" step="1" id="def-ml-divisor">
+    </div>
+
+    <div class="card">
+      <div class="section-title" style="margin-bottom:6px;">Mercado Libre — categorías y comisión</div>
+      <div id="categoryList"></div>
+      <button class="btn btn-small" id="addCategoryBtn">+ agregar categoría</button>
+      <div class="hint">Cada categoría de ML cobra una comisión distinta. Agrega aquí las que uses, con su % real.</div>
+    </div>
+
+    <div class="card">
+      <div class="section-title" style="margin-bottom:6px;">Mercado Libre — tabla de envíos</div>
+      <label>Tabla de envíos por peso facturable</label>
+      <div id="tierList"></div>
+      <button class="btn btn-small" id="addTierBtn">+ agregar rango</button>
+      <div class="hint">Cuando tengas las capturas de las tablas oficiales de ML, mándamelas y ajustamos estos rangos juntos.</div>
+    </div>
+
+    <div class="card">
+      <div class="section-title" style="margin-bottom:6px;">Sincronización automática con Google Drive</div>
+      <div class="hint" style="margin-bottom:10px;">Esto guarda tu información en un archivo de tu propio Google Drive y la sincroniza sola entre tus dispositivos. Necesitas pegar aquí un "Client ID" que se genera una sola vez en Google Cloud Console (te dejo la guía completa después de esta configuración).</div>
+      <label>Client ID de Google (termina en .apps.googleusercontent.com)</label>
+      <input type="text" id="googleClientId" placeholder="xxxxxxxx.apps.googleusercontent.com">
+      <button class="btn btn-block" id="saveClientIdBtn" style="margin-top:8px;">Guardar Client ID</button>
+
+      <div id="driveConnectSection" style="margin-top:14px; display:none;">
+        <div class="summary-line"><span class="lbl">Estado</span><span id="driveStatus">sin conectar</span></div>
+        <button class="btn btn-accent btn-block" id="driveConnectBtn">🔗 Conectar con Google Drive</button>
+        <div id="driveConnectedActions" style="display:none; margin-top:8px;">
+          <div class="row">
+            <button class="btn" id="drivePullBtn">⬇ Actualizar desde Drive</button>
+            <button class="btn" id="drivePushBtn">⬆ Subir cambios ahora</button>
+          </div>
+          <button class="btn btn-danger btn-block" id="driveDisconnectBtn" style="margin-top:8px;">Desconectar</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title" style="margin-bottom:6px;">Respaldo manual (siempre disponible)</div>
+      <div class="hint" style="margin-bottom:10px;">Úsalo como plan B, o para mover datos a un dispositivo que aún no conectas a Drive.</div>
+      <button class="btn btn-block" id="exportBtn">⬇ Descargar copia de seguridad</button>
+      <label style="margin-top:12px;">Importar copia de seguridad (reemplaza tus datos actuales)</label>
+      <input type="file" id="importFile" accept="application/json">
+    </div>
+
+    <button class="btn btn-accent btn-block" id="saveSettingsBtn" style="padding:12px;">Guardar ajustes</button>
+  </div>
+</div>
+
+<div class="tabbar">
+  <button class="tab-btn active" data-view="view-new"><span>Nueva</span><span class="dot"></span></button>
+  <button class="tab-btn" data-view="view-filaments"><span>Filamentos</span><span class="dot"></span></button>
+  <button class="tab-btn" data-view="view-history"><span>Historial</span><span class="dot"></span></button>
+  <button class="tab-btn" data-view="view-settings"><span>Ajustes</span><span class="dot"></span></button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const $ = id => document.getElementById(id);
+const money = n => '$' + (isFinite(n) ? n : 0).toLocaleString('es-MX', {minimumFractionDigits:2, maximumFractionDigits:2});
+
+let settings = {
+  kwhPrice: 2.5, watts: 200, riskPct: 8, profitPct: 30, ivaPct: 16,
+  isrPct: 2.5, ivaRetPct: 8, mlDivisor: 5000,
+  mlCategories: [
+    {id:'cat_1', name:'Hogar, Muebles y Jardín', feePct: 13},
+    {id:'cat_2', name:'Juguetes y Hobbies', feePct: 14},
+    {id:'cat_3', name:'Accesorios para Vehículos', feePct: 15},
+    {id:'cat_4', name:'Otras categorías', feePct: 13}
+  ],
+  tiers: [
+    {max: 1, cost: 95},
+    {max: 5, cost: 140},
+    {max: 15, cost: 210}
+  ]
+};
+let filaments = [];      // rows in the current quote
+let filamentCatalog = []; // saved catalog
+let currentQuoteId = null;
+
+function showToast(msg){
+  const t = $('toast'); t.textContent = msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 1800);
+}
+
+function hasNativeStorage(){
+  return typeof window.storage !== 'undefined' && window.storage && typeof window.storage.get === 'function';
+}
+async function storageGet(key, fallback){
+  try{
+    if (hasNativeStorage()){
+      const r = await window.storage.get(key, false);
+      return r ? JSON.parse(r.value) : fallback;
+    } else {
+      const raw = localStorage.getItem('cotiza3d:' + key);
+      return raw !== null ? JSON.parse(raw) : fallback;
+    }
+  }catch(e){ return fallback; }
+}
+async function storageSet(key, value){
+  try{
+    if (hasNativeStorage()){
+      await window.storage.set(key, JSON.stringify(value), false);
+    } else {
+      localStorage.setItem('cotiza3d:' + key, JSON.stringify(value));
+    }
+  }catch(e){ console.error('storage error', e); showToast('No se pudo guardar (revisa espacio/almacenamiento)'); }
+}
+async function storageDelete(key){
+  try{
+    if (hasNativeStorage()){
+      await window.storage.delete(key, false);
+    } else {
+      localStorage.removeItem('cotiza3d:' + key);
+    }
+  }catch(e){ /* key may not exist, ignore */ }
+}
+async function storageListKeysWithPrefix(prefix){
+  if (hasNativeStorage()){
+    try{
+      const r = await window.storage.list(prefix, false);
+      return r ? r.keys : [];
+    }catch(e){ return []; }
+  } else {
+    const keys = [];
+    for (let i=0; i<localStorage.length; i++){
+      const k = localStorage.key(i);
+      if (k && k.startsWith('cotiza3d:' + prefix)) keys.push(k.replace('cotiza3d:',''));
+    }
+    return keys;
+  }
+}
+
+// ---------- FILAMENT CATALOG ----------
+function catalogOptionsHtml(selectedId){
+  let html = `<option value="custom">— Personalizado (capturar manual) —</option>`;
+  filamentCatalog.forEach(c => {
+    const pg = (c.priceKg/1000).toFixed(3);
+    html += `<option value="${c.id}" ${c.id===selectedId?'selected':''}>${c.marca} · ${c.color} — $${pg}/g</option>`;
+  });
+  return html;
+}
+
+async function loadCatalog(){
+  filamentCatalog = await storageGet('filaments-catalog', []);
+}
+
+function fcPreview(){
+  const marca = $('fc-marca').value.trim();
+  const color = $('fc-color').value.trim();
+  const precio = +$('fc-precio').value || 0;
+  $('fc-preview').textContent = precio ? `Precio por gramo: $${(precio/1000).toFixed(3)}/g` : '';
+}
+['fc-marca','fc-color','fc-precio'].forEach(id => $(id).addEventListener('input', fcPreview));
+
+$('addFilCatBtn').onclick = async () => {
+  const marca = $('fc-marca').value.trim();
+  const color = $('fc-color').value.trim();
+  const precio = +$('fc-precio').value || 0;
+  if (!marca || !color || !precio){ showToast('Completa marca, color y precio'); return; }
+  filamentCatalog.push({id:'fil_'+Date.now(), marca, color, priceKg: precio});
+  await storageSet('filaments-catalog', filamentCatalog);
+  driveQueuePush();
+  $('fc-marca').value=''; $('fc-color').value=''; $('fc-precio').value=''; $('fc-preview').textContent='';
+  renderFilamentCatalog();
+  showToast('Filamento agregado al catálogo');
+};
+
+function renderFilamentCatalog(){
+  const wrap = $('filCatList');
+  if (!filamentCatalog.length){
+    wrap.innerHTML = '<div class="empty-state">Tu catálogo está vacío. Agrega tu primer filamento arriba.</div>';
+    return;
+  }
+  wrap.innerHTML = '';
+  filamentCatalog.forEach(c => {
+    const div = document.createElement('div');
+    div.className = 'fil-cat-item';
+    div.innerHTML = `
+      <div>
+        <div class="fc-main">${c.marca} · ${c.color}</div>
+        <div class="fc-sub">$${c.priceKg.toFixed(2)}/kg</div>
+      </div>
+      <div class="fil-cat-actions">
+        <div class="fc-price">$${(c.priceKg/1000).toFixed(3)}/g</div>
+        <button class="remove-btn" data-id="${c.id}">✕</button>
+      </div>
+    `;
+    div.querySelector('.remove-btn').onclick = async () => {
+      if (!confirm(`¿Eliminar ${c.marca} ${c.color} del catálogo?`)) return;
+      filamentCatalog = filamentCatalog.filter(x => x.id !== c.id);
+      await storageSet('filaments-catalog', filamentCatalog);
+      driveQueuePush();
+      renderFilamentCatalog();
+      renderFilaments();
+    };
+    wrap.appendChild(div);
+  });
+}
+
+// ---------- FILAMENTS (in a quote) ----------
+function addFilament(data){
+  filaments.push(data || {catalogId:'custom', name:'', priceKg:0, grams:0});
+  renderFilaments();
+}
+function renderFilaments(){
+  $('noCatalogHint').style.display = filamentCatalog.length ? 'none' : 'block';
+  const wrap = $('filamentList');
+  wrap.innerHTML = '';
+  filaments.forEach((f, i) => {
+    const div = document.createElement('div');
+    div.className = 'filament-row';
+    const isCustom = !f.catalogId || f.catalogId === 'custom';
+    div.innerHTML = `
+      <div class="fr-top">
+        <span class="fr-label">Filamento ${i+1}</span>
+        <button class="remove-btn" data-i="${i}">quitar ✕</button>
+      </div>
+      <label>Selecciona de tu catálogo</label>
+      <select class="f-catalog" data-i="${i}">${catalogOptionsHtml(f.catalogId)}</select>
+      <div class="f-custom-fields" data-i="${i}" style="display:${isCustom?'block':'none'}">
+        <label>Color / nombre</label>
+        <input type="text" class="f-name" data-i="${i}" value="${f.name}" placeholder="ej. PLA negro">
+        <label>Precio por kg ($)</label>
+        <input type="number" step="0.1" class="f-price" data-i="${i}" value="${f.priceKg}">
+      </div>
+      <label>Gramos usados</label>
+      <input type="number" step="0.1" class="f-grams" data-i="${i}" value="${f.grams}">
+    `;
+    wrap.appendChild(div);
+  });
+  wrap.querySelectorAll('.remove-btn').forEach(b => b.onclick = () => {
+    filaments.splice(+b.dataset.i, 1); renderFilaments(); calculate();
+  });
+  wrap.querySelectorAll('.f-catalog').forEach(el => el.onchange = () => {
+    const i = +el.dataset.i;
+    const val = el.value;
+    filaments[i].catalogId = val;
+    if (val !== 'custom'){
+      const c = filamentCatalog.find(x => x.id === val);
+      if (c){ filaments[i].name = c.marca + ' ' + c.color; filaments[i].priceKg = c.priceKg; }
+    }
+    renderFilaments(); calculate();
+  });
+  wrap.querySelectorAll('.f-name').forEach(el => el.oninput = () => { filaments[+el.dataset.i].name = el.value; });
+  wrap.querySelectorAll('.f-price').forEach(el => el.oninput = () => { filaments[+el.dataset.i].priceKg = +el.value || 0; calculate(); });
+  wrap.querySelectorAll('.f-grams').forEach(el => el.oninput = () => { filaments[+el.dataset.i].grams = +el.value || 0; calculate(); });
+}
+
+$('addFilamentBtn').onclick = () => {
+  if (filaments.length >= 4){ showToast('Máximo 4 colores'); return; }
+  addFilament();
+};
+
+// ---------- CALCULATIONS ----------
+function calculate(){
+  const matCost = filaments.reduce((sum,f) => sum + (f.priceKg/1000)*f.grams, 0);
+  const hours = +$('printHours').value || 0;
+  const watts = +$('printWatts').value || 0;
+  const kwhPrice = +$('kwhPrice').value || 0;
+  const energyCost = (watts/1000)*hours*kwhPrice;
+  const directCost = matCost + energyCost;
+  const labor = +$('laborCost').value || 0;
+  const base = directCost + labor;
+  const riskPct = +$('riskPct').value || 0;
+  const riskAmt = base * riskPct/100;
+  const totalEst = base + riskAmt;
+  const profitPct = +$('profitPct').value || 0;
+  const profitAmt = totalEst * profitPct/100;
+  const priceNoIva = totalEst + profitAmt;
+  const ivaPct = +$('ivaPct').value || 0;
+  const ivaAmt = priceNoIva * ivaPct/100;
+  const finalPrice = priceNoIva + ivaAmt;
+
+  $('s-mat').textContent = money(matCost);
+  $('s-energy').textContent = money(energyCost);
+  $('s-direct').textContent = money(directCost);
+  $('s-labor').textContent = money(labor);
+  $('s-base').textContent = money(base);
+  $('s-total-est').textContent = money(totalEst);
+  $('s-price-noiva').textContent = money(priceNoIva);
+  $('s-final').textContent = money(finalPrice);
+
+  calculateML(finalPrice);
+
+  return {matCost, energyCost, directCost, labor, base, riskPct, riskAmt, totalEst, profitPct, profitAmt, priceNoIva, ivaPct, ivaAmt, finalPrice};
+}
+
+function populateMlCategorySelect(selectedId){
+  const sel = $('mlCategory');
+  sel.innerHTML = settings.mlCategories.map(c =>
+    `<option value="${c.id}" ${c.id===selectedId?'selected':''}>${c.name} — ${c.feePct}%</option>`
+  ).join('');
+}
+
+function calculateML(finalPrice){
+  if (!$('mlBody').classList.contains('show')) return;
+  const weightG = +$('mlWeight').value || 0;
+  const l = +$('mlL').value || 0, a = +$('mlA').value || 0, h = +$('mlH').value || 0;
+  const volW = (l*a*h) / (settings.mlDivisor || 5000);
+  const realKg = weightG/1000;
+  const billW = Math.max(realKg, volW);
+  const mode = $('mlMode').value;
+
+  const catId = $('mlCategory').value;
+  const cat = settings.mlCategories.find(c => c.id === catId) || {feePct:0};
+  const feePct = cat.feePct;
+  const fee = finalPrice * feePct/100;
+
+  const isrPct = settings.isrPct || 0;
+  const ivaRetPct = settings.ivaRetPct || 0;
+  const isrAmt = finalPrice * isrPct/100;
+  const ivaRetAmt = finalPrice * ivaRetPct/100;
+
+  let shipCost = 0;
+  const sortedTiers = [...settings.tiers].sort((x,y)=>x.max-y.max);
+  for (const t of sortedTiers){ if (billW <= t.max){ shipCost = t.cost; break; } }
+  if (sortedTiers.length && billW > sortedTiers[sortedTiers.length-1].max) shipCost = sortedTiers[sortedTiers.length-1].cost;
+  if (mode === 'full') shipCost = 0;
+
+  const net = finalPrice - fee - shipCost - isrAmt - ivaRetAmt;
+  const totalPct = feePct + isrPct + ivaRetPct;
+  const listPrice = (finalPrice + shipCost) / (1 - totalPct/100);
+
+  $('ml-volw').textContent = volW.toFixed(2) + ' kg';
+  $('ml-billw').textContent = billW.toFixed(2) + ' kg';
+  $('ml-feepct-view').textContent = feePct;
+  $('ml-fee').textContent = money(fee);
+  $('ml-isr-view').textContent = isrPct;
+  $('ml-isr').textContent = money(isrAmt);
+  $('ml-ivaret-view').textContent = ivaRetPct;
+  $('ml-ivaret').textContent = money(ivaRetAmt);
+  $('ml-ship').textContent = money(shipCost);
+  $('ml-net').textContent = money(net);
+  $('ml-listprice').textContent = money(listPrice);
+}
+
+['printHours','printWatts','kwhPrice','laborCost','riskPct','profitPct','ivaPct',
+ 'mlWeight','mlL','mlA','mlH'].forEach(id => $(id).addEventListener('input', calculate));
+$('mlMode').addEventListener('change', calculate);
+$('mlCategory').addEventListener('change', calculate);
+
+// ---------- ML TOGGLE ----------
+$('mlToggleWrap').onclick = (e) => {
+  if (e.target.tagName === 'SELECT' || e.target.tagName === 'INPUT') return;
+  const sw = $('mlSwitch'); const body = $('mlBody');
+  sw.classList.toggle('on'); body.classList.toggle('show');
+  calculate();
+};
+
+// ---------- SAVE / LOAD QUOTES ----------
+function resetForm(){
+  currentQuoteId = null;
+  $('qName').value = ''; $('qNotes').value = '';
+  filaments = []; renderFilaments();
+  $('printHours').value = 0;
+  $('printWatts').value = settings.watts;
+  $('kwhPrice').value = settings.kwhPrice;
+  $('laborCost').value = 0;
+  $('riskPct').value = settings.riskPct;
+  $('profitPct').value = settings.profitPct;
+  $('ivaPct').value = settings.ivaPct;
+  $('mlSwitch').classList.remove('on'); $('mlBody').classList.remove('show');
+  $('mlWeight').value=''; $('mlL').value=''; $('mlA').value=''; $('mlH').value='';
+  $('mlMode').value = 'normal';
+  populateMlCategorySelect(settings.mlCategories[0] ? settings.mlCategories[0].id : null);
+  calculate();
+}
+
+$('newQuoteBtn').onclick = resetForm;
+
+$('saveQuoteBtn').onclick = async () => {
+  const name = $('qName').value.trim();
+  if (!name){ showToast('Ponle un nombre a la cotización'); return; }
+  const calc = calculate();
+  const id = currentQuoteId || ('q_' + Date.now());
+  const quote = {
+    id, name, notes: $('qNotes').value,
+    filaments: JSON.parse(JSON.stringify(filaments)),
+    printHours: +$('printHours').value, printWatts: +$('printWatts').value, kwhPrice: +$('kwhPrice').value,
+    laborCost: +$('laborCost').value, riskPct: +$('riskPct').value, profitPct: +$('profitPct').value, ivaPct: +$('ivaPct').value,
+    mlEnabled: $('mlBody').classList.contains('show'),
+    mlCategory: $('mlCategory').value,
+    mlWeight: +$('mlWeight').value || 0, mlL: +$('mlL').value||0, mlA: +$('mlA').value||0, mlH: +$('mlH').value||0, mlMode: $('mlMode').value,
+    finalPrice: calc.finalPrice,
+    updatedAt: new Date().toISOString()
+  };
+  await storageSet('quote:' + id, quote);
+  let index = await storageGet('quotes-index', []);
+  index = index.filter(q => q.id !== id);
+  index.unshift({id, name: quote.name, finalPrice: quote.finalPrice, updatedAt: quote.updatedAt});
+  await storageSet('quotes-index', index);
+  driveQueuePush();
+  currentQuoteId = id;
+  showToast('Cotización guardada');
+  renderHistory();
+};
+
+async function loadQuote(id){
+  const q = await storageGet('quote:' + id, null);
+  if (!q) return;
+  currentQuoteId = q.id;
+  $('qName').value = q.name; $('qNotes').value = q.notes || '';
+  filaments = q.filaments || []; renderFilaments();
+  $('printHours').value = q.printHours; $('printWatts').value = q.printWatts; $('kwhPrice').value = q.kwhPrice;
+  $('laborCost').value = q.laborCost; $('riskPct').value = q.riskPct; $('profitPct').value = q.profitPct; $('ivaPct').value = q.ivaPct;
+  $('mlWeight').value = q.mlWeight || ''; $('mlL').value = q.mlL||''; $('mlA').value = q.mlA||''; $('mlH').value = q.mlH||'';
+  $('mlMode').value = q.mlMode || 'normal';
+  populateMlCategorySelect(q.mlCategory);
+  if (q.mlEnabled){ $('mlSwitch').classList.add('on'); $('mlBody').classList.add('show'); }
+  else { $('mlSwitch').classList.remove('on'); $('mlBody').classList.remove('show'); }
+  calculate();
+  switchView('view-new');
+}
+
+async function duplicateQuote(id){
+  const q = await storageGet('quote:' + id, null);
+  if (!q) return;
+  await loadQuote(id);
+  currentQuoteId = null;
+  $('qName').value = q.name + ' (copia)';
+  showToast('Duplicado — edita y guarda como nueva');
+}
+
+async function deleteQuote(id){
+  await storageDelete('quote:' + id);
+  let index = await storageGet('quotes-index', []);
+  index = index.filter(q => q.id !== id);
+  await storageSet('quotes-index', index);
+  driveQueuePush();
+  renderHistory();
+  showToast('Cotización eliminada');
+}
+
+async function renderHistory(filter){
+  const list = $('historyList');
+  let index = await storageGet('quotes-index', []);
+  if (filter) index = index.filter(q => q.name.toLowerCase().includes(filter.toLowerCase()));
+  if (!index.length){
+    list.innerHTML = '<div class="empty-state">Aún no tienes cotizaciones guardadas.<br>Crea una en la pestaña "Nueva".</div>';
+    return;
+  }
+  list.innerHTML = '';
+  index.forEach(q => {
+    const div = document.createElement('div');
+    div.className = 'quote-item';
+    const date = new Date(q.updatedAt);
+    div.innerHTML = `
+      <div class="qi-top">
+        <div>
+          <div class="qi-name">${q.name}</div>
+          <div class="qi-date">${date.toLocaleDateString('es-MX', {day:'2-digit', month:'short', year:'numeric'})}</div>
+        </div>
+        <div class="qi-price">${money(q.finalPrice)}</div>
+      </div>
+      <div class="qi-actions">
+        <button class="btn btn-small" data-act="load">Ver / editar</button>
+        <button class="btn btn-small" data-act="dup">Duplicar</button>
+        <button class="btn btn-small btn-danger" data-act="del">Eliminar</button>
+      </div>
+    `;
+    div.querySelector('[data-act=load]').onclick = () => loadQuote(q.id);
+    div.querySelector('[data-act=dup]').onclick = () => duplicateQuote(q.id);
+    div.querySelector('[data-act=del]').onclick = () => { if(confirm('¿Eliminar "'+q.name+'"?')) deleteQuote(q.id); };
+    list.appendChild(div);
+  });
+}
+
+$('searchQuotes').addEventListener('input', (e) => renderHistory(e.target.value));
+
+// ---------- SETTINGS: SHIPPING TIERS ----------
+function renderTiers(){
+  const wrap = $('tierList');
+  wrap.innerHTML = '';
+  settings.tiers.forEach((t, i) => {
+    const row = document.createElement('div');
+    row.className = 'tier-row';
+    row.innerHTML = `
+      <span style="font-size:11px; color:var(--muted); white-space:nowrap;">hasta</span>
+      <input type="number" step="0.1" class="tier-max" data-i="${i}" value="${t.max}" style="width:70px">
+      <span style="font-size:11px; color:var(--muted);">kg →</span>
+      <input type="number" step="1" class="tier-cost" data-i="${i}" value="${t.cost}" style="width:80px">
+      <button class="remove-btn" data-i="${i}">✕</button>
+    `;
+    wrap.appendChild(row);
+  });
+  wrap.querySelectorAll('.tier-max').forEach(el => el.oninput = () => settings.tiers[+el.dataset.i].max = +el.value || 0);
+  wrap.querySelectorAll('.tier-cost').forEach(el => el.oninput = () => settings.tiers[+el.dataset.i].cost = +el.value || 0);
+  wrap.querySelectorAll('.remove-btn').forEach(b => b.onclick = () => { settings.tiers.splice(+b.dataset.i,1); renderTiers(); });
+}
+$('addTierBtn').onclick = () => { settings.tiers.push({max:0, cost:0}); renderTiers(); };
+
+// ---------- SETTINGS: ML CATEGORIES ----------
+function renderCategories(){
+  const wrap = $('categoryList');
+  wrap.innerHTML = '';
+  settings.mlCategories.forEach((c, i) => {
+    const row = document.createElement('div');
+    row.className = 'cat-row';
+    row.innerHTML = `
+      <input type="text" class="cat-name" data-i="${i}" value="${c.name}" placeholder="nombre de categoría">
+      <input type="number" step="0.1" class="cat-fee" data-i="${i}" value="${c.feePct}" placeholder="%">
+      <button class="remove-btn" data-i="${i}">✕</button>
+    `;
+    wrap.appendChild(row);
+  });
+  wrap.querySelectorAll('.cat-name').forEach(el => el.oninput = () => settings.mlCategories[+el.dataset.i].name = el.value);
+  wrap.querySelectorAll('.cat-fee').forEach(el => el.oninput = () => settings.mlCategories[+el.dataset.i].feePct = +el.value || 0);
+  wrap.querySelectorAll('.remove-btn').forEach(b => b.onclick = () => { settings.mlCategories.splice(+b.dataset.i,1); renderCategories(); });
+}
+$('addCategoryBtn').onclick = () => { settings.mlCategories.push({id:'cat_'+Date.now(), name:'', feePct:0}); renderCategories(); };
+
+function fillSettingsForm(){
+  $('def-kwh').value = settings.kwhPrice;
+  $('def-watts').value = settings.watts;
+  $('def-risk').value = settings.riskPct;
+  $('def-profit').value = settings.profitPct;
+  $('def-iva').value = settings.ivaPct;
+  $('def-isr').value = settings.isrPct;
+  $('def-ivaret').value = settings.ivaRetPct;
+  $('def-ml-divisor').value = settings.mlDivisor;
+  renderTiers();
+  renderCategories();
+  $('settingsGlance').textContent = 'kWh $' + settings.kwhPrice + ' · IVA ' + settings.ivaPct + '%';
+}
+
+$('saveSettingsBtn').onclick = async () => {
+  settings.kwhPrice = +$('def-kwh').value || 0;
+  settings.watts = +$('def-watts').value || 0;
+  settings.riskPct = +$('def-risk').value || 0;
+  settings.profitPct = +$('def-profit').value || 0;
+  settings.ivaPct = +$('def-iva').value || 0;
+  settings.isrPct = +$('def-isr').value || 0;
+  settings.ivaRetPct = +$('def-ivaret').value || 0;
+  settings.mlDivisor = +$('def-ml-divisor').value || 5000;
+  await storageSet('settings', settings);
+  driveQueuePush();
+  fillSettingsForm();
+  populateMlCategorySelect($('mlCategory').value);
+  showToast('Ajustes guardados');
+};
+
+// ---------- TABS ----------
+function switchView(viewId){
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  $(viewId).classList.add('active');
+  document.querySelector(`.tab-btn[data-view="${viewId}"]`).classList.add('active');
+  if (viewId === 'view-history') renderHistory();
+  if (viewId === 'view-filaments') renderFilamentCatalog();
+}
+document.querySelectorAll('.tab-btn').forEach(b => b.onclick = () => switchView(b.dataset.view));
+
+// ---------- BACKUP: EXPORT / IMPORT ----------
+$('exportBtn').onclick = async () => {
+  const backup = {
+    exportedAt: new Date().toISOString(),
+    settings: await storageGet('settings', settings),
+    filamentsCatalog: await storageGet('filaments-catalog', []),
+    quotesIndex: await storageGet('quotes-index', [])
+  };
+  backup.quotes = {};
+  for (const q of backup.quotesIndex){
+    backup.quotes[q.id] = await storageGet('quote:' + q.id, null);
+  }
+  const blob = new Blob([JSON.stringify(backup, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'cotiza3d-respaldo-' + new Date().toISOString().slice(0,10) + '.json';
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+  showToast('Respaldo descargado');
+};
+
+$('importFile').onchange = (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  if (!confirm('Esto reemplazará tus cotizaciones, catálogo y ajustes actuales en este dispositivo. ¿Continuar?')) { e.target.value=''; return; }
+  const reader = new FileReader();
+  reader.onload = async (ev) => {
+    try{
+      const backup = JSON.parse(ev.target.result);
+      if (backup.settings) await storageSet('settings', backup.settings);
+      if (backup.filamentsCatalog) await storageSet('filaments-catalog', backup.filamentsCatalog);
+      if (backup.quotesIndex) await storageSet('quotes-index', backup.quotesIndex);
+      if (backup.quotes){
+        for (const id in backup.quotes){
+          if (backup.quotes[id]) await storageSet('quote:' + id, backup.quotes[id]);
+        }
+      }
+      showToast('Respaldo importado, recargando...');
+      setTimeout(() => location.reload(), 900);
+    }catch(err){
+      showToast('El archivo no es un respaldo válido');
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+};
+
+// ---------- GOOGLE DRIVE SYNC ----------
+const DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.file';
+const DRIVE_FILENAME = 'cotiza3d-data.json';
+let googleClientId = localStorage.getItem('cotiza3d_google_client_id') || '';
+let driveTokenClient = null;
+let driveAccessToken = null;
+let driveFileId = localStorage.getItem('cotiza3d_drive_file_id') || null;
+let driveConnected = false;
+
+function driveSetStatus(text){
+  $('driveStatus').textContent = text;
+  $('driveStatusTop').textContent = '☁ Drive: ' + text;
+}
+
+async function buildFullBackupObject(){
+  const backup = {
+    exportedAt: new Date().toISOString(),
+    settings: await storageGet('settings', settings),
+    filamentsCatalog: await storageGet('filaments-catalog', []),
+    quotesIndex: await storageGet('quotes-index', [])
+  };
+  backup.quotes = {};
+  for (const q of backup.quotesIndex){
+    backup.quotes[q.id] = await storageGet('quote:' + q.id, null);
+  }
+  return backup;
+}
+
+async function applyBackupObject(backup){
+  if (backup.settings) await storageSet('settings', backup.settings);
+  if (backup.filamentsCatalog) await storageSet('filaments-catalog', backup.filamentsCatalog);
+  if (backup.quotesIndex) await storageSet('quotes-index', backup.quotesIndex);
+  if (backup.quotes){
+    for (const id in backup.quotes){
+      if (backup.quotes[id]) await storageSet('quote:' + id, backup.quotes[id]);
+    }
+  }
+  // reload in-memory state to reflect what came from Drive
+  const savedSettings = await storageGet('settings', null);
+  if (savedSettings) settings = {...settings, ...savedSettings};
+  await loadCatalog();
+  fillSettingsForm();
+  resetForm();
+  renderHistory();
+  renderFilamentCatalog();
+}
+
+function initGoogleClient(){
+  if (!googleClientId || typeof google === 'undefined' || !google.accounts) return;
+  driveTokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: googleClientId,
+    scope: DRIVE_SCOPE,
+    callback: onDriveTokenResponse
+  });
+  $('driveConnectSection').style.display = 'block';
+}
+
+async function onDriveTokenResponse(resp){
+  if (resp.error){ driveSetStatus('error al conectar'); showToast('No se pudo conectar con Google'); return; }
+  driveAccessToken = resp.access_token;
+  driveConnected = true;
+  driveSetStatus('conectando...');
+  $('driveConnectBtn').style.display = 'none';
+  $('driveConnectedActions').style.display = 'block';
+  await drivePull(true);
+}
+
+async function driveFindFile(){
+  const url = 'https://www.googleapis.com/drive/v3/files?q=' +
+    encodeURIComponent(`name='${DRIVE_FILENAME}' and trashed=false`) +
+    '&spaces=drive&fields=files(id,name)';
+  const res = await fetch(url, {headers:{Authorization:'Bearer ' + driveAccessToken}});
+  const data = await res.json();
+  return (data.files && data.files[0]) ? data.files[0].id : null;
+}
+
+async function driveCreateFile(content){
+  const boundary = 'cotiza3d_boundary';
+  const metadata = {name: DRIVE_FILENAME, mimeType: 'application/json'};
+  const body =
+    `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify(metadata)}\r\n` +
+    `--${boundary}\r\nContent-Type: application/json\r\n\r\n${content}\r\n--${boundary}--`;
+  const res = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+    method: 'POST',
+    headers: {Authorization:'Bearer ' + driveAccessToken, 'Content-Type': `multipart/related; boundary=${boundary}`},
+    body
+  });
+  const data = await res.json();
+  return data.id;
+}
+
+async function driveReadFile(fileId){
+  const res = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`, {
+    headers:{Authorization:'Bearer ' + driveAccessToken}
+  });
+  return res.text();
+}
+
+async function driveWriteFile(fileId, content){
+  await fetch(`https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=media`, {
+    method: 'PATCH',
+    headers: {Authorization:'Bearer ' + driveAccessToken, 'Content-Type': 'application/json'},
+    body: content
+  });
+}
+
+async function drivePull(isInitial){
+  try{
+    driveSetStatus('sincronizando...');
+    if (!driveFileId) driveFileId = await driveFindFile();
+    if (driveFileId){
+      localStorage.setItem('cotiza3d_drive_file_id', driveFileId);
+      const text = await driveReadFile(driveFileId);
+      if (text && text.trim()){
+        const backup = JSON.parse(text);
+        await applyBackupObject(backup);
+      }
+    } else {
+      // no file yet in Drive: push what we currently have locally
+      const backup = await buildFullBackupObject();
+      driveFileId = await driveCreateFile(JSON.stringify(backup, null, 2));
+      localStorage.setItem('cotiza3d_drive_file_id', driveFileId);
+    }
+    driveSetStatus('conectado · ' + new Date().toLocaleTimeString('es-MX', {hour:'2-digit', minute:'2-digit'}));
+    if (isInitial) showToast('Conectado a Google Drive');
+  }catch(e){
+    console.error(e);
+    driveSetStatus('error al sincronizar');
+    showToast('No se pudo sincronizar con Drive');
+  }
+}
+
+async function drivePush(){
+  if (!driveConnected || !driveAccessToken) return;
+  try{
+    driveSetStatus('subiendo cambios...');
+    const backup = await buildFullBackupObject();
+    if (!driveFileId) driveFileId = await driveFindFile();
+    if (!driveFileId){
+      driveFileId = await driveCreateFile(JSON.stringify(backup, null, 2));
+      localStorage.setItem('cotiza3d_drive_file_id', driveFileId);
+    } else {
+      await driveWriteFile(driveFileId, JSON.stringify(backup, null, 2));
+    }
+    driveSetStatus('conectado · ' + new Date().toLocaleTimeString('es-MX', {hour:'2-digit', minute:'2-digit'}));
+  }catch(e){
+    console.error(e);
+    driveSetStatus('error al subir cambios');
+  }
+}
+let drivePushTimer = null;
+function driveQueuePush(){
+  if (!driveConnected) return;
+  clearTimeout(drivePushTimer);
+  drivePushTimer = setTimeout(drivePush, 1200);
+}
+
+$('saveClientIdBtn').onclick = () => {
+  const val = $('googleClientId').value.trim();
+  if (!val.endsWith('.apps.googleusercontent.com')){ showToast('Ese Client ID no se ve completo'); return; }
+  googleClientId = val;
+  localStorage.setItem('cotiza3d_google_client_id', val);
+  initGoogleClient();
+  showToast('Client ID guardado');
+};
+
+$('driveConnectBtn').onclick = () => {
+  if (!driveTokenClient){ showToast('Primero guarda tu Client ID'); return; }
+  driveTokenClient.requestAccessToken({prompt: driveAccessToken ? '' : 'consent'});
+};
+$('drivePullBtn').onclick = () => drivePull(false);
+$('drivePushBtn').onclick = () => drivePush().then(() => showToast('Cambios subidos a Drive'));
+$('driveDisconnectBtn').onclick = () => {
+  driveConnected = false; driveAccessToken = null;
+  $('driveConnectBtn').style.display = 'block';
+  $('driveConnectedActions').style.display = 'none';
+  driveSetStatus('sin conectar');
+  showToast('Desconectado de Drive (tus datos locales siguen intactos)');
+};
+
+// ---------- INIT ----------
+(async function init(){
+  const saved = await storageGet('settings', null);
+  if (saved){
+    settings = {...settings, ...saved};
+    if (saved.mlCategories) settings.mlCategories = saved.mlCategories;
+    if (saved.tiers) settings.tiers = saved.tiers;
+  }
+  await loadCatalog();
+  fillSettingsForm();
+  resetForm();
+  renderHistory();
+  renderFilamentCatalog();
+
+  if (googleClientId){
+    $('googleClientId').value = googleClientId;
+    let tries = 0;
+    const waitForGoogle = setInterval(() => {
+      tries++;
+      if (typeof google !== 'undefined' && google.accounts){
+        clearInterval(waitForGoogle);
+        initGoogleClient();
+      } else if (tries > 40){
+        clearInterval(waitForGoogle);
+      }
+    }, 250);
+  }
+})();
+</script>
+</body>
+</html>
