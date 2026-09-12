@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Cotizador 3D</title>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Quicksand:wght@400;500;600;700&display=swap');
 
@@ -185,6 +186,29 @@ textarea{
 .fil-cat-item .fc-sub{font-size:11px; color:var(--muted); margin-top:2px;}
 .fil-cat-item .fc-price{font-family:'Fredoka'; color:var(--money); font-weight:600; font-size:14px; margin-right:10px;}
 .fil-cat-actions{display:flex; gap:6px; align-items:center;}
+
+.subsection{margin-top:18px; padding-top:14px; border-top:1px solid var(--line-soft);}
+.subsection-title{font-family:'Fredoka'; font-weight:600; font-size:13.5px; color:var(--accent); margin-bottom:10px;}
+.platform-badges{display:flex; gap:6px; margin-top:6px; flex-wrap:wrap;}
+.platform-badge{font-size:10px; padding:3px 8px; border-radius:20px; border:1px solid var(--line); color:var(--muted); background:var(--panel-alt);}
+.product-item{
+  background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
+  padding:14px; margin-bottom:10px; box-shadow:0 4px 14px rgba(214,51,108,0.10);
+}
+.product-item .pi-top{display:flex; justify-content:space-between; align-items:flex-start;}
+.product-item .pi-name{font-family:'Fredoka'; font-weight:600; font-size:14.5px;}
+.product-item .pi-sub{font-size:11px; color:var(--muted); margin-top:2px;}
+.product-item .pi-price{font-family:'Fredoka'; font-weight:700; color:var(--money); font-size:15px;}
+.product-item .pi-actions{display:flex; gap:6px; margin-top:10px; flex-wrap:wrap;}
+.variant-row{
+  border:1px solid var(--line-soft); border-radius:12px; padding:10px; margin-bottom:8px;
+  background:rgba(214,51,108,0.035);
+}
+.variant-row .vr-top{display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;}
+.generate-card{
+  border:1px dashed var(--line); border-radius:12px; padding:12px; margin-bottom:10px;
+}
+.generate-card .gc-title{font-family:'Fredoka'; font-weight:600; font-size:13.5px; margin-bottom:6px;}
 </style>
 </head>
 <body>
@@ -346,6 +370,217 @@ textarea{
     <div id="filCatList"></div>
   </div>
 
+  <!-- CATALOGO DE PRODUCTOS -->
+  <div class="view" id="view-products">
+
+    <div id="productsListPanel">
+      <div class="card">
+        <div class="section-title" style="margin-bottom:10px;">Generar archivos para publicar</div>
+        <div class="hint" style="margin-bottom:10px;">Selecciona abajo qué productos quieres cargar en esta tanda (normalmente los que aún no están "cargados") y luego usa el botón de la plataforma que quieras. Cada plataforma usa sus propias fotos, configuradas dentro de cada producto.</div>
+
+        <div class="generate-card">
+          <div class="gc-title">🛍️ Tienda Nube</div>
+          <div class="hint" style="margin-bottom:8px;">Genera el CSV completo, listo para subir directo en Tienda Nube (Productos → Importar).</div>
+          <button class="btn btn-accent btn-block" id="genTiendaNubeBtn">⬇ Descargar CSV de Tienda Nube</button>
+        </div>
+
+        <div class="generate-card">
+          <div class="gc-title">🎵 TikTok Shop</div>
+          <div class="hint" style="margin-bottom:8px;">Descarga el .xlsx (fila 1 son solo nombres de referencia). Ábrelo, copia desde la <b>fila 2</b> en adelante, y pégalo en la celda A7 de la hoja "Template" de tu plantilla ya descargada.</div>
+          <div class="row">
+            <button class="btn" id="genTikTokFileBtn">⬇ Descargar</button>
+            <button class="btn" id="genTikTokCopyBtn">📋 Copiar</button>
+          </div>
+        </div>
+
+        <div class="generate-card">
+          <div class="gc-title">🛒 MercadoLibre</div>
+          <div class="hint" style="margin-bottom:8px;">Descarga el .xlsx (fila 1 son solo nombres de referencia). Ábrelo, copia desde la <b>fila 2</b> en adelante, y pégalo en A7 de la hoja "Otros" usando <b>Pegado especial → Saltar en blanco</b> (Ctrl+Alt+V) para no borrar sus fórmulas.</div>
+          <div class="row">
+            <button class="btn" id="genMLFileBtn">⬇ Descargar</button>
+            <button class="btn" id="genMLCopyBtn">📋 Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn btn-accent btn-block" id="newProductBtn" style="padding:13px; font-size:14px;">+ Nuevo producto</button>
+      <div class="row" style="margin-top:10px;">
+        <button class="btn" id="selectAllProductsBtn">☑ Seleccionar todos</button>
+        <button class="btn" id="selectNoneProductsBtn">☐ Ninguno</button>
+      </div>
+      <div id="productsList" style="margin-top:12px;"></div>
+    </div>
+
+    <div id="productFormPanel" style="display:none;">
+      <div class="card">
+        <div class="section-title" style="margin-bottom:6px;">Cotización de origen</div>
+        <div class="hint" style="margin-bottom:10px;">Todo producto debe venir de una cotización guardada — de ahí sale tu costo real y el precio sugerido. Cada cotización solo se puede usar en un producto.</div>
+        <label>Cotización</label>
+        <select id="p-linkedQuote"><option value="">— Selecciona una cotización —</option></select>
+      </div>
+
+      <div class="card">
+        <div class="section-title" style="margin-bottom:10px;">Datos generales</div>
+        <label>Nombre del producto</label>
+        <input type="text" id="p-nombre" placeholder="ej. Hucha gato geométrico 12cm">
+        <label>Descripción</label>
+        <textarea id="p-descripcion" placeholder="Detalles, material, medidas, cuidados..."></textarea>
+        <label>Marca (opcional)</label>
+        <input type="text" id="p-marca">
+        <label>Costo (de la cotización, editable)</label>
+        <input type="number" step="0.01" id="p-costo">
+        <div class="row">
+          <div>
+            <label>SKU</label>
+            <input type="text" id="p-sku">
+          </div>
+          <div>
+            <label>Stock</label>
+            <input type="number" step="1" id="p-stock" value="1">
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-title" style="margin-bottom:6px;">Precio por plataforma</div>
+        <div class="hint" style="margin-bottom:10px;">Cada plataforma cobra comisiones distintas — se prellenan con el precio sugerido de tu cotización, ajústalos si quieres compensar comisiones diferentes.</div>
+        <label>Precio para TikTok Shop</label>
+        <input type="number" step="0.01" id="p-precio-tiktok">
+        <label>Precio para MercadoLibre</label>
+        <input type="number" step="0.01" id="p-precio-ml">
+        <label>Precio para Tienda Nube</label>
+        <input type="number" step="0.01" id="p-precio-tiendanube">
+      </div>
+
+      <div class="card">
+        <div class="section-title" style="margin-bottom:10px;">Peso y dimensiones del paquete</div>
+        <label>Peso (g)</label>
+        <input type="number" step="1" id="p-peso">
+        <div class="row">
+          <div><label>Largo (cm)</label><input type="number" step="0.1" id="p-largo"></div>
+          <div><label>Ancho (cm)</label><input type="number" step="0.1" id="p-ancho"></div>
+          <div><label>Alto (cm)</label><input type="number" step="0.1" id="p-alto"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="subsection-title" style="margin-top:0;">🎵 TikTok Shop</div>
+        <label>Categoría</label>
+        <select id="p-tt-categoria">
+          <option value="colgar">Decoración para el hogar/Decoración para colgar</option>
+          <option value="placas">Decoración para el hogar/Placas y letreros</option>
+          <option value="huchas">Decoración para el hogar/Huchas</option>
+        </select>
+        <label>Material (opcional)</label>
+        <select id="p-tt-material"></select>
+        <div id="p-tt-estilo-wrap" style="display:none;">
+          <label>Estilo (opcional)</label>
+          <select id="p-tt-estilo"></select>
+        </div>
+        <div id="p-tt-patron-wrap" style="display:none;">
+          <label>Patrón (opcional)</label>
+          <select id="p-tt-patron"></select>
+        </div>
+        <div id="p-tt-caracteristica-wrap" style="display:none;">
+          <label>Característica (opcional)</label>
+          <select id="p-tt-caracteristica"></select>
+        </div>
+        <div class="subsection">
+          <label>Fotos en TikTok (URLs, hasta 9 — ya subidas a su Centro multimedia)</label>
+          <div id="productImagesTiktokList"></div>
+          <button class="btn btn-block" id="addImageTiktokBtn">+ agregar URL de imagen</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="subsection-title" style="margin-top:0;">🛒 MercadoLibre</div>
+        <div class="hint" style="margin-bottom:8px;">Categoría fija: Arte, Papelería y Mercería / Otros (la única plantilla que tengo por ahora — mándame otra si vendes en otra categoría).</div>
+        <label>Condición</label>
+        <select id="p-ml-condicion"><option>Nuevo</option><option>Usado</option></select>
+        <label>Código universal</label>
+        <select id="p-ml-codigo">
+          <option value="">Escribe uno abajo o elige un motivo</option>
+          <option value="El producto no tiene código registrado">No tiene código registrado</option>
+          <option value="El producto es una pieza artesanal">Es una pieza artesanal</option>
+          <option value="El producto es un kit o un pack">Es un kit o pack</option>
+          <option value="Otra razón">Otra razón</option>
+        </select>
+        <input type="text" id="p-ml-codigo-manual" placeholder="o escribe el código (8-14 dígitos)" style="margin-top:6px;">
+        <label>Tipo de publicación</label>
+        <select id="p-ml-tipopub"><option>Clásica</option><option>Premium</option></select>
+        <label>Costo de envío</label>
+        <select id="p-ml-costoenvio"><option>A cargo del comprador</option><option>Ofreces envío gratis</option></select>
+        <label>Retiro en persona</label>
+        <select id="p-ml-retiro"><option>No acepto</option><option>Acepto</option></select>
+        <label>Garantía</label>
+        <select id="p-ml-garantia-tipo">
+          <option>Sin garantía</option>
+          <option>Garantía del vendedor</option>
+          <option>Garantía de fábrica</option>
+        </select>
+        <div class="row" id="p-ml-garantia-tiempo-wrap" style="display:none;">
+          <div><label>Tiempo</label><input type="number" step="1" id="p-ml-garantia-tiempo"></div>
+          <div><label>Unidad</label><select id="p-ml-garantia-unidad"><option>días</option><option>meses</option><option>años</option></select></div>
+        </div>
+        <div class="subsection">
+          <label>Fotos en MercadoLibre (URLs — ya subidas a su Gestor de fotos)</label>
+          <div id="productImagesMlList"></div>
+          <button class="btn btn-block" id="addImageMlBtn">+ agregar URL de imagen</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="subsection-title" style="margin-top:0;">🛍️ Tienda Nube</div>
+        <label>Categoría (texto libre)</label>
+        <input type="text" id="p-tn-categoria" placeholder="ej. Decoración/Huchas">
+        <div class="row">
+          <div>
+            <label>Mostrar en tienda</label>
+            <select id="p-tn-mostrar"><option>SI</option><option>NO</option></select>
+          </div>
+          <div>
+            <label>Envío sin cargo</label>
+            <select id="p-tn-enviogratis"><option>NO</option><option>SI</option></select>
+          </div>
+        </div>
+        <label>Visibilidad</label>
+        <select id="p-tn-visibilidad"><option>Visible</option><option>Oculto</option></select>
+      </div>
+
+      <div class="card">
+        <div class="ml-toggle-wrap" id="variantsToggleWrap">
+          <div class="subsection-title" style="margin-top:0;">Variantes (color, tamaño, etc.)</div>
+          <div class="switch" id="variantsSwitch"></div>
+        </div>
+        <div id="variantsBody" style="display:none; margin-top:10px;">
+          <div class="hint" style="margin-bottom:10px;">Para MercadoLibre, todas las variantes deben tener el mismo precio (regla de la plataforma) — si pones precios distintos, para ML se usará el precio base del producto.</div>
+          <div id="variantsList"></div>
+          <button class="btn btn-block" id="addVariantBtn">+ agregar variante</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="subsection-title" style="margin-top:0;">Estado de carga</div>
+        <div class="hint" style="margin-bottom:10px;">Se marca "Cargado" solo cuando generas el archivo con este producto seleccionado. Si una carga falla en la plataforma, márcalo aquí manualmente con el motivo.</div>
+
+        <label>🎵 TikTok Shop</label>
+        <select id="p-status-tiktok"><option value="pendiente">Pendiente</option><option value="cargado">Cargado</option><option value="fallo">Falló carga</option></select>
+        <input type="text" id="p-status-tiktok-motivo" placeholder="Motivo del fallo (si aplica)" style="margin-top:6px; display:none;">
+
+        <label style="margin-top:12px;">🛒 MercadoLibre</label>
+        <select id="p-status-ml"><option value="pendiente">Pendiente</option><option value="cargado">Cargado</option><option value="fallo">Falló carga</option></select>
+        <input type="text" id="p-status-ml-motivo" placeholder="Motivo del fallo (si aplica)" style="margin-top:6px; display:none;">
+
+        <label style="margin-top:12px;">🛍️ Tienda Nube</label>
+        <select id="p-status-tiendanube"><option value="pendiente">Pendiente</option><option value="cargado">Cargado</option><option value="fallo">Falló carga</option></select>
+        <input type="text" id="p-status-tiendanube-motivo" placeholder="Motivo del fallo (si aplica)" style="margin-top:6px; display:none;">
+      </div>
+
+      <button class="btn btn-accent btn-block" id="saveProductBtn" style="padding:13px; font-size:14px;">Guardar producto</button>
+      <button class="btn btn-block" id="cancelProductBtn" style="margin-top:8px;">Cancelar</button>
+    </div>
+  </div>
+
   <!-- HISTORIAL -->
   <div class="view" id="view-history">
     <div class="card" style="padding:12px 16px;">
@@ -430,6 +665,7 @@ textarea{
 <div class="tabbar">
   <button class="tab-btn active" data-view="view-new"><span>Nueva</span><span class="dot"></span></button>
   <button class="tab-btn" data-view="view-filaments"><span>Filamentos</span><span class="dot"></span></button>
+  <button class="tab-btn" data-view="view-products"><span>Catálogo</span><span class="dot"></span></button>
   <button class="tab-btn" data-view="view-history"><span>Historial</span><span class="dot"></span></button>
   <button class="tab-btn" data-view="view-settings"><span>Ajustes</span><span class="dot"></span></button>
 </div>
@@ -458,6 +694,28 @@ let settings = {
 let filaments = [];      // rows in the current quote
 let filamentCatalog = []; // saved catalog
 let currentQuoteId = null;
+
+// ---------- PRODUCT CATALOG DATA ----------
+let productsCatalog = [];
+let currentProductId = null;
+let productImagesTiktok = [];
+let productImagesMl = [];
+let productVariants = [];
+let selectedProductIds = new Set();
+
+const TT_CATEGORY_LABEL = {
+  colgar: 'Decoración para el hogar/Decoración para colgar',
+  placas: 'Decoración para el hogar/Placas y letreros',
+  huchas: 'Decoración para el hogar/Huchas'
+};
+const TT_MATERIAL_OPTIONS = {
+  colgar: ['Acrílico','Acero inoxidable','Aluminio','Piedra','Madera','Cerámica','Vidrio','Polipropileno','Caucho','Jade','PVC','Mineral','ABS','Silicona','Metal'],
+  placas: ['Acrílico','Piedra','Madera','Mineral','ABS','Cerámica','Vidrio','Polipropileno','Caucho','Acero inoxidable','Aluminio','Jade','PVC','Silicona','Metal'],
+  huchas: ['Polipropileno','Caucho','Acrílico','Mineral','ABS','Silicona','Metal','Cerámica','Vidrio','Piedra','Madera','Jade','PVC','Acero inoxidable','Aluminio']
+};
+const TT_ESTILO_OPTIONS = ['Japonés','Vintage','Glam','Tradicional','Clásico','Retro','Industrial','Tropical','French Country','Rústico','Antiguo','Jardín','Sudeste Asiático','Asiático','Moderno'];
+const TT_PATRON_OPTIONS = ['Animales','Geométrico','Acuarela','Camuflaje','Eslogan','Figura','Floral','Plantas','Lunares','Impreso','Sólido','Rayas'];
+const TT_CARACTERISTICA_OPTIONS = ['Inducción','Duradero','Resistente al óxido','Seguro','Inquebrantable','A prueba de agua'];
 
 function showToast(msg){
   const t = $('toast'); t.textContent = msg; t.classList.add('show');
@@ -729,6 +987,569 @@ $('mlToggleWrap').onclick = (e) => {
   calculate();
 };
 
+// ---------- PRODUCT CATALOG: OPTIONS POPULATION ----------
+function fillSelect(id, options, selected){
+  const sel = $(id);
+  sel.innerHTML = options.map(o => `<option value="${o}" ${o===selected?'selected':''}>${o}</option>`).join('');
+}
+
+function updateTiktokAttributeFields(){
+  const cat = $('p-tt-categoria').value;
+  fillSelect('p-tt-material', ['', ...TT_MATERIAL_OPTIONS[cat]]);
+  $('p-tt-estilo-wrap').style.display = (cat === 'colgar') ? 'block' : 'none';
+  $('p-tt-patron-wrap').style.display = (cat === 'huchas') ? 'block' : 'none';
+  $('p-tt-caracteristica-wrap').style.display = (cat === 'huchas') ? 'block' : 'none';
+  if (cat === 'colgar') fillSelect('p-tt-estilo', ['', ...TT_ESTILO_OPTIONS]);
+  if (cat === 'huchas'){
+    fillSelect('p-tt-patron', ['', ...TT_PATRON_OPTIONS]);
+    fillSelect('p-tt-caracteristica', ['', ...TT_CARACTERISTICA_OPTIONS]);
+  }
+}
+$('p-tt-categoria').addEventListener('change', updateTiktokAttributeFields);
+$('p-ml-garantia-tipo').addEventListener('change', () => {
+  $('p-ml-garantia-tiempo-wrap').style.display = ($('p-ml-garantia-tipo').value === 'Sin garantía') ? 'none' : 'flex';
+});
+
+// ---------- PRODUCT IMAGES (per platform) ----------
+function makeImageListController(listVarGetter, listVarSetter, wrapId, maxCount){
+  function render(){
+    const wrap = $(wrapId);
+    const arr = listVarGetter();
+    wrap.innerHTML = '';
+    arr.forEach((url, i) => {
+      const div = document.createElement('div');
+      div.className = 'filament-row';
+      div.innerHTML = `
+        <div class="fr-top">
+          <span class="fr-label">Imagen ${i+1}${i===0 ? ' (principal)' : ''}</span>
+          <button class="remove-btn" data-i="${i}">quitar ✕</button>
+        </div>
+        <input type="text" class="img-url" data-i="${i}" value="${url}" placeholder="https://...">
+      `;
+      wrap.appendChild(div);
+    });
+    wrap.querySelectorAll('.remove-btn').forEach(b => b.onclick = () => { const a=listVarGetter(); a.splice(+b.dataset.i,1); listVarSetter(a); render(); });
+    wrap.querySelectorAll('.img-url').forEach(el => el.oninput = () => { listVarGetter()[+el.dataset.i] = el.value; });
+  }
+  return {
+    render,
+    add(){ const a=listVarGetter(); if (maxCount && a.length>=maxCount){ showToast('Máximo '+maxCount+' imágenes'); return; } a.push(''); listVarSetter(a); render(); }
+  };
+}
+const ttImagesCtrl = makeImageListController(() => productImagesTiktok, (v)=>{productImagesTiktok=v;}, 'productImagesTiktokList', 9);
+const mlImagesCtrl = makeImageListController(() => productImagesMl, (v)=>{productImagesMl=v;}, 'productImagesMlList', null);
+function renderProductImages(){ ttImagesCtrl.render(); mlImagesCtrl.render(); }
+$('addImageTiktokBtn').onclick = () => ttImagesCtrl.add();
+$('addImageMlBtn').onclick = () => mlImagesCtrl.add();
+
+// ---------- PRODUCT VARIANTS ----------
+function renderVariants(){
+  const wrap = $('variantsList');
+  wrap.innerHTML = '';
+  productVariants.forEach((v, i) => {
+    const div = document.createElement('div');
+    div.className = 'variant-row';
+    div.innerHTML = `
+      <div class="vr-top">
+        <span class="fr-label">Variante ${i+1}</span>
+        <button class="remove-btn" data-i="${i}">quitar ✕</button>
+      </div>
+      <div class="row">
+        <div><label>Nombre propiedad 1</label><input type="text" class="v-n1" data-i="${i}" value="${v.nombre1||''}" placeholder="ej. Color"></div>
+        <div><label>Valor</label><input type="text" class="v-v1" data-i="${i}" value="${v.valor1||''}" placeholder="ej. Rosa"></div>
+      </div>
+      <div class="row">
+        <div><label>Nombre propiedad 2 (opcional)</label><input type="text" class="v-n2" data-i="${i}" value="${v.nombre2||''}" placeholder="ej. Tamaño"></div>
+        <div><label>Valor</label><input type="text" class="v-v2" data-i="${i}" value="${v.valor2||''}" placeholder="ej. Grande"></div>
+      </div>
+      <div class="row">
+        <div><label>SKU variante</label><input type="text" class="v-sku" data-i="${i}" value="${v.sku||''}"></div>
+        <div><label>Stock</label><input type="number" class="v-stock" data-i="${i}" value="${v.stock!=null?v.stock:1}"></div>
+      </div>
+      <label>Precio (opcional, si es distinto al base)</label>
+      <input type="number" step="0.01" class="v-precio" data-i="${i}" value="${v.precio!=null?v.precio:''}">
+      <label>Imagen de esta variante (opcional, para TikTok)</label>
+      <input type="text" class="v-img" data-i="${i}" value="${v.imagen||''}" placeholder="https://...">
+    `;
+    wrap.appendChild(div);
+  });
+  wrap.querySelectorAll('.remove-btn').forEach(b => b.onclick = () => { productVariants.splice(+b.dataset.i,1); renderVariants(); });
+  const bind = (cls, field, isNum) => wrap.querySelectorAll(cls).forEach(el => el.oninput = () => {
+    productVariants[+el.dataset.i][field] = isNum ? (+el.value || 0) : el.value;
+  });
+  bind('.v-n1','nombre1'); bind('.v-v1','valor1'); bind('.v-n2','nombre2'); bind('.v-v2','valor2');
+  bind('.v-sku','sku'); bind('.v-stock','stock',true); bind('.v-precio','precio',true); bind('.v-img','imagen');
+}
+$('addVariantBtn').onclick = () => { productVariants.push({nombre1:'',valor1:'',nombre2:'',valor2:'',sku:'',stock:1,precio:null,imagen:''}); renderVariants(); };
+$('variantsToggleWrap').onclick = () => {
+  const sw = $('variantsSwitch'); const body = $('variantsBody');
+  sw.classList.toggle('on'); body.classList.toggle('show');
+  const show = body.classList.contains('show');
+  body.style.display = show ? 'block' : 'none';
+  if (show && productVariants.length === 0) $('addVariantBtn').click();
+};
+
+// ---------- PRODUCT FORM: RESET / LOAD ----------
+function computeQuoteCostBreakdown(q){
+  const matCost = (q.filaments||[]).reduce((sum,f) => sum + (f.priceKg/1000)*f.grams, 0);
+  const energyCost = ((q.printWatts||0)/1000) * (q.printHours||0) * (q.kwhPrice||0);
+  const directCost = matCost + energyCost;
+  const base = directCost + (q.laborCost||0);
+  const riskAmt = base * (q.riskPct||0)/100;
+  const totalEst = base + riskAmt;
+  return {matCost, energyCost, directCost, base, riskAmt, totalEst};
+}
+
+async function populateLinkedQuoteOptions(selectedId){
+  const index = await storageGet('quotes-index', []);
+  const usedByOtherProduct = new Set(
+    productsCatalog.filter(p => p.linkedQuoteId && p.id !== currentProductId).map(p => p.linkedQuoteId)
+  );
+  const sel = $('p-linkedQuote');
+  sel.innerHTML = '<option value="">— Selecciona una cotización —</option>' +
+    index.map(q => {
+      const taken = usedByOtherProduct.has(q.id) && q.id !== selectedId;
+      return `<option value="${q.id}" ${q.id===selectedId?'selected':''} ${taken?'disabled':''}>${q.name} (${money(q.finalPrice)})${taken?' — ya usada':''}</option>`;
+    }).join('');
+}
+$('p-linkedQuote').addEventListener('change', async () => {
+  const id = $('p-linkedQuote').value;
+  if (!id) return;
+  const q = await storageGet('quote:' + id, null);
+  if (q){
+    const breakdown = computeQuoteCostBreakdown(q);
+    $('p-costo').value = breakdown.totalEst.toFixed(2);
+    $('p-precio-tiktok').value = q.finalPrice.toFixed(2);
+    $('p-precio-ml').value = q.finalPrice.toFixed(2);
+    $('p-precio-tiendanube').value = q.finalPrice.toFixed(2);
+    if (!$('p-nombre').value.trim()) $('p-nombre').value = q.name;
+  }
+});
+
+['p-status-tiktok','p-status-ml','p-status-tiendanube'].forEach(id => {
+  $(id).addEventListener('change', () => {
+    $(id + '-motivo').style.display = ($(id).value === 'fallo') ? 'block' : 'none';
+  });
+});
+
+function resetProductForm(){
+  currentProductId = null;
+  $('p-nombre').value=''; $('p-descripcion').value=''; $('p-marca').value='';
+  $('p-costo').value=''; $('p-sku').value=''; $('p-stock').value=1;
+  $('p-precio-tiktok').value=''; $('p-precio-ml').value=''; $('p-precio-tiendanube').value='';
+  $('p-peso').value=''; $('p-largo').value=''; $('p-ancho').value=''; $('p-alto').value='';
+  productImagesTiktok = ['']; productImagesMl = ['']; renderProductImages();
+  $('p-tt-categoria').value = 'colgar'; updateTiktokAttributeFields();
+  $('p-tt-estilo') && ($('p-tt-estilo').value='');
+  $('p-ml-condicion').value='Nuevo'; $('p-ml-codigo').value=''; $('p-ml-codigo-manual').value='';
+  $('p-ml-tipopub').value='Clásica'; $('p-ml-costoenvio').value='A cargo del comprador';
+  $('p-ml-retiro').value='No acepto'; $('p-ml-garantia-tipo').value='Sin garantía';
+  $('p-ml-garantia-tiempo-wrap').style.display='none';
+  $('p-ml-garantia-tiempo').value=''; $('p-ml-garantia-unidad').value='días';
+  $('p-tn-categoria').value=''; $('p-tn-mostrar').value='SI'; $('p-tn-enviogratis').value='NO'; $('p-tn-visibilidad').value='Visible';
+  $('p-status-tiktok').value='pendiente'; $('p-status-tiktok-motivo').value=''; $('p-status-tiktok-motivo').style.display='none';
+  $('p-status-ml').value='pendiente'; $('p-status-ml-motivo').value=''; $('p-status-ml-motivo').style.display='none';
+  $('p-status-tiendanube').value='pendiente'; $('p-status-tiendanube-motivo').value=''; $('p-status-tiendanube-motivo').style.display='none';
+  productVariants = []; $('variantsSwitch').classList.remove('on'); $('variantsBody').classList.remove('show'); $('variantsBody').style.display='none';
+  renderVariants();
+  populateLinkedQuoteOptions(null);
+}
+
+function showProductForm(){ $('productsListPanel').style.display='none'; $('productFormPanel').style.display='block'; }
+function showProductsList(){ $('productsListPanel').style.display='block'; $('productFormPanel').style.display='none'; }
+
+$('newProductBtn').onclick = () => { resetProductForm(); showProductForm(); };
+$('cancelProductBtn').onclick = () => { showProductsList(); };
+
+$('saveProductBtn').onclick = async () => {
+  const nombre = $('p-nombre').value.trim();
+  if (!nombre){ showToast('Ponle un nombre al producto'); return; }
+  const linkedQuoteId = $('p-linkedQuote').value || null;
+  if (!linkedQuoteId){ showToast('Selecciona la cotización de la que viene este producto'); return; }
+  const id = currentProductId || ('prod_' + Date.now());
+  const prevProduct = productsCatalog.find(p => p.id === id);
+  const product = {
+    id, nombre,
+    descripcion: $('p-descripcion').value,
+    marca: $('p-marca').value,
+    costo: +$('p-costo').value || 0,
+    precioTiktok: +$('p-precio-tiktok').value || 0,
+    precioMl: +$('p-precio-ml').value || 0,
+    precioTiendaNube: +$('p-precio-tiendanube').value || 0,
+    sku: $('p-sku').value,
+    stock: +$('p-stock').value || 0,
+    linkedQuoteId,
+    pesoG: +$('p-peso').value || 0,
+    largoCm: +$('p-largo').value || 0,
+    anchoCm: +$('p-ancho').value || 0,
+    altoCm: +$('p-alto').value || 0,
+    imagenesTiktok: productImagesTiktok.filter(u => u && u.trim()),
+    imagenesMl: productImagesMl.filter(u => u && u.trim()),
+    tt: {
+      categoria: $('p-tt-categoria').value,
+      material: $('p-tt-material').value,
+      estilo: $('p-tt-estilo') ? $('p-tt-estilo').value : '',
+      patron: $('p-tt-patron') ? $('p-tt-patron').value : '',
+      caracteristica: $('p-tt-caracteristica') ? $('p-tt-caracteristica').value : ''
+    },
+    ml: {
+      condicion: $('p-ml-condicion').value,
+      codigo: $('p-ml-codigo-manual').value.trim() || $('p-ml-codigo').value,
+      tipoPublicacion: $('p-ml-tipopub').value,
+      costoEnvio: $('p-ml-costoenvio').value,
+      retiro: $('p-ml-retiro').value,
+      garantiaTipo: $('p-ml-garantia-tipo').value,
+      garantiaTiempo: +$('p-ml-garantia-tiempo').value || '',
+      garantiaUnidad: $('p-ml-garantia-unidad').value
+    },
+    tn: {
+      categoria: $('p-tn-categoria').value,
+      mostrar: $('p-tn-mostrar').value,
+      envioGratis: $('p-tn-enviogratis').value,
+      visibilidad: $('p-tn-visibilidad').value
+    },
+    estadoCarga: {
+      tiktok: {estado: $('p-status-tiktok').value, motivo: $('p-status-tiktok-motivo').value},
+      ml: {estado: $('p-status-ml').value, motivo: $('p-status-ml-motivo').value},
+      tiendanube: {estado: $('p-status-tiendanube').value, motivo: $('p-status-tiendanube-motivo').value}
+    },
+    variantes: JSON.parse(JSON.stringify(productVariants)),
+    updatedAt: new Date().toISOString()
+  };
+  productsCatalog = productsCatalog.filter(p => p.id !== id);
+  productsCatalog.push(product);
+  await storageSet('products-list', productsCatalog);
+  productsDriveQueuePush();
+  currentProductId = id;
+  showToast('Producto guardado');
+  showProductsList();
+  renderProductsList();
+};
+
+async function loadProduct(id){
+  const p = productsCatalog.find(x => x.id === id);
+  if (!p) return;
+  currentProductId = p.id;
+  $('p-nombre').value = p.nombre; $('p-descripcion').value = p.descripcion || ''; $('p-marca').value = p.marca || '';
+  $('p-costo').value = p.costo || ''; $('p-sku').value = p.sku || ''; $('p-stock').value = p.stock;
+  $('p-precio-tiktok').value = p.precioTiktok != null ? p.precioTiktok : (p.precio||'');
+  $('p-precio-ml').value = p.precioMl != null ? p.precioMl : (p.precio||'');
+  $('p-precio-tiendanube').value = p.precioTiendaNube != null ? p.precioTiendaNube : (p.precio||'');
+  $('p-peso').value = p.pesoG || ''; $('p-largo').value = p.largoCm || ''; $('p-ancho').value = p.anchoCm || ''; $('p-alto').value = p.altoCm || '';
+  productImagesTiktok = (p.imagenesTiktok && p.imagenesTiktok.length) ? [...p.imagenesTiktok] : (p.imagenes ? [...p.imagenes] : ['']);
+  productImagesMl = (p.imagenesMl && p.imagenesMl.length) ? [...p.imagenesMl] : (p.imagenes ? [...p.imagenes] : ['']);
+  renderProductImages();
+  $('p-tt-categoria').value = p.tt?.categoria || 'colgar';
+  updateTiktokAttributeFields();
+  if ($('p-tt-material')) $('p-tt-material').value = p.tt?.material || '';
+  if ($('p-tt-estilo')) $('p-tt-estilo').value = p.tt?.estilo || '';
+  if ($('p-tt-patron')) $('p-tt-patron').value = p.tt?.patron || '';
+  if ($('p-tt-caracteristica')) $('p-tt-caracteristica').value = p.tt?.caracteristica || '';
+  $('p-ml-condicion').value = p.ml?.condicion || 'Nuevo';
+  $('p-ml-codigo').value=''; $('p-ml-codigo-manual').value = p.ml?.codigo || '';
+  $('p-ml-tipopub').value = p.ml?.tipoPublicacion || 'Clásica';
+  $('p-ml-costoenvio').value = p.ml?.costoEnvio || 'A cargo del comprador';
+  $('p-ml-retiro').value = p.ml?.retiro || 'No acepto';
+  $('p-ml-garantia-tipo').value = p.ml?.garantiaTipo || 'Sin garantía';
+  $('p-ml-garantia-tiempo-wrap').style.display = ($('p-ml-garantia-tipo').value === 'Sin garantía') ? 'none' : 'flex';
+  $('p-ml-garantia-tiempo').value = p.ml?.garantiaTiempo || '';
+  $('p-ml-garantia-unidad').value = p.ml?.garantiaUnidad || 'días';
+  $('p-tn-categoria').value = p.tn?.categoria || '';
+  $('p-tn-mostrar').value = p.tn?.mostrar || 'SI';
+  $('p-tn-enviogratis').value = p.tn?.envioGratis || 'NO';
+  $('p-tn-visibilidad').value = p.tn?.visibilidad || 'Visible';
+  const est = p.estadoCarga || {};
+  $('p-status-tiktok').value = est.tiktok?.estado || 'pendiente';
+  $('p-status-tiktok-motivo').value = est.tiktok?.motivo || '';
+  $('p-status-tiktok-motivo').style.display = ($('p-status-tiktok').value === 'fallo') ? 'block' : 'none';
+  $('p-status-ml').value = est.ml?.estado || 'pendiente';
+  $('p-status-ml-motivo').value = est.ml?.motivo || '';
+  $('p-status-ml-motivo').style.display = ($('p-status-ml').value === 'fallo') ? 'block' : 'none';
+  $('p-status-tiendanube').value = est.tiendanube?.estado || 'pendiente';
+  $('p-status-tiendanube-motivo').value = est.tiendanube?.motivo || '';
+  $('p-status-tiendanube-motivo').style.display = ($('p-status-tiendanube').value === 'fallo') ? 'block' : 'none';
+  productVariants = p.variantes ? JSON.parse(JSON.stringify(p.variantes)) : [];
+  if (productVariants.length){
+    $('variantsSwitch').classList.add('on'); $('variantsBody').classList.add('show'); $('variantsBody').style.display='block';
+  } else {
+    $('variantsSwitch').classList.remove('on'); $('variantsBody').classList.remove('show'); $('variantsBody').style.display='none';
+  }
+  renderVariants();
+  await populateLinkedQuoteOptions(p.linkedQuoteId);
+  showProductForm();
+}
+
+async function duplicateProduct(id){
+  const p = productsCatalog.find(x => x.id === id);
+  if (!p) return;
+  await loadProduct(id);
+  currentProductId = null;
+  $('p-nombre').value = p.nombre + ' (copia)';
+  $('p-sku').value = '';
+  showToast('Duplicado — edita y guarda como nuevo');
+}
+
+async function deleteProduct(id){
+  productsCatalog = productsCatalog.filter(p => p.id !== id);
+  selectedProductIds.delete(id);
+  await storageSet('products-list', productsCatalog);
+  productsDriveQueuePush();
+  renderProductsList();
+  showToast('Producto eliminado');
+}
+
+function statusBadgeHtml(label, est){
+  const estado = est?.estado || 'pendiente';
+  const colorMap = {pendiente: 'var(--muted)', cargado: 'var(--ok)', fallo: 'var(--danger)'};
+  const textMap = {pendiente: 'pendiente', cargado: 'cargado', fallo: 'falló'};
+  const title = (estado === 'fallo' && est?.motivo) ? ` title="${est.motivo.replace(/"/g,'&quot;')}"` : '';
+  return `<span class="platform-badge" style="color:${colorMap[estado]}; border-color:${colorMap[estado]};"${title}>${label}: ${textMap[estado]}</span>`;
+}
+
+function renderProductsList(){
+  const wrap = $('productsList');
+  if (!productsCatalog.length){
+    wrap.innerHTML = '<div class="empty-state">Aún no tienes productos en tu catálogo.<br>Agrega el primero arriba.</div>';
+    return;
+  }
+  wrap.innerHTML = '';
+  productsCatalog.forEach(p => {
+    const div = document.createElement('div');
+    div.className = 'product-item';
+    const checked = selectedProductIds.has(p.id) ? 'checked' : '';
+    div.innerHTML = `
+      <div class="pi-top">
+        <div style="display:flex; gap:10px; align-items:flex-start;">
+          <input type="checkbox" class="p-select" data-id="${p.id}" ${checked} style="margin-top:4px; width:18px; height:18px; accent-color: var(--accent);">
+          <div>
+            <div class="pi-name">${p.nombre}</div>
+            <div class="pi-sub">SKU: ${p.sku || '—'} · Stock: ${p.stock}${p.variantes && p.variantes.length ? ' · ' + p.variantes.length + ' variantes' : ''}</div>
+          </div>
+        </div>
+        <div class="pi-price">${money(p.precioTiktok||0)}</div>
+      </div>
+      <div class="platform-badges">
+        ${statusBadgeHtml('TikTok', p.estadoCarga?.tiktok)}
+        ${statusBadgeHtml('ML', p.estadoCarga?.ml)}
+        ${statusBadgeHtml('T.Nube', p.estadoCarga?.tiendanube)}
+      </div>
+      <div class="pi-actions">
+        <button class="btn btn-small" data-act="edit">Editar</button>
+        <button class="btn btn-small" data-act="dup">Duplicar</button>
+        <button class="btn btn-small btn-danger" data-act="del">Eliminar</button>
+      </div>
+    `;
+    div.querySelector('.p-select').onchange = (e) => {
+      if (e.target.checked) selectedProductIds.add(p.id); else selectedProductIds.delete(p.id);
+    };
+    div.querySelector('[data-act=edit]').onclick = () => loadProduct(p.id);
+    div.querySelector('[data-act=dup]').onclick = () => duplicateProduct(p.id);
+    div.querySelector('[data-act=del]').onclick = () => { if(confirm('¿Eliminar "'+p.nombre+'"?')) deleteProduct(p.id); };
+    wrap.appendChild(div);
+  });
+}
+$('selectAllProductsBtn').onclick = () => { productsCatalog.forEach(p => selectedProductIds.add(p.id)); renderProductsList(); };
+$('selectNoneProductsBtn').onclick = () => { selectedProductIds.clear(); renderProductsList(); };
+
+// ---------- GENERATORS: shared helpers ----------
+function slugify(text){
+  return (text||'').toString().toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
+}
+function csvEscape(val, sep){
+  let s = (val===null||val===undefined) ? '' : String(val);
+  if (s.includes(sep) || s.includes('"') || s.includes('\n')){
+    s = '"' + s.replace(/"/g,'""') + '"';
+  }
+  return s;
+}
+function downloadTextFile(filename, content, mime){
+  const blob = new Blob([content], {type: mime || 'text/plain;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+}
+async function copyToClipboard(text){
+  try{ await navigator.clipboard.writeText(text); showToast('Copiado al portapapeles'); }
+  catch(e){ showToast('No se pudo copiar, descarga el archivo mejor'); }
+}
+function productVariantRows(p, basePrice){
+  // returns list of {nombre1,valor1,nombre2,valor2,sku,stock,precio,imagen}
+  if (p.variantes && p.variantes.length){
+    return p.variantes.map(v => ({
+      nombre1: v.nombre1||'', valor1: v.valor1||'',
+      nombre2: v.nombre2||'', valor2: v.valor2||'',
+      sku: v.sku || p.sku, stock: (v.stock!=null?v.stock:p.stock),
+      precio: (v.precio!=null && v.precio!=='') ? v.precio : basePrice,
+      imagen: v.imagen || (p.imagenes[0]||'')
+    }));
+  }
+  return [{nombre1:'',valor1:'',nombre2:'',valor2:'',sku:p.sku,stock:p.stock,precio:basePrice,imagen:p.imagenes[0]||''}];
+}
+
+function getSelectedProducts(){
+  return productsCatalog.filter(p => selectedProductIds.has(p.id));
+}
+
+async function markProductsStatus(products, platform, estado, motivo){
+  products.forEach(p => {
+    const full = productsCatalog.find(x => x.id === p.id);
+    if (!full) return;
+    if (!full.estadoCarga) full.estadoCarga = {tiktok:{estado:'pendiente',motivo:''}, ml:{estado:'pendiente',motivo:''}, tiendanube:{estado:'pendiente',motivo:''}};
+    full.estadoCarga[platform] = {estado, motivo: motivo||''};
+  });
+  await storageSet('products-list', productsCatalog);
+  productsDriveQueuePush();
+  renderProductsList();
+}
+
+
+// ---------- GENERATOR: TIENDA NUBE (full CSV) ----------
+function generateTiendaNubeCSV(products){
+  const sep = ';';
+  const headers = ['Identificador de URL','Nombre','Categorías','Nombre de propiedad 1','Valor de propiedad 1','Nombre de propiedad 2','Valor de propiedad 2','Nombre de propiedad 3','Valor de propiedad 3','Precio','Precio promocional','Peso (kg)','Alto (cm)','Ancho (cm)','Profundidad (cm)','Stock','SKU','Código de barras','Mostrar en tienda','Envío sin cargo','Descripción','Tags','Título para SEO','Descripción para SEO','Marca','Producto Físico','MPN (Número de pieza del fabricante)','Sexo','Rango de edad','Costo','Visibilidad'];
+  const lines = [headers.join(sep)];
+  products.forEach(p => {
+    const slug = slugify(p.nombre) + (p.sku ? '-'+slugify(p.sku) : '');
+    const rows = productVariantRows(p, p.precioTiendaNube);
+    rows.forEach(v => {
+      const row = [
+        slug, p.nombre, p.tn.categoria,
+        v.nombre1, v.valor1, v.nombre2, v.valor2, '', '',
+        Number(v.precio||0).toFixed(2), '',
+        ((p.pesoG||0)/1000).toFixed(3), p.altoCm||'', p.anchoCm||'', p.largoCm||'',
+        v.stock, v.sku, '',
+        p.tn.mostrar, p.tn.envioGratis,
+        p.descripcion||'', '', '', '',
+        p.marca||'', 'SI', '', '', '',
+        p.costo ? Number(p.costo).toFixed(2) : '',
+        p.tn.visibilidad
+      ];
+      lines.push(row.map(c => csvEscape(c, sep)).join(sep));
+    });
+  });
+  return lines.join('\r\n');
+}
+$('genTiendaNubeBtn').onclick = async () => {
+  const products = getSelectedProducts();
+  if (!products.length){ showToast('Selecciona al menos un producto de la lista'); return; }
+  downloadTextFile('tiendanube-productos.csv', generateTiendaNubeCSV(products), 'text/csv;charset=utf-8');
+  await markProductsStatus(products, 'tiendanube', 'cargado');
+  showToast('Marcados como cargados en Tienda Nube');
+};
+
+// ---------- GENERATOR: TIKTOK SHOP (44-column, .xlsx with header row for reference) ----------
+const TIKTOK_HEADERS = ['category','brand','product_name','product_description','main_image','image_2','image_3','image_4','image_5','image_6','image_7','image_8','image_9','gtin_type','gtin_code','property_name_1','property_value_1','property_1_image','property_name_2','property_value_2','parcel_weight','parcel_length','parcel_width','parcel_height','delivery','price','quantity','seller_sku','minimum_order_quantity','maximum_order_quantity','cumulative_order_quantity','size_chart','Patrón','Ocasión','Estilo','Característica','Forma','Aroma','Material','Configuración','Uso','Cuota','Manual de usuario','Política de garantía'];
+function generateTikTokRows(products){
+  const rows = [];
+  products.forEach(p => {
+    const variantRows = productVariantRows(p, p.precioTiktok);
+    const hasVariants = p.variantes && p.variantes.length > 1;
+    const imgs = (p.imagenesTiktok||[]).slice(0,9);
+    while (imgs.length < 9) imgs.push('');
+    variantRows.forEach((v, idx) => {
+      rows.push([
+        idx===0 ? TT_CATEGORY_LABEL[p.tt.categoria] : '',
+        idx===0 ? (p.marca||'') : '',
+        idx===0 ? p.nombre : '',
+        idx===0 ? (p.descripcion||'') : '',
+        imgs[0],imgs[1],imgs[2],imgs[3],imgs[4],imgs[5],imgs[6],imgs[7],imgs[8],
+        '', '', // gtin type/code
+        hasVariants ? v.nombre1 : '', hasVariants ? v.valor1 : '', hasVariants ? v.imagen : '',
+        hasVariants ? v.nombre2 : '', hasVariants ? v.valor2 : '',
+        p.pesoG||'', p.largoCm||'', p.anchoCm||'', p.altoCm||'',
+        '', // delivery
+        Number(v.precio||0).toFixed(2), v.stock, v.sku,
+        '', '', '', '', // min/max/cumulative order qty, size chart
+        p.tt.patron||'', '', p.tt.estilo||'', p.tt.caracteristica||'', '', '',
+        p.tt.material||'', '', '', '',
+        '', ''
+      ]);
+    });
+  });
+  return rows;
+}
+function downloadXlsx(filename, sheetName, headerRow, dataRows){
+  const ws = XLSX.utils.aoa_to_sheet([headerRow, ...dataRows]);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, sheetName);
+  XLSX.writeFile(wb, filename);
+}
+$('genTikTokFileBtn').onclick = async () => {
+  const products = getSelectedProducts();
+  if (!products.length){ showToast('Selecciona al menos un producto de la lista'); return; }
+  downloadXlsx('tiktok-datos-para-pegar.xlsx', 'Datos', TIKTOK_HEADERS, generateTikTokRows(products));
+  await markProductsStatus(products, 'tiktok', 'cargado');
+  showToast('Marcados como cargados en TikTok Shop');
+};
+$('genTikTokCopyBtn').onclick = async () => {
+  const products = getSelectedProducts();
+  if (!products.length){ showToast('Selecciona al menos un producto de la lista'); return; }
+  const tsv = generateTikTokRows(products).map(r => r.join('\t')).join('\n');
+  await copyToClipboard(tsv);
+  await markProductsStatus(products, 'tiktok', 'cargado');
+};
+
+// ---------- GENERATOR: MERCADOLIBRE (27 columns incl. blank formula cols, .xlsx) ----------
+const ML_HEADERS = ['Título','(fórmula - no tocar)','Condición','Código universal','Fotos','SKU','Stock','Precio','Moneda','Descripción','Ancho (cm)','Alto (cm)','Profundidad (cm)','Peso físico (kg)','Tipo de publicación','(fórmula - no tocar)','Forma de envío','Costo de envío','Retiro en persona','Tipo de garantía','Tiempo de garantía','Unidad de Tiempo de garantía','Tiempo de disponibilidad','Fabricante','Número de pedimento','(fórmula - no tocar)','(fórmula - no tocar)'];
+function generateMLRows(products){
+  const rows = [];
+  products.forEach(p => {
+    const variantRows = productVariantRows(p, p.precioMl);
+    variantRows.forEach(v => {
+      const garantiaTiempo = (p.ml.garantiaTipo !== 'Sin garantía') ? (p.ml.garantiaTiempo||'') : '';
+      const garantiaUnidad = (p.ml.garantiaTipo !== 'Sin garantía') ? p.ml.garantiaUnidad : '';
+      rows.push([
+        p.nombre, // A Título (ML requires same title on every variant row)
+        '', // B formula - leave blank
+        p.ml.condicion, // C
+        p.ml.codigo || 'El producto no tiene código registrado', // D
+        (p.imagenesMl||[]).join(', '), // E Fotos
+        v.sku, // F SKU
+        v.stock, // G Stock
+        Number((p.variantes&&p.variantes.length) ? p.precioMl : v.precio || 0).toFixed(2), // H Precio (same across variants per ML rule)
+        '$', // I Moneda
+        p.descripcion||'', // J
+        p.anchoCm||'', // K Ancho
+        p.altoCm||'', // L Alto
+        p.largoCm||'', // M Profundidad
+        ((p.pesoG||0)/1000).toFixed(3), // N Peso kg
+        p.ml.tipoPublicacion, // O
+        '', // P formula
+        'Mercado Envíos', // Q
+        p.ml.costoEnvio, // R
+        p.ml.retiro, // S
+        p.ml.garantiaTipo, // T
+        garantiaTiempo, // U
+        garantiaUnidad, // V
+        '', // W tiempo disponibilidad
+        p.marca||'', // X Fabricante
+        '', // Y número de pedimento
+        '', // Z formula
+        ''  // AA formula
+      ]);
+    });
+  });
+  return rows;
+}
+$('genMLFileBtn').onclick = async () => {
+  const products = getSelectedProducts();
+  if (!products.length){ showToast('Selecciona al menos un producto de la lista'); return; }
+  downloadXlsx('mercadolibre-datos-para-pegar.xlsx', 'Datos', ML_HEADERS, generateMLRows(products));
+  await markProductsStatus(products, 'ml', 'cargado');
+  showToast('Marcados como cargados en MercadoLibre');
+};
+$('genMLCopyBtn').onclick = async () => {
+  const products = getSelectedProducts();
+  if (!products.length){ showToast('Selecciona al menos un producto de la lista'); return; }
+  const tsv = generateMLRows(products).map(r => r.join('\t')).join('\n');
+  await copyToClipboard(tsv);
+  await markProductsStatus(products, 'ml', 'cargado');
+};
+
 // ---------- SAVE / LOAD QUOTES ----------
 function resetForm(){
   currentQuoteId = null;
@@ -929,6 +1750,7 @@ function switchView(viewId){
   document.querySelector(`.tab-btn[data-view="${viewId}"]`).classList.add('active');
   if (viewId === 'view-history') renderHistory();
   if (viewId === 'view-filaments') renderFilamentCatalog();
+  if (viewId === 'view-products'){ showProductsList(); renderProductsList(); }
 }
 document.querySelectorAll('.tab-btn').forEach(b => b.onclick = () => switchView(b.dataset.view));
 
@@ -983,10 +1805,12 @@ $('importFile').onchange = (e) => {
 // ---------- GOOGLE DRIVE SYNC ----------
 const DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.file';
 const DRIVE_FILENAME = 'cotiza3d-data.json';
+const DRIVE_PRODUCTS_FILENAME = 'cotiza3d-productos.json';
 let googleClientId = localStorage.getItem('cotiza3d_google_client_id') || '';
 let driveTokenClient = null;
 let driveAccessToken = null;
 let driveFileId = localStorage.getItem('cotiza3d_drive_file_id') || null;
+let productsDriveFileId = localStorage.getItem('cotiza3d_drive_products_file_id') || null;
 let driveConnected = false;
 
 function driveSetStatus(text){
@@ -1045,20 +1869,23 @@ async function onDriveTokenResponse(resp){
   $('driveConnectBtn').style.display = 'none';
   $('driveConnectedActions').style.display = 'block';
   await drivePull(true);
+  await productsDrivePull();
 }
 
-async function driveFindFile(){
+async function driveFindFile(filename){
+  filename = filename || DRIVE_FILENAME;
   const url = 'https://www.googleapis.com/drive/v3/files?q=' +
-    encodeURIComponent(`name='${DRIVE_FILENAME}' and trashed=false`) +
+    encodeURIComponent(`name='${filename}' and trashed=false`) +
     '&spaces=drive&fields=files(id,name)';
   const res = await fetch(url, {headers:{Authorization:'Bearer ' + driveAccessToken}});
   const data = await res.json();
   return (data.files && data.files[0]) ? data.files[0].id : null;
 }
 
-async function driveCreateFile(content){
+async function driveCreateFile(content, filename){
+  filename = filename || DRIVE_FILENAME;
   const boundary = 'cotiza3d_boundary';
-  const metadata = {name: DRIVE_FILENAME, mimeType: 'application/json'};
+  const metadata = {name: filename, mimeType: 'application/json'};
   const body =
     `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify(metadata)}\r\n` +
     `--${boundary}\r\nContent-Type: application/json\r\n\r\n${content}\r\n--${boundary}--`;
@@ -1137,6 +1964,48 @@ function driveQueuePush(){
   drivePushTimer = setTimeout(drivePush, 1200);
 }
 
+// ---------- DRIVE SYNC: PRODUCTS CATALOG (separate file) ----------
+async function productsDrivePull(){
+  try{
+    if (!productsDriveFileId) productsDriveFileId = await driveFindFile(DRIVE_PRODUCTS_FILENAME);
+    if (productsDriveFileId){
+      localStorage.setItem('cotiza3d_drive_products_file_id', productsDriveFileId);
+      const text = await driveReadFile(productsDriveFileId);
+      if (text && text.trim()){
+        const data = JSON.parse(text);
+        productsCatalog = data.products || [];
+        await storageSet('products-list', productsCatalog);
+      }
+    } else {
+      productsCatalog = await storageGet('products-list', []);
+      const payload = JSON.stringify({exportedAt: new Date().toISOString(), products: productsCatalog}, null, 2);
+      productsDriveFileId = await driveCreateFile(payload, DRIVE_PRODUCTS_FILENAME);
+      localStorage.setItem('cotiza3d_drive_products_file_id', productsDriveFileId);
+    }
+    if (document.getElementById('view-products').classList.contains('active')) renderProductsList();
+  }catch(e){ console.error('products drive pull error', e); }
+}
+
+async function productsDrivePush(){
+  if (!driveConnected || !driveAccessToken) return;
+  try{
+    const payload = JSON.stringify({exportedAt: new Date().toISOString(), products: productsCatalog}, null, 2);
+    if (!productsDriveFileId) productsDriveFileId = await driveFindFile(DRIVE_PRODUCTS_FILENAME);
+    if (!productsDriveFileId){
+      productsDriveFileId = await driveCreateFile(payload, DRIVE_PRODUCTS_FILENAME);
+      localStorage.setItem('cotiza3d_drive_products_file_id', productsDriveFileId);
+    } else {
+      await driveWriteFile(productsDriveFileId, payload);
+    }
+  }catch(e){ console.error('products drive push error', e); }
+}
+let productsDrivePushTimer = null;
+function productsDriveQueuePush(){
+  if (!driveConnected) return;
+  clearTimeout(productsDrivePushTimer);
+  productsDrivePushTimer = setTimeout(productsDrivePush, 1200);
+}
+
 $('saveClientIdBtn').onclick = () => {
   const val = $('googleClientId').value.trim();
   if (!val.endsWith('.apps.googleusercontent.com')){ showToast('Ese Client ID no se ve completo'); return; }
@@ -1150,8 +2019,8 @@ $('driveConnectBtn').onclick = () => {
   if (!driveTokenClient){ showToast('Primero guarda tu Client ID'); return; }
   driveTokenClient.requestAccessToken({prompt: driveAccessToken ? '' : 'consent'});
 };
-$('drivePullBtn').onclick = () => drivePull(false);
-$('drivePushBtn').onclick = () => drivePush().then(() => showToast('Cambios subidos a Drive'));
+$('drivePullBtn').onclick = () => drivePull(false).then(() => productsDrivePull());
+$('drivePushBtn').onclick = () => Promise.all([drivePush(), productsDrivePush()]).then(() => showToast('Cambios subidos a Drive'));
 $('driveDisconnectBtn').onclick = () => {
   driveConnected = false; driveAccessToken = null;
   $('driveConnectBtn').style.display = 'block';
@@ -1169,6 +2038,7 @@ $('driveDisconnectBtn').onclick = () => {
     if (saved.tiers) settings.tiers = saved.tiers;
   }
   await loadCatalog();
+  productsCatalog = await storageGet('products-list', []);
   fillSettingsForm();
   resetForm();
   renderHistory();
