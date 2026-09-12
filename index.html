@@ -249,7 +249,7 @@ textarea{
     <div class="card">
       <div class="section-head">
         <div class="section-num">2</div>
-        <div class="section-title">Tiempo de impresión y energía</div>
+        <div class="section-title">Tiempo de impresión, energía y desgaste</div>
       </div>
       <div class="row">
         <div>
@@ -263,6 +263,8 @@ textarea{
       </div>
       <label>Precio por kWh ($)</label>
       <input type="number" step="0.01" id="kwhPrice">
+      <label>Costo desgaste / depreciación de máquina ($/hora)</label>
+      <input type="number" step="0.01" id="depreciationRate">
     </div>
 
     <div class="card">
@@ -281,6 +283,7 @@ textarea{
       </div>
       <div class="summary-line"><span class="lbl">Subtotal materiales</span><span id="s-mat">$0.00</span></div>
       <div class="summary-line"><span class="lbl">Subtotal energía</span><span id="s-energy">$0.00</span></div>
+      <div class="summary-line"><span class="lbl">Desgaste / depreciación de máquina</span><span id="s-depreciation">$0.00</span></div>
       <div class="summary-line"><span class="lbl">Subtotal costo directo</span><span id="s-direct">$0.00</span></div>
       <div class="summary-line"><span class="lbl">Mano de obra</span><span id="s-labor">$0.00</span></div>
       <div class="summary-line"><span class="lbl">= Costo base producción</span><span id="s-base">$0.00</span></div>
@@ -597,6 +600,8 @@ textarea{
       <input type="number" step="0.01" id="def-kwh">
       <label>Potencia de impresora por defecto (W)</label>
       <input type="number" step="1" id="def-watts">
+      <label>Costo desgaste / depreciación de máquina por defecto ($/hora)</label>
+      <input type="number" step="0.01" id="def-depreciation">
       <label>Margen de riesgo / fallas por defecto (%)</label>
       <input type="number" step="0.5" id="def-risk">
       <label>Margen de ganancia por defecto (%)</label>
@@ -677,7 +682,7 @@ const $ = id => document.getElementById(id);
 const money = n => '$' + (isFinite(n) ? n : 0).toLocaleString('es-MX', {minimumFractionDigits:2, maximumFractionDigits:2});
 
 let settings = {
-  kwhPrice: 2.5, watts: 200, riskPct: 8, profitPct: 30, ivaPct: 16,
+  kwhPrice: 2.5, watts: 200, depreciationRate: 4.50, riskPct: 8, profitPct: 30, ivaPct: 16,
   isrPct: 2.5, ivaRetPct: 8, mlDivisor: 5000,
   mlCategories: [
     {id:'cat_1', name:'Hogar, Muebles y Jardín', feePct: 13},
@@ -898,7 +903,9 @@ function calculate(){
   const watts = +$('printWatts').value || 0;
   const kwhPrice = +$('kwhPrice').value || 0;
   const energyCost = (watts/1000)*hours*kwhPrice;
-  const directCost = matCost + energyCost;
+  const depreciationRate = +$('depreciationRate').value || 0;
+  const depreciationCost = hours * depreciationRate;
+  const directCost = matCost + energyCost + depreciationCost;
   const labor = +$('laborCost').value || 0;
   const base = directCost + labor;
   const riskPct = +$('riskPct').value || 0;
@@ -913,6 +920,7 @@ function calculate(){
 
   $('s-mat').textContent = money(matCost);
   $('s-energy').textContent = money(energyCost);
+  $('s-depreciation').textContent = money(depreciationCost);
   $('s-direct').textContent = money(directCost);
   $('s-labor').textContent = money(labor);
   $('s-base').textContent = money(base);
@@ -922,7 +930,7 @@ function calculate(){
 
   calculateML(finalPrice);
 
-  return {matCost, energyCost, directCost, labor, base, riskPct, riskAmt, totalEst, profitPct, profitAmt, priceNoIva, ivaPct, ivaAmt, finalPrice};
+  return {matCost, energyCost, depreciationCost, directCost, labor, base, riskPct, riskAmt, totalEst, profitPct, profitAmt, priceNoIva, ivaPct, ivaAmt, finalPrice};
 }
 
 function populateMlCategorySelect(selectedId){
@@ -974,7 +982,7 @@ function calculateML(finalPrice){
   $('ml-listprice').textContent = money(listPrice);
 }
 
-['printHours','printWatts','kwhPrice','laborCost','riskPct','profitPct','ivaPct',
+['printHours','printWatts','kwhPrice','depreciationRate','laborCost','riskPct','profitPct','ivaPct',
  'mlWeight','mlL','mlA','mlH'].forEach(id => $(id).addEventListener('input', calculate));
 $('mlMode').addEventListener('change', calculate);
 $('mlCategory').addEventListener('change', calculate);
@@ -1093,11 +1101,12 @@ $('variantsToggleWrap').onclick = () => {
 function computeQuoteCostBreakdown(q){
   const matCost = (q.filaments||[]).reduce((sum,f) => sum + (f.priceKg/1000)*f.grams, 0);
   const energyCost = ((q.printWatts||0)/1000) * (q.printHours||0) * (q.kwhPrice||0);
-  const directCost = matCost + energyCost;
+  const depreciationCost = (q.printHours||0) * (q.depreciationRate||0);
+  const directCost = matCost + energyCost + depreciationCost;
   const base = directCost + (q.laborCost||0);
   const riskAmt = base * (q.riskPct||0)/100;
   const totalEst = base + riskAmt;
-  return {matCost, energyCost, directCost, base, riskAmt, totalEst};
+  return {matCost, energyCost, depreciationCost, directCost, base, riskAmt, totalEst};
 }
 
 async function populateLinkedQuoteOptions(selectedId){
@@ -1558,6 +1567,7 @@ function resetForm(){
   $('printHours').value = 0;
   $('printWatts').value = settings.watts;
   $('kwhPrice').value = settings.kwhPrice;
+  $('depreciationRate').value = settings.depreciationRate;
   $('laborCost').value = 0;
   $('riskPct').value = settings.riskPct;
   $('profitPct').value = settings.profitPct;
@@ -1579,7 +1589,7 @@ $('saveQuoteBtn').onclick = async () => {
   const quote = {
     id, name, notes: $('qNotes').value,
     filaments: JSON.parse(JSON.stringify(filaments)),
-    printHours: +$('printHours').value, printWatts: +$('printWatts').value, kwhPrice: +$('kwhPrice').value,
+    printHours: +$('printHours').value, printWatts: +$('printWatts').value, kwhPrice: +$('kwhPrice').value, depreciationRate: +$('depreciationRate').value,
     laborCost: +$('laborCost').value, riskPct: +$('riskPct').value, profitPct: +$('profitPct').value, ivaPct: +$('ivaPct').value,
     mlEnabled: $('mlBody').classList.contains('show'),
     mlCategory: $('mlCategory').value,
@@ -1604,7 +1614,7 @@ async function loadQuote(id){
   currentQuoteId = q.id;
   $('qName').value = q.name; $('qNotes').value = q.notes || '';
   filaments = q.filaments || []; renderFilaments();
-  $('printHours').value = q.printHours; $('printWatts').value = q.printWatts; $('kwhPrice').value = q.kwhPrice;
+  $('printHours').value = q.printHours; $('printWatts').value = q.printWatts; $('kwhPrice').value = q.kwhPrice; $('depreciationRate').value = (q.depreciationRate!=null ? q.depreciationRate : settings.depreciationRate);
   $('laborCost').value = q.laborCost; $('riskPct').value = q.riskPct; $('profitPct').value = q.profitPct; $('ivaPct').value = q.ivaPct;
   $('mlWeight').value = q.mlWeight || ''; $('mlL').value = q.mlL||''; $('mlA').value = q.mlA||''; $('mlH').value = q.mlH||'';
   $('mlMode').value = q.mlMode || 'normal';
@@ -1714,6 +1724,7 @@ $('addCategoryBtn').onclick = () => { settings.mlCategories.push({id:'cat_'+Date
 
 function fillSettingsForm(){
   $('def-kwh').value = settings.kwhPrice;
+  $('def-depreciation').value = settings.depreciationRate;
   $('def-watts').value = settings.watts;
   $('def-risk').value = settings.riskPct;
   $('def-profit').value = settings.profitPct;
@@ -1728,6 +1739,7 @@ function fillSettingsForm(){
 
 $('saveSettingsBtn').onclick = async () => {
   settings.kwhPrice = +$('def-kwh').value || 0;
+  settings.depreciationRate = +$('def-depreciation').value || 0;
   settings.watts = +$('def-watts').value || 0;
   settings.riskPct = +$('def-risk').value || 0;
   settings.profitPct = +$('def-profit').value || 0;
