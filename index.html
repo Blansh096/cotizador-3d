@@ -212,11 +212,11 @@ textarea{
 .generate-card .gc-title{font-family:'Fredoka'; font-weight:600; font-size:13.5px; margin-bottom:6px;}
 
 .subtab-bar{display:flex; gap:6px; margin-bottom:14px; flex-wrap:wrap;}
-.subtab-btn{
+.subtab-btn, .settings-subtab-btn, .quote-subtab-btn{
   flex:1; min-width:90px; border:1px solid var(--line); background:var(--panel-alt); color:var(--muted);
   padding:9px 6px; border-radius:20px; font-family:'Fredoka'; font-weight:600; font-size:11.5px; cursor:pointer; text-align:center;
 }
-.subtab-btn.active{background:var(--accent); color:var(--bg); border-color:var(--accent);}
+.subtab-btn.active, .settings-subtab-btn.active, .quote-subtab-btn.active{background:var(--accent); color:var(--bg); border-color:var(--accent);}
 .full-item{
   background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
   padding:14px; margin-bottom:10px; box-shadow:0 4px 14px rgba(214,51,108,0.10);
@@ -264,8 +264,14 @@ textarea{
     </div>
   </div>
 
-  <!-- NUEVA COTIZACION -->
+  <!-- COTIZACION -->
   <div class="view active" id="view-new">
+    <div class="subtab-bar">
+      <button class="quote-subtab-btn active" data-sub="quote-cotizar">Cotizar</button>
+      <button class="quote-subtab-btn" data-sub="quote-historial">Historial</button>
+    </div>
+
+    <div class="quote-sub" id="quote-cotizar">
 
     <div class="card">
       <label>Nombre del producto / cotización</label>
@@ -392,6 +398,10 @@ textarea{
           <option value="gratis">Ofreces envío gratis</option>
           <option value="comprador">Lo paga el comprador</option>
         </select>
+        <div id="mlRepDiscountWrap" style="display:flex; align-items:center; gap:8px; margin-top:10px;">
+          <input type="checkbox" id="mlApplyRepDiscount" checked style="width:18px; height:18px; accent-color:var(--accent); margin:0;">
+          <label style="margin:0; font-size:12.5px;" for="mlApplyRepDiscount">Aplicar mi % de descuento por reputación (<span id="mlRepDiscountPctView">50</span>%, editable en Ajustes)</label>
+        </div>
         <label>Dimensiones del paquete (cm) — largo × ancho × alto</label>
         <div class="row">
           <div><input type="number" step="0.1" id="mlL" placeholder="largo"></div>
@@ -422,6 +432,14 @@ textarea{
 
     <button class="btn btn-accent btn-block" id="saveQuoteBtn" style="padding:13px; font-size:14px;">Guardar cotización</button>
     <button class="btn btn-block" id="newQuoteBtn" style="margin-top:8px;">Limpiar / nueva cotización</button>
+    </div>
+
+    <div class="quote-sub" id="quote-historial" style="display:none;">
+      <div class="card" style="padding:12px 16px;">
+        <input type="text" id="searchQuotes" placeholder="Buscar por nombre...">
+      </div>
+      <div id="historyList"></div>
+    </div>
   </div>
 
   <!-- FILAMENTOS -->
@@ -727,126 +745,133 @@ textarea{
     <div id="salesList"></div>
   </div>
 
-  <!-- HISTORIAL -->
-  <div class="view" id="view-history">
-    <div class="card" style="padding:12px 16px;">
-      <input type="text" id="searchQuotes" placeholder="Buscar por nombre...">
-    </div>
-    <div id="historyList"></div>
-  </div>
-
   <!-- AJUSTES -->
   <div class="view" id="view-settings">
-    <div class="card">
-      <div class="section-title" style="margin-bottom:12px;">Valores por defecto</div>
-      <label>Precio por kWh ($)</label>
-      <input type="number" step="0.01" id="def-kwh">
-      <label>Potencia de impresora por defecto (W)</label>
-      <input type="number" step="1" id="def-watts">
-      <label>Costo desgaste / depreciación de máquina por defecto ($/hora)</label>
-      <input type="number" step="0.01" id="def-depreciation">
-      <label>Margen de riesgo / fallas por defecto (%)</label>
-      <input type="number" step="0.5" id="def-risk">
-      <label>Margen de ganancia por defecto (%)</label>
-      <input type="number" step="1" id="def-profit">
-      <label>IVA por defecto (%)</label>
-      <input type="number" step="0.5" id="def-iva">
+    <div class="subtab-bar">
+      <button class="settings-subtab-btn active" data-sub="settings-general">General</button>
+      <button class="settings-subtab-btn" data-sub="settings-ml">Mercado Libre</button>
+      <button class="settings-subtab-btn" data-sub="settings-sync">Sincronización</button>
     </div>
 
-    <div class="card">
-      <div class="section-title" style="margin-bottom:6px;">Tipos de embalaje</div>
-      <div class="hint" style="margin-bottom:10px;">Agrega cada material (caja, bolsa, plástico burbuja, cinta...) con su precio total y cuántas piezas rinde ese paquete — calculamos el costo por pieza solo.</div>
-      <div id="packagingTypesList"></div>
-      <button class="btn btn-small" id="addPackagingTypeBtn">+ agregar tipo de embalaje</button>
+    <!-- Sub: General -->
+    <div class="settings-sub" id="settings-general">
+      <div class="card">
+        <div class="section-title" style="margin-bottom:12px;">Valores por defecto</div>
+        <label>Precio por kWh ($)</label>
+        <input type="number" step="0.01" id="def-kwh">
+        <label>Potencia de impresora por defecto (W)</label>
+        <input type="number" step="1" id="def-watts">
+        <label>Costo desgaste / depreciación de máquina por defecto ($/hora)</label>
+        <input type="number" step="0.01" id="def-depreciation">
+        <label>Margen de riesgo / fallas por defecto (%)</label>
+        <input type="number" step="0.5" id="def-risk">
+        <label>Margen de ganancia por defecto (%)</label>
+        <input type="number" step="1" id="def-profit">
+        <label>IVA por defecto (%)</label>
+        <input type="number" step="0.5" id="def-iva">
+      </div>
+
+      <div class="card">
+        <div class="section-title" style="margin-bottom:6px;">Tipos de embalaje</div>
+        <div class="hint" style="margin-bottom:10px;">Agrega cada material (caja, bolsa, plástico burbuja, cinta...) con su precio total y cuántas piezas rinde ese paquete — calculamos el costo por pieza solo.</div>
+        <div id="packagingTypesList"></div>
+        <button class="btn btn-small" id="addPackagingTypeBtn">+ agregar tipo de embalaje</button>
+      </div>
     </div>
 
-    <div class="card">
-      <div class="section-title" style="margin-bottom:6px;">Mercado Libre — retenciones fijas</div>
-      <label>Retención de ISR (%)</label>
-      <input type="number" step="0.1" id="def-isr">
-      <label>Retención de IVA (%)</label>
-      <input type="number" step="0.1" id="def-ivaret">
-      <label>IVA que ML asume incluido en el precio (%)</label>
-      <input type="number" step="0.1" id="def-iva-embebido">
-      <div class="hint" style="margin-top:4px;">ML calcula las retenciones sobre el precio ya sin este IVA (precio ÷ 1 + este %), no sobre el precio completo.</div>
-      <label style="margin-top:14px;">% de descuento en envío por tu nivel de reputación (al ofrecer envío gratis)</label>
-      <input type="number" step="1" id="def-ml-ship-discount">
-      <div class="hint" style="margin-top:4px;">Se aplica sobre el costo nominal de tu tabla de envíos cuando ofreces envío gratis. Ajústalo si tu descuento real cambia.</div>
-      <label style="margin-top:14px;">Divisor volumétrico (ML usa 5000 o 6000 según categoría)</label>
-      <input type="number" step="1" id="def-ml-divisor">
+    <!-- Sub: Mercado Libre -->
+    <div class="settings-sub" id="settings-ml" style="display:none;">
+      <div class="card">
+        <div class="section-title" style="margin-bottom:6px;">Retenciones fijas</div>
+        <label>Retención de ISR (%)</label>
+        <input type="number" step="0.1" id="def-isr">
+        <label>Retención de IVA (%)</label>
+        <input type="number" step="0.1" id="def-ivaret">
+        <label>IVA que ML asume incluido en el precio (%)</label>
+        <input type="number" step="0.1" id="def-iva-embebido">
+        <div class="hint" style="margin-top:4px;">ML calcula las retenciones sobre el precio ya sin este IVA (precio ÷ 1 + este %), no sobre el precio completo.</div>
+        <label style="margin-top:14px;">% de descuento en envío por tu nivel de reputación (al ofrecer envío gratis)</label>
+        <input type="number" step="1" id="def-ml-ship-discount">
+        <div class="hint" style="margin-top:4px;">Se aplica sobre el costo nominal de tu tabla de envíos cuando ofreces envío gratis. Ajústalo si tu descuento real cambia.</div>
+        <label style="margin-top:14px;">Divisor volumétrico (ML usa 5000 o 6000 según categoría)</label>
+        <input type="number" step="1" id="def-ml-divisor">
+      </div>
+
+      <div class="card">
+        <div class="section-title" style="margin-bottom:6px;">Categorías y comisión</div>
+        <div id="categoryList"></div>
+        <button class="btn btn-small" id="addCategoryBtn">+ agregar categoría</button>
+        <div class="hint">Cada categoría de ML cobra una comisión distinta. Agrega aquí las que uses, con su % real.</div>
+      </div>
+
+      <div class="card">
+        <div class="section-title" style="margin-bottom:6px;">Tabla de envíos</div>
+        <label>Tabla de envíos por peso facturable</label>
+        <div id="tierList"></div>
+        <button class="btn btn-small" id="addTierBtn">+ agregar rango</button>
+        <div class="hint">Cuando tengas las capturas de las tablas oficiales de ML, mándamelas y ajustamos estos rangos juntos.</div>
+      </div>
+
+      <div class="card">
+        <div class="section-title" style="margin-bottom:6px;">Tarifas de FULL</div>
+        <div class="hint" style="margin-bottom:10px;">Según las tablas oficiales de ML. Los tamaños y umbrales son fijos, pero puedes actualizar las tarifas si ML las cambia.</div>
+        <div id="fullRatesList"></div>
+      </div>
     </div>
 
-    <div class="card">
-      <div class="section-title" style="margin-bottom:6px;">Mercado Libre — categorías y comisión</div>
-      <div id="categoryList"></div>
-      <button class="btn btn-small" id="addCategoryBtn">+ agregar categoría</button>
-      <div class="hint">Cada categoría de ML cobra una comisión distinta. Agrega aquí las que uses, con su % real.</div>
-    </div>
+    <!-- Sub: Sincronización -->
+    <div class="settings-sub" id="settings-sync" style="display:none;">
+      <div class="card">
+        <div class="section-title" style="margin-bottom:6px;">Sincronización automática con Google Drive</div>
+        <div class="hint" style="margin-bottom:10px;">Esto guarda tu información en un archivo de tu propio Google Drive y la sincroniza sola entre tus dispositivos. Necesitas pegar aquí un "Client ID" que se genera una sola vez en Google Cloud Console (te dejo la guía completa después de esta configuración).</div>
+        <label>Client ID de Google (termina en .apps.googleusercontent.com)</label>
+        <input type="text" id="googleClientId" placeholder="xxxxxxxx.apps.googleusercontent.com">
+        <button class="btn btn-block" id="saveClientIdBtn" style="margin-top:8px;">Guardar Client ID</button>
 
-    <div class="card">
-      <div class="section-title" style="margin-bottom:6px;">Mercado Libre — tabla de envíos</div>
-      <label>Tabla de envíos por peso facturable</label>
-      <div id="tierList"></div>
-      <button class="btn btn-small" id="addTierBtn">+ agregar rango</button>
-      <div class="hint">Cuando tengas las capturas de las tablas oficiales de ML, mándamelas y ajustamos estos rangos juntos.</div>
-    </div>
-
-    <div class="card">
-      <div class="section-title" style="margin-bottom:6px;">Mercado Libre — tarifas de FULL</div>
-      <div class="hint" style="margin-bottom:10px;">Según las tablas oficiales de ML. Los tamaños y umbrales son fijos, pero puedes actualizar las tarifas si ML las cambia.</div>
-      <div id="fullRatesList"></div>
-    </div>
-
-    <div class="card">
-      <div class="section-title" style="margin-bottom:6px;">Sincronización automática con Google Drive</div>
-      <div class="hint" style="margin-bottom:10px;">Esto guarda tu información en un archivo de tu propio Google Drive y la sincroniza sola entre tus dispositivos. Necesitas pegar aquí un "Client ID" que se genera una sola vez en Google Cloud Console (te dejo la guía completa después de esta configuración).</div>
-      <label>Client ID de Google (termina en .apps.googleusercontent.com)</label>
-      <input type="text" id="googleClientId" placeholder="xxxxxxxx.apps.googleusercontent.com">
-      <button class="btn btn-block" id="saveClientIdBtn" style="margin-top:8px;">Guardar Client ID</button>
-
-      <div id="driveConnectSection" style="margin-top:14px; display:none;">
-        <div class="summary-line"><span class="lbl">Estado</span><span id="driveStatus">sin conectar</span></div>
-        <button class="btn btn-accent btn-block" id="driveConnectBtn">🔗 Conectar con Google Drive</button>
-        <div id="driveConnectedActions" style="display:none; margin-top:8px;">
-          <div class="row">
-            <button class="btn" id="drivePullBtn">⬇ Actualizar desde Drive</button>
-            <button class="btn" id="drivePushBtn">⬆ Subir cambios ahora</button>
+        <div id="driveConnectSection" style="margin-top:14px; display:none;">
+          <div class="summary-line"><span class="lbl">Estado</span><span id="driveStatus">sin conectar</span></div>
+          <button class="btn btn-accent btn-block" id="driveConnectBtn">🔗 Conectar con Google Drive</button>
+          <div id="driveConnectedActions" style="display:none; margin-top:8px;">
+            <div class="row">
+              <button class="btn" id="drivePullBtn">⬇ Actualizar desde Drive</button>
+              <button class="btn" id="drivePushBtn">⬆ Subir cambios ahora</button>
+            </div>
+            <button class="btn btn-danger btn-block" id="driveDisconnectBtn" style="margin-top:8px;">Desconectar</button>
           </div>
-          <button class="btn btn-danger btn-block" id="driveDisconnectBtn" style="margin-top:8px;">Desconectar</button>
         </div>
       </div>
-    </div>
 
-    <div class="card">
-      <div class="section-title" style="margin-bottom:6px;">Respaldo manual (siempre disponible)</div>
-      <div class="hint" style="margin-bottom:10px;">Útil como plan B, para mover datos entre dispositivos, o para probar cambios aquí antes de subirlos a tu sitio real (Drive no funciona en esta vista previa).</div>
+      <div class="card">
+        <div class="section-title" style="margin-bottom:6px;">Respaldo manual (siempre disponible)</div>
+        <div class="hint" style="margin-bottom:10px;">Útil como plan B, para mover datos entre dispositivos, o para probar cambios aquí antes de subirlos a tu sitio real (Drive no funciona en esta vista previa). Se guardan tus ajustes pendientes automáticamente antes de cada descarga.</div>
 
-      <div class="subsection" style="margin-top:0; padding-top:0; border-top:none;">
-        <div class="subsection-title">Cotizaciones, filamentos y ajustes</div>
-        <button class="btn btn-block" id="exportBtn">⬇ Descargar JSON</button>
-        <label style="margin-top:10px;">Importar (reemplaza cotizaciones/filamentos/ajustes actuales)</label>
-        <input type="file" id="importFile" accept="application/json">
-      </div>
+        <div class="subsection" style="margin-top:0; padding-top:0; border-top:none;">
+          <div class="subsection-title">Cotizaciones, filamentos y ajustes</div>
+          <button class="btn btn-block" id="exportBtn">⬇ Descargar JSON</button>
+          <label style="margin-top:10px;">Importar (reemplaza cotizaciones/filamentos/ajustes actuales)</label>
+          <input type="file" id="importFile" accept="application/json">
+        </div>
 
-      <div class="subsection">
-        <div class="subsection-title">Catálogo de productos</div>
-        <button class="btn btn-block" id="exportProductsBtn">⬇ Descargar JSON</button>
-        <label style="margin-top:10px;">Importar (reemplaza tu catálogo actual)</label>
-        <input type="file" id="importProductsFile" accept="application/json">
-      </div>
+        <div class="subsection">
+          <div class="subsection-title">Catálogo de productos</div>
+          <button class="btn btn-block" id="exportProductsBtn">⬇ Descargar JSON</button>
+          <label style="margin-top:10px;">Importar (reemplaza tu catálogo actual)</label>
+          <input type="file" id="importProductsFile" accept="application/json">
+        </div>
 
-      <div class="subsection">
-        <div class="subsection-title">Datos de FULL (envíos y proyecciones)</div>
-        <button class="btn btn-block" id="exportFullBtn">⬇ Descargar JSON</button>
-        <label style="margin-top:10px;">Importar (reemplaza tus envíos/proyecciones de FULL)</label>
-        <input type="file" id="importFullFile" accept="application/json">
-      </div>
+        <div class="subsection">
+          <div class="subsection-title">Datos de FULL (envíos y proyecciones)</div>
+          <button class="btn btn-block" id="exportFullBtn">⬇ Descargar JSON</button>
+          <label style="margin-top:10px;">Importar (reemplaza tus envíos/proyecciones de FULL)</label>
+          <input type="file" id="importFullFile" accept="application/json">
+        </div>
 
-      <div class="subsection">
-        <div class="subsection-title">Ventas</div>
-        <button class="btn btn-block" id="exportSalesBtn">⬇ Descargar JSON</button>
-        <label style="margin-top:10px;">Importar (reemplaza tus ventas actuales)</label>
-        <input type="file" id="importSalesFile" accept="application/json">
+        <div class="subsection">
+          <div class="subsection-title">Ventas</div>
+          <button class="btn btn-block" id="exportSalesBtn">⬇ Descargar JSON</button>
+          <label style="margin-top:10px;">Importar (reemplaza tus ventas actuales)</label>
+          <input type="file" id="importSalesFile" accept="application/json">
+        </div>
       </div>
     </div>
 
@@ -855,12 +880,11 @@ textarea{
 </div>
 
 <div class="tabbar">
-  <button class="tab-btn active" data-view="view-new"><span>Nueva</span><span class="dot"></span></button>
+  <button class="tab-btn active" data-view="view-new"><span>Cotización</span><span class="dot"></span></button>
   <button class="tab-btn" data-view="view-filaments"><span>Filamentos</span><span class="dot"></span></button>
-  <button class="tab-btn" data-view="view-products"><span>Catálogo</span><span class="dot"></span></button>
+  <button class="tab-btn" data-view="view-products"><span>E-Commerce</span><span class="dot"></span></button>
   <button class="tab-btn" data-view="view-full"><span>FULL</span><span class="dot"></span></button>
   <button class="tab-btn" data-view="view-sales"><span>Ventas</span><span class="dot"></span></button>
-  <button class="tab-btn" data-view="view-history"><span>Historial</span><span class="dot"></span></button>
   <button class="tab-btn" data-view="view-settings"><span>Ajustes</span><span class="dot"></span></button>
 </div>
 
@@ -1203,8 +1227,11 @@ function calculateML(finalPrice){
   if (sortedTiers.length && billW > sortedTiers[sortedTiers.length-1].max) nominalShip = sortedTiers[sortedTiers.length-1].cost;
 
   let shipCost = 0;
+  const applyRepDiscount = $('mlApplyRepDiscount').checked;
+  $('mlRepDiscountPctView').textContent = settings.mlShippingDiscountPct || 0;
+  $('mlRepDiscountWrap').style.display = (mode !== 'full' && quienPaga === 'gratis') ? 'flex' : 'none';
   if (mode !== 'full'){
-    if (quienPaga === 'gratis') shipCost = nominalShip * (1 - (settings.mlShippingDiscountPct||0)/100);
+    if (quienPaga === 'gratis') shipCost = nominalShip * (applyRepDiscount ? (1 - (settings.mlShippingDiscountPct||0)/100) : 1);
     else shipCost = 0; // lo paga el comprador: no le cuesta al vendedor
   }
 
@@ -1215,7 +1242,7 @@ function calculateML(finalPrice){
 
   // precio sugerido para conservar el margen de la cotización (usa finalPrice como "recibes" objetivo)
   const effectiveTaxRate = (isrPct + ivaRetPct)/100 / (1 + ivaEmbebidoPct/100);
-  const shipForSuggested = (mode !== 'full' && quienPaga === 'gratis') ? nominalShip * (1 - (settings.mlShippingDiscountPct||0)/100) : 0;
+  const shipForSuggested = (mode !== 'full' && quienPaga === 'gratis') ? nominalShip * (applyRepDiscount ? (1 - (settings.mlShippingDiscountPct||0)/100) : 1) : 0;
   const factor = 1 - feePct/100 - effectiveTaxRate;
   const listPrice = factor > 0 ? (finalPrice + shipForSuggested) / factor : 0;
 
@@ -1242,6 +1269,7 @@ $('mlUseSuggestedBtn').addEventListener('click', (e) => {
 });
 $('mlSimPrice').addEventListener('input', () => calculateML(lastCalc ? lastCalc.finalPrice : 0));
 $('mlQuienPaga').addEventListener('change', () => calculateML(lastCalc ? lastCalc.finalPrice : 0));
+$('mlApplyRepDiscount').addEventListener('change', () => calculateML(lastCalc ? lastCalc.finalPrice : 0));
 
 ['printHours','printWatts','kwhPrice','depreciationRate','laborCost','riskPct','profitPct','ivaPct',
  'mlWeight','mlL','mlA','mlH'].forEach(id => $(id).addEventListener('input', calculate));
@@ -1877,6 +1905,24 @@ async function saveFullState(){
   fulfillmentDriveQueuePush();
 }
 
+// ---------- QUOTE VIEW: SUB-TAB SWITCHING ----------
+function showQuoteSubtab(id){
+  document.querySelectorAll('.quote-subtab-btn').forEach(x => x.classList.remove('active'));
+  document.querySelectorAll('.quote-sub').forEach(x => x.style.display = 'none');
+  document.querySelector(`.quote-subtab-btn[data-sub="${id}"]`).classList.add('active');
+  $(id).style.display = 'block';
+  if (id === 'quote-historial') renderHistory();
+}
+document.querySelectorAll('.quote-subtab-btn').forEach(b => b.onclick = () => showQuoteSubtab(b.dataset.sub));
+
+// ---------- SETTINGS: SUB-TAB SWITCHING ----------
+document.querySelectorAll('.settings-subtab-btn').forEach(b => b.onclick = () => {
+  document.querySelectorAll('.settings-subtab-btn').forEach(x => x.classList.remove('active'));
+  document.querySelectorAll('.settings-sub').forEach(x => x.style.display = 'none');
+  b.classList.add('active');
+  $(b.dataset.sub).style.display = 'block';
+});
+
 // ---------- FULL: SUB-TAB SWITCHING ----------
 document.querySelectorAll('.subtab-btn').forEach(b => b.onclick = () => {
   document.querySelectorAll('.subtab-btn').forEach(x => x.classList.remove('active'));
@@ -2253,6 +2299,7 @@ function resetForm(){
   $('mlWeight').value=''; $('mlL').value=''; $('mlA').value=''; $('mlH').value='';
   $('mlMode').value = 'normal';
   $('mlQuienPaga').value = 'gratis';
+  $('mlApplyRepDiscount').checked = true;
   $('mlSimPrice').value = '';
   populateMlCategorySelect(settings.mlCategories[0] ? settings.mlCategories[0].id : null);
   calculate();
@@ -2273,7 +2320,7 @@ $('saveQuoteBtn').onclick = async () => {
     laborCost: +$('laborCost').value, riskPct: +$('riskPct').value, profitPct: +$('profitPct').value, ivaPct: +$('ivaPct').value,
     mlEnabled: $('mlBody').classList.contains('show'),
     mlCategory: $('mlCategory').value,
-    mlWeight: +$('mlWeight').value || 0, mlL: +$('mlL').value||0, mlA: +$('mlA').value||0, mlH: +$('mlH').value||0, mlMode: $('mlMode').value, mlQuienPaga: $('mlQuienPaga').value,
+    mlWeight: +$('mlWeight').value || 0, mlL: +$('mlL').value||0, mlA: +$('mlA').value||0, mlH: +$('mlH').value||0, mlMode: $('mlMode').value, mlQuienPaga: $('mlQuienPaga').value, mlApplyRepDiscount: $('mlApplyRepDiscount').checked,
     finalPrice: calc.finalPrice,
     updatedAt: new Date().toISOString()
   };
@@ -2300,6 +2347,7 @@ async function loadQuote(id){
   $('mlWeight').value = q.mlWeight || ''; $('mlL').value = q.mlL||''; $('mlA').value = q.mlA||''; $('mlH').value = q.mlH||'';
   $('mlMode').value = q.mlMode || 'normal';
   $('mlQuienPaga').value = q.mlQuienPaga || 'gratis';
+  $('mlApplyRepDiscount').checked = q.mlApplyRepDiscount != null ? q.mlApplyRepDiscount : true;
   $('mlSimPrice').value = '';
   populateMlCategorySelect(q.mlCategory);
   if (q.mlEnabled){ $('mlSwitch').classList.add('on'); $('mlBody').classList.add('show'); }
@@ -2462,7 +2510,7 @@ function fillSettingsForm(){
   $('settingsGlance').textContent = 'kWh $' + settings.kwhPrice + ' · IVA ' + settings.ivaPct + '%';
 }
 
-$('saveSettingsBtn').onclick = async () => {
+async function persistSettingsFromForm(){
   settings.kwhPrice = +$('def-kwh').value || 0;
   settings.depreciationRate = +$('def-depreciation').value || 0;
   settings.watts = +$('def-watts').value || 0;
@@ -2476,6 +2524,10 @@ $('saveSettingsBtn').onclick = async () => {
   settings.mlDivisor = +$('def-ml-divisor').value || 5000;
   await storageSet('settings', settings);
   driveQueuePush();
+}
+
+$('saveSettingsBtn').onclick = async () => {
+  await persistSettingsFromForm();
   fillSettingsForm();
   populateMlCategorySelect($('mlCategory').value);
   showToast('Ajustes guardados');
@@ -2487,7 +2539,7 @@ function switchView(viewId){
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   $(viewId).classList.add('active');
   document.querySelector(`.tab-btn[data-view="${viewId}"]`).classList.add('active');
-  if (viewId === 'view-history') renderHistory();
+  if (viewId === 'view-new') showQuoteSubtab('quote-cotizar');
   if (viewId === 'view-filaments') renderFilamentCatalog();
   if (viewId === 'view-products'){ showProductsList(); renderProductsList(); }
   if (viewId === 'view-full'){ renderFullEligible(); }
@@ -2501,6 +2553,7 @@ document.querySelectorAll('.tab-btn').forEach(b => b.onclick = () => switchView(
 
 // ---------- BACKUP: EXPORT / IMPORT ----------
 $('exportBtn').onclick = async () => {
+  await persistSettingsFromForm();
   const backup = {
     exportedAt: new Date().toISOString(),
     settings: await storageGet('settings', settings),
@@ -2548,6 +2601,7 @@ $('importFile').onchange = (e) => {
 };
 
 $('exportProductsBtn').onclick = async () => {
+  await persistSettingsFromForm();
   const backup = {
     exportedAt: new Date().toISOString(),
     products: await storageGet('products-list', [])
@@ -2578,6 +2632,7 @@ $('importProductsFile').onchange = (e) => {
 };
 
 $('exportFullBtn').onclick = async () => {
+  await persistSettingsFromForm();
   const backup = {
     exportedAt: new Date().toISOString(),
     fullShipments: await storageGet('full-shipments', []),
@@ -2610,6 +2665,7 @@ $('importFullFile').onchange = (e) => {
 };
 
 $('exportSalesBtn').onclick = async () => {
+  await persistSettingsFromForm();
   const backup = {
     exportedAt: new Date().toISOString(),
     sales: await storageGet('ventas-list', [])
