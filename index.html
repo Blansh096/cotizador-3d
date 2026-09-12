@@ -124,10 +124,11 @@ input:disabled{opacity:0.6;}
 .tabbar{
   position:fixed; bottom:0; left:0; right:0; background:var(--panel);
   border-top:1px solid var(--line); display:flex; z-index:10;
+  overflow-x:auto; -webkit-overflow-scrolling:touch;
 }
 .tabbar button{
-  flex:1; background:none; border:none; color:var(--muted); padding:12px 4px 10px;
-  font-family:'Fredoka'; font-size:11px; font-weight:600; cursor:pointer;
+  flex:0 0 auto; min-width:66px; background:none; border:none; color:var(--muted); padding:10px 6px 8px;
+  font-family:'Fredoka'; font-size:10px; font-weight:600; cursor:pointer;
   display:flex; flex-direction:column; align-items:center; gap:3px;
 }
 .tabbar button.active{color:var(--accent);}
@@ -209,6 +210,44 @@ textarea{
   border:1px dashed var(--line); border-radius:12px; padding:12px; margin-bottom:10px;
 }
 .generate-card .gc-title{font-family:'Fredoka'; font-weight:600; font-size:13.5px; margin-bottom:6px;}
+
+.subtab-bar{display:flex; gap:6px; margin-bottom:14px; flex-wrap:wrap;}
+.subtab-btn{
+  flex:1; min-width:90px; border:1px solid var(--line); background:var(--panel-alt); color:var(--muted);
+  padding:9px 6px; border-radius:20px; font-family:'Fredoka'; font-weight:600; font-size:11.5px; cursor:pointer; text-align:center;
+}
+.subtab-btn.active{background:var(--accent); color:var(--bg); border-color:var(--accent);}
+.full-item{
+  background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
+  padding:14px; margin-bottom:10px; box-shadow:0 4px 14px rgba(214,51,108,0.10);
+}
+.full-item .fi-name{font-family:'Fredoka'; font-weight:600; font-size:14px;}
+.full-item .fi-row{display:flex; justify-content:space-between; font-size:12.5px; padding:3px 0; color:var(--muted);}
+.full-item .fi-row b{color:var(--text); font-weight:600;}
+.full-warning{
+  margin-top:8px; padding:8px 10px; border-radius:8px; background:rgba(224,69,123,0.12);
+  border:1px solid var(--danger); color:var(--danger); font-size:11.5px;
+}
+.sale-item{
+  background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
+  padding:14px; margin-bottom:10px; box-shadow:0 4px 14px rgba(214,51,108,0.10);
+}
+.sale-item .si-top{display:flex; justify-content:space-between; align-items:flex-start;}
+.sale-item .si-name{font-family:'Fredoka'; font-weight:600; font-size:14px;}
+.sale-item .si-sub{font-size:11px; color:var(--muted); margin-top:2px;}
+.sale-item .si-profit{font-family:'Fredoka'; font-weight:700; font-size:15px;}
+
+.chip-wrap{display:flex; flex-wrap:wrap; gap:8px; margin:10px 0;}
+.chip{
+  display:flex; align-items:center; gap:6px; background:var(--panel-alt); border:1px solid var(--line);
+  border-radius:20px; padding:6px 8px 6px 14px; font-size:12.5px;
+}
+.chip .chip-cost{color:var(--money); font-weight:600;}
+.chip .chip-x{
+  background:var(--line); color:var(--text); border:none; border-radius:50%;
+  width:18px; height:18px; font-size:11px; line-height:1; cursor:pointer; display:flex; align-items:center; justify-content:center;
+}
+.chip .chip-x:hover{background:var(--danger); color:#fff;}
 </style>
 </head>
 <body>
@@ -249,6 +288,24 @@ textarea{
     <div class="card">
       <div class="section-head">
         <div class="section-num">2</div>
+        <div class="section-title">Embalaje</div>
+      </div>
+      <div class="row">
+        <div style="flex:2;">
+          <label>Tipo de embalaje</label>
+          <select id="packagingSelect"></select>
+        </div>
+        <div style="flex:1; display:flex; align-items:flex-end;">
+          <button class="btn btn-accent btn-block" id="addPackagingBtn">+ Agregar</button>
+        </div>
+      </div>
+      <div class="chip-wrap" id="packagingChips"></div>
+      <div class="hint" id="noPackagingHint" style="display:none;">Aún no tienes tipos de embalaje. Agrégalos en Ajustes.</div>
+    </div>
+
+    <div class="card">
+      <div class="section-head">
+        <div class="section-num">3</div>
         <div class="section-title">Tiempo de impresión, energía y desgaste</div>
       </div>
       <div class="row">
@@ -269,7 +326,7 @@ textarea{
 
     <div class="card">
       <div class="section-head">
-        <div class="section-num">3</div>
+        <div class="section-num">4</div>
         <div class="section-title">Mano de obra</div>
       </div>
       <label>Costo operativo / mano de obra ($, monto fijo)</label>
@@ -278,10 +335,11 @@ textarea{
 
     <div class="card">
       <div class="section-head">
-        <div class="section-num">4</div>
+        <div class="section-num">5</div>
         <div class="section-title">Resumen y precio de venta</div>
       </div>
       <div class="summary-line"><span class="lbl">Subtotal materiales</span><span id="s-mat">$0.00</span></div>
+      <div class="summary-line"><span class="lbl">Subtotal embalaje</span><span id="s-packaging">$0.00</span></div>
       <div class="summary-line"><span class="lbl">Subtotal energía</span><span id="s-energy">$0.00</span></div>
       <div class="summary-line"><span class="lbl">Desgaste / depreciación de máquina</span><span id="s-depreciation">$0.00</span></div>
       <div class="summary-line"><span class="lbl">Subtotal costo directo</span><span id="s-direct">$0.00</span></div>
@@ -307,7 +365,7 @@ textarea{
     <div class="card">
       <div class="ml-toggle-wrap" id="mlToggleWrap">
         <div class="section-head" style="margin-bottom:0">
-          <div class="section-num">5</div>
+          <div class="section-num">6</div>
           <div class="section-title">Mercado Libre (opcional)</div>
         </div>
         <div class="switch" id="mlSwitch"></div>
@@ -322,13 +380,18 @@ textarea{
             <input type="number" step="1" id="mlWeight">
           </div>
           <div>
-            <label>Modalidad de envío</label>
+            <label>Modalidad</label>
             <select id="mlMode">
-              <option value="normal">Envío por mí</option>
+              <option value="normal">Mercado Envíos (por mí)</option>
               <option value="full">FULL</option>
             </select>
           </div>
         </div>
+        <label>¿Quién paga el envío?</label>
+        <select id="mlQuienPaga">
+          <option value="gratis">Ofreces envío gratis</option>
+          <option value="comprador">Lo paga el comprador</option>
+        </select>
         <label>Dimensiones del paquete (cm) — largo × ancho × alto</label>
         <div class="row">
           <div><input type="number" step="0.1" id="mlL" placeholder="largo"></div>
@@ -337,13 +400,23 @@ textarea{
         </div>
         <div class="summary-line"><span class="lbl">Peso volumétrico</span><span id="ml-volw">0.00 kg</span></div>
         <div class="summary-line"><span class="lbl">Peso facturable (mayor de los dos)</span><span id="ml-billw">0.00 kg</span></div>
-        <div class="summary-line"><span class="lbl">Comisión ML (<span id="ml-feepct-view">-</span>%)</span><span id="ml-fee">$0.00</span></div>
-        <div class="summary-line"><span class="lbl">Retención ISR (<span id="ml-isr-view">-</span>%)</span><span id="ml-isr">$0.00</span></div>
-        <div class="summary-line"><span class="lbl">Retención IVA (<span id="ml-ivaret-view">-</span>%)</span><span id="ml-ivaret">$0.00</span></div>
-        <div class="summary-line"><span class="lbl">Costo de envío estimado</span><span id="ml-ship">$0.00</span></div>
-        <div class="summary-line"><span class="lbl">Neto si publicas al precio sugerido</span><span id="ml-net">$0.00</span></div>
-        <div class="summary-line total"><span class="lbl">Precio a publicar en ML para conservar margen</span><span id="ml-listprice">$0.00</span></div>
-        <div class="hint">Comisión según categoría, envío según tabla de peso — ambas editables en Ajustes. ISR e IVA son retenciones estimadas que Mercado Libre aplica como plataforma digital; confírmalas con tu contador si tu régimen fiscal cambia. FULL sigue sin costo de envío calculado aquí hasta que tengamos sus tablas.</div>
+
+        <div class="subsection">
+          <label>Precio a simular en ML <button class="btn btn-small" id="mlUseSuggestedBtn" style="float:right; padding:3px 8px;">usar precio sugerido</button></label>
+          <input type="number" step="0.01" id="mlSimPrice">
+        </div>
+
+        <div class="summary-line" style="margin-top:10px;"><span class="lbl">Precio</span><span id="ml-precio">$0.00</span></div>
+        <div class="summary-line"><span class="lbl">Cargo por venta (<span id="ml-feepct-view">-</span>%)</span><span id="ml-fee">-$0.00</span></div>
+        <div class="summary-line"><span class="lbl">Costo por envío</span><span id="ml-ship">-$0.00</span></div>
+        <div class="summary-line"><span class="lbl">Impuestos</span><span id="ml-taxes">-$0.00</span></div>
+        <div class="summary-line" style="padding-left:14px;"><span class="lbl">IVA retenido (<span id="ml-ivaret-view">-</span>%)</span><span id="ml-ivaret">-$0.00</span></div>
+        <div class="summary-line" style="padding-left:14px;"><span class="lbl">ISR retenido (<span id="ml-isr-view">-</span>%)</span><span id="ml-isr">-$0.00</span></div>
+        <div class="summary-line total"><span class="lbl">= Recibes</span><span id="ml-net">$0.00</span></div>
+        <div class="summary-line" style="margin-top:8px;"><span class="lbl">Costo de producción</span><span id="ml-costoprod">-$0.00</span></div>
+        <div class="summary-line total"><span class="lbl">= Ganancia neta</span><span id="ml-gananciantea">$0.00</span></div>
+        <div class="summary-line" style="margin-top:8px;"><span class="lbl">Precio sugerido para conservar tu margen original</span><span id="ml-listprice">$0.00</span></div>
+        <div class="hint">Comisión según categoría, envío nominal según tabla de peso — ambas editables en Ajustes. Si ofreces envío gratis, se aplica tu % de descuento por reputación sobre ese costo nominal (también editable). Impuestos calculados sobre el precio sin el IVA que ML asume incluido. FULL sigue sin costo de envío calculado aquí hasta que tengamos sus tablas.</div>
       </div>
     </div>
 
@@ -584,6 +657,76 @@ textarea{
     </div>
   </div>
 
+  <!-- FULL -->
+  <div class="view" id="view-full">
+    <div class="subtab-bar">
+      <button class="subtab-btn active" data-sub="full-eligible">Enviar a FULL</button>
+      <button class="subtab-btn" data-sub="full-active">En FULL</button>
+      <button class="subtab-btn" data-sub="full-projection">Proyección</button>
+    </div>
+
+    <!-- Sub: elegibles -->
+    <div class="full-sub" id="full-eligible">
+      <div class="hint" style="margin-bottom:10px;">Productos de tu catálogo que aún no tienen un envío activo a FULL. El tamaño se sugiere solo según las medidas del producto — corrígelo si ML lo clasifica distinto.</div>
+      <div id="fullEligibleList"></div>
+    </div>
+
+    <!-- Sub: en FULL -->
+    <div class="full-sub" id="full-active" style="display:none;">
+      <div class="hint" style="margin-bottom:10px;">Costo estimado asumiendo que el stock enviado no ha cambiado — cuando tengamos el módulo de Ventas, esto se ajustará solo.</div>
+      <div id="fullActiveList"></div>
+    </div>
+
+    <!-- Sub: proyección -->
+    <div class="full-sub" id="full-projection" style="display:none;">
+      <div class="card">
+        <div class="section-title" style="margin-bottom:10px;">Nueva proyección</div>
+        <label>Producto</label>
+        <select id="proj-producto"></select>
+        <label>Tamaño en FULL</label>
+        <select id="proj-tamano"></select>
+        <div class="row">
+          <div><label>Stock a enviar</label><input type="number" step="1" id="proj-stock"></div>
+          <div><label>Días sin venta esperados</label><input type="number" step="1" id="proj-dias"></div>
+        </div>
+        <button class="btn btn-accent btn-block" id="addProjectionBtn" style="margin-top:10px;">+ Agregar al historial</button>
+      </div>
+      <div id="fullProjectionList"></div>
+    </div>
+  </div>
+
+  <!-- VENTAS -->
+  <div class="view" id="view-sales">
+    <div class="card">
+      <div class="section-title" style="margin-bottom:10px;">Registrar venta</div>
+      <label>Plataforma</label>
+      <select id="v-plataforma">
+        <option value="tiktok">TikTok Shop</option>
+        <option value="ml">MercadoLibre</option>
+        <option value="tiendanube">Tienda Nube</option>
+        <option value="otro">Otra</option>
+      </select>
+      <label>ID de la venta</label>
+      <input type="text" id="v-ventaId" placeholder="ej. 2000012345678">
+      <label>Producto</label>
+      <select id="v-producto"></select>
+      <div class="row">
+        <div><label>Cantidad</label><input type="number" step="1" id="v-cantidad" value="1"></div>
+        <div><label>Fecha de venta</label><input type="date" id="v-fecha"></div>
+      </div>
+      <div class="row">
+        <div><label>Precio de venta (unitario)</label><input type="number" step="0.01" id="v-precioVenta"></div>
+        <div><label>Total recibido</label><input type="number" step="0.01" id="v-totalRecibido"></div>
+      </div>
+      <button class="btn btn-accent btn-block" id="addSaleBtn" style="margin-top:10px;">Registrar venta</button>
+    </div>
+
+    <div class="card" style="padding:12px 16px;">
+      <input type="text" id="searchSales" placeholder="Buscar por producto o ID de venta...">
+    </div>
+    <div id="salesList"></div>
+  </div>
+
   <!-- HISTORIAL -->
   <div class="view" id="view-history">
     <div class="card" style="padding:12px 16px;">
@@ -611,11 +754,24 @@ textarea{
     </div>
 
     <div class="card">
+      <div class="section-title" style="margin-bottom:6px;">Tipos de embalaje</div>
+      <div class="hint" style="margin-bottom:10px;">Agrega cada material (caja, bolsa, plástico burbuja, cinta...) con su precio total y cuántas piezas rinde ese paquete — calculamos el costo por pieza solo.</div>
+      <div id="packagingTypesList"></div>
+      <button class="btn btn-small" id="addPackagingTypeBtn">+ agregar tipo de embalaje</button>
+    </div>
+
+    <div class="card">
       <div class="section-title" style="margin-bottom:6px;">Mercado Libre — retenciones fijas</div>
       <label>Retención de ISR (%)</label>
       <input type="number" step="0.1" id="def-isr">
       <label>Retención de IVA (%)</label>
       <input type="number" step="0.1" id="def-ivaret">
+      <label>IVA que ML asume incluido en el precio (%)</label>
+      <input type="number" step="0.1" id="def-iva-embebido">
+      <div class="hint" style="margin-top:4px;">ML calcula las retenciones sobre el precio ya sin este IVA (precio ÷ 1 + este %), no sobre el precio completo.</div>
+      <label style="margin-top:14px;">% de descuento en envío por tu nivel de reputación (al ofrecer envío gratis)</label>
+      <input type="number" step="1" id="def-ml-ship-discount">
+      <div class="hint" style="margin-top:4px;">Se aplica sobre el costo nominal de tu tabla de envíos cuando ofreces envío gratis. Ajústalo si tu descuento real cambia.</div>
       <label style="margin-top:14px;">Divisor volumétrico (ML usa 5000 o 6000 según categoría)</label>
       <input type="number" step="1" id="def-ml-divisor">
     </div>
@@ -633,6 +789,12 @@ textarea{
       <div id="tierList"></div>
       <button class="btn btn-small" id="addTierBtn">+ agregar rango</button>
       <div class="hint">Cuando tengas las capturas de las tablas oficiales de ML, mándamelas y ajustamos estos rangos juntos.</div>
+    </div>
+
+    <div class="card">
+      <div class="section-title" style="margin-bottom:6px;">Mercado Libre — tarifas de FULL</div>
+      <div class="hint" style="margin-bottom:10px;">Según las tablas oficiales de ML. Los tamaños y umbrales son fijos, pero puedes actualizar las tarifas si ML las cambia.</div>
+      <div id="fullRatesList"></div>
     </div>
 
     <div class="card">
@@ -657,10 +819,35 @@ textarea{
 
     <div class="card">
       <div class="section-title" style="margin-bottom:6px;">Respaldo manual (siempre disponible)</div>
-      <div class="hint" style="margin-bottom:10px;">Úsalo como plan B, o para mover datos a un dispositivo que aún no conectas a Drive.</div>
-      <button class="btn btn-block" id="exportBtn">⬇ Descargar copia de seguridad</button>
-      <label style="margin-top:12px;">Importar copia de seguridad (reemplaza tus datos actuales)</label>
-      <input type="file" id="importFile" accept="application/json">
+      <div class="hint" style="margin-bottom:10px;">Útil como plan B, para mover datos entre dispositivos, o para probar cambios aquí antes de subirlos a tu sitio real (Drive no funciona en esta vista previa).</div>
+
+      <div class="subsection" style="margin-top:0; padding-top:0; border-top:none;">
+        <div class="subsection-title">Cotizaciones, filamentos y ajustes</div>
+        <button class="btn btn-block" id="exportBtn">⬇ Descargar JSON</button>
+        <label style="margin-top:10px;">Importar (reemplaza cotizaciones/filamentos/ajustes actuales)</label>
+        <input type="file" id="importFile" accept="application/json">
+      </div>
+
+      <div class="subsection">
+        <div class="subsection-title">Catálogo de productos</div>
+        <button class="btn btn-block" id="exportProductsBtn">⬇ Descargar JSON</button>
+        <label style="margin-top:10px;">Importar (reemplaza tu catálogo actual)</label>
+        <input type="file" id="importProductsFile" accept="application/json">
+      </div>
+
+      <div class="subsection">
+        <div class="subsection-title">Datos de FULL (envíos y proyecciones)</div>
+        <button class="btn btn-block" id="exportFullBtn">⬇ Descargar JSON</button>
+        <label style="margin-top:10px;">Importar (reemplaza tus envíos/proyecciones de FULL)</label>
+        <input type="file" id="importFullFile" accept="application/json">
+      </div>
+
+      <div class="subsection">
+        <div class="subsection-title">Ventas</div>
+        <button class="btn btn-block" id="exportSalesBtn">⬇ Descargar JSON</button>
+        <label style="margin-top:10px;">Importar (reemplaza tus ventas actuales)</label>
+        <input type="file" id="importSalesFile" accept="application/json">
+      </div>
     </div>
 
     <button class="btn btn-accent btn-block" id="saveSettingsBtn" style="padding:12px;">Guardar ajustes</button>
@@ -671,6 +858,8 @@ textarea{
   <button class="tab-btn active" data-view="view-new"><span>Nueva</span><span class="dot"></span></button>
   <button class="tab-btn" data-view="view-filaments"><span>Filamentos</span><span class="dot"></span></button>
   <button class="tab-btn" data-view="view-products"><span>Catálogo</span><span class="dot"></span></button>
+  <button class="tab-btn" data-view="view-full"><span>FULL</span><span class="dot"></span></button>
+  <button class="tab-btn" data-view="view-sales"><span>Ventas</span><span class="dot"></span></button>
   <button class="tab-btn" data-view="view-history"><span>Historial</span><span class="dot"></span></button>
   <button class="tab-btn" data-view="view-settings"><span>Ajustes</span><span class="dot"></span></button>
 </div>
@@ -683,7 +872,14 @@ const money = n => '$' + (isFinite(n) ? n : 0).toLocaleString('es-MX', {minimumF
 
 let settings = {
   kwhPrice: 2.5, watts: 200, depreciationRate: 4.50, riskPct: 8, profitPct: 30, ivaPct: 16,
-  isrPct: 2.5, ivaRetPct: 8, mlDivisor: 5000,
+  fullSizeRates: [
+    {id:'pequeno', label:'Pequeño (hasta 12×15×25cm, 18kg)', dailyRate:0.011, oldStock:{m4_6:14, m6_12:44, m12plus:75}},
+    {id:'mediano', label:'Mediano (hasta 28×36×51cm, 18kg)', dailyRate:0.040, oldStock:{m4_6:21, m6_12:68, m12plus:102}},
+    {id:'grande', label:'Grande (hasta 50×60×60cm, 18kg)', dailyRate:0.090, oldStock:{m4_6:30, m6_12:100, m12plus:166}},
+    {id:'extragrande', label:'Extragrande (más de 50×60×60cm o 18kg)', dailyRate:0.500, oldStock:{m4_6:66, m6_12:219, m12plus:459}}
+  ],
+  isrPct: 2.5, ivaRetPct: 8, ivaEmbebidoPct: 16, mlShippingDiscountPct: 50, mlDivisor: 5000,
+  packagingTypes: [],
   mlCategories: [
     {id:'cat_1', name:'Hogar, Muebles y Jardín', feePct: 13},
     {id:'cat_2', name:'Juguetes y Hobbies', feePct: 14},
@@ -699,6 +895,8 @@ let settings = {
 let filaments = [];      // rows in the current quote
 let filamentCatalog = []; // saved catalog
 let currentQuoteId = null;
+let lastCalc = null;
+let quotePackaging = []; // {instanceId, typeId, nombre, costoUnitario} — locked-in costs for this quote
 
 // ---------- PRODUCT CATALOG DATA ----------
 let productsCatalog = [];
@@ -896,16 +1094,47 @@ $('addFilamentBtn').onclick = () => {
   addFilament();
 };
 
+// ---------- PACKAGING (Embalaje) ----------
+function populatePackagingSelect(){
+  const sel = $('packagingSelect');
+  $('noPackagingHint').style.display = settings.packagingTypes.length ? 'none' : 'block';
+  sel.innerHTML = settings.packagingTypes.map(t => {
+    const unitCost = t.piezasIncluidas > 0 ? (t.precioTotal / t.piezasIncluidas) : 0;
+    return `<option value="${t.id}">${t.nombre || '(sin nombre)'} — ${money(unitCost)}/pieza</option>`;
+  }).join('');
+}
+function renderPackagingChips(){
+  const wrap = $('packagingChips');
+  wrap.innerHTML = '';
+  quotePackaging.forEach((p, i) => {
+    const chip = document.createElement('div');
+    chip.className = 'chip';
+    chip.innerHTML = `<span>${p.nombre}</span> <span class="chip-cost">${money(p.costoUnitario)}</span> <button class="chip-x" data-i="${i}">✕</button>`;
+    chip.querySelector('.chip-x').onclick = () => { quotePackaging.splice(i,1); renderPackagingChips(); calculate(); };
+    wrap.appendChild(chip);
+  });
+}
+$('addPackagingBtn').onclick = () => {
+  const typeId = $('packagingSelect').value;
+  const t = settings.packagingTypes.find(x => x.id === typeId);
+  if (!t){ showToast('Agrega primero un tipo de embalaje en Ajustes'); return; }
+  const unitCost = t.piezasIncluidas > 0 ? (t.precioTotal / t.piezasIncluidas) : 0;
+  quotePackaging.push({instanceId: 'pkinst_'+Date.now()+Math.random().toString(36).slice(2,6), typeId: t.id, nombre: t.nombre, costoUnitario: unitCost});
+  renderPackagingChips();
+  calculate();
+};
+
 // ---------- CALCULATIONS ----------
 function calculate(){
   const matCost = filaments.reduce((sum,f) => sum + (f.priceKg/1000)*f.grams, 0);
+  const packagingCost = quotePackaging.reduce((sum,p) => sum + (p.costoUnitario||0), 0);
   const hours = +$('printHours').value || 0;
   const watts = +$('printWatts').value || 0;
   const kwhPrice = +$('kwhPrice').value || 0;
   const energyCost = (watts/1000)*hours*kwhPrice;
   const depreciationRate = +$('depreciationRate').value || 0;
   const depreciationCost = hours * depreciationRate;
-  const directCost = matCost + energyCost + depreciationCost;
+  const directCost = matCost + packagingCost + energyCost + depreciationCost;
   const labor = +$('laborCost').value || 0;
   const base = directCost + labor;
   const riskPct = +$('riskPct').value || 0;
@@ -919,6 +1148,7 @@ function calculate(){
   const finalPrice = priceNoIva + ivaAmt;
 
   $('s-mat').textContent = money(matCost);
+  $('s-packaging').textContent = money(packagingCost);
   $('s-energy').textContent = money(energyCost);
   $('s-depreciation').textContent = money(depreciationCost);
   $('s-direct').textContent = money(directCost);
@@ -928,9 +1158,10 @@ function calculate(){
   $('s-price-noiva').textContent = money(priceNoIva);
   $('s-final').textContent = money(finalPrice);
 
+  lastCalc = {matCost, energyCost, depreciationCost, directCost, labor, base, riskPct, riskAmt, totalEst, profitPct, profitAmt, priceNoIva, ivaPct, ivaAmt, finalPrice};
   calculateML(finalPrice);
 
-  return {matCost, energyCost, depreciationCost, directCost, labor, base, riskPct, riskAmt, totalEst, profitPct, profitAmt, priceNoIva, ivaPct, ivaAmt, finalPrice};
+  return lastCalc;
 }
 
 function populateMlCategorySelect(selectedId){
@@ -948,39 +1179,69 @@ function calculateML(finalPrice){
   const realKg = weightG/1000;
   const billW = Math.max(realKg, volW);
   const mode = $('mlMode').value;
+  const quienPaga = $('mlQuienPaga').value;
+
+  if (!$('mlSimPrice').value) $('mlSimPrice').value = finalPrice.toFixed(2);
+  const simPrice = +$('mlSimPrice').value || 0;
 
   const catId = $('mlCategory').value;
   const cat = settings.mlCategories.find(c => c.id === catId) || {feePct:0};
   const feePct = cat.feePct;
-  const fee = finalPrice * feePct/100;
+  const fee = simPrice * feePct/100;
 
   const isrPct = settings.isrPct || 0;
   const ivaRetPct = settings.ivaRetPct || 0;
-  const isrAmt = finalPrice * isrPct/100;
-  const ivaRetAmt = finalPrice * ivaRetPct/100;
+  const ivaEmbebidoPct = settings.ivaEmbebidoPct != null ? settings.ivaEmbebidoPct : 16;
+  const taxBase = simPrice / (1 + ivaEmbebidoPct/100);
+  const isrAmt = taxBase * isrPct/100;
+  const ivaRetAmt = taxBase * ivaRetPct/100;
+  const taxesTotal = isrAmt + ivaRetAmt;
+
+  let nominalShip = 0;
+  const sortedTiers = [...settings.tiers].sort((x,y)=>x.max-y.max);
+  for (const t of sortedTiers){ if (billW <= t.max){ nominalShip = t.cost; break; } }
+  if (sortedTiers.length && billW > sortedTiers[sortedTiers.length-1].max) nominalShip = sortedTiers[sortedTiers.length-1].cost;
 
   let shipCost = 0;
-  const sortedTiers = [...settings.tiers].sort((x,y)=>x.max-y.max);
-  for (const t of sortedTiers){ if (billW <= t.max){ shipCost = t.cost; break; } }
-  if (sortedTiers.length && billW > sortedTiers[sortedTiers.length-1].max) shipCost = sortedTiers[sortedTiers.length-1].cost;
-  if (mode === 'full') shipCost = 0;
+  if (mode !== 'full'){
+    if (quienPaga === 'gratis') shipCost = nominalShip * (1 - (settings.mlShippingDiscountPct||0)/100);
+    else shipCost = 0; // lo paga el comprador: no le cuesta al vendedor
+  }
 
-  const net = finalPrice - fee - shipCost - isrAmt - ivaRetAmt;
-  const totalPct = feePct + isrPct + ivaRetPct;
-  const listPrice = (finalPrice + shipCost) / (1 - totalPct/100);
+  const recibes = simPrice - fee - shipCost - taxesTotal;
+
+  const costoProduccion = lastCalc ? lastCalc.totalEst : 0;
+  const gananciaNeta = recibes - costoProduccion;
+
+  // precio sugerido para conservar el margen de la cotización (usa finalPrice como "recibes" objetivo)
+  const effectiveTaxRate = (isrPct + ivaRetPct)/100 / (1 + ivaEmbebidoPct/100);
+  const shipForSuggested = (mode !== 'full' && quienPaga === 'gratis') ? nominalShip * (1 - (settings.mlShippingDiscountPct||0)/100) : 0;
+  const factor = 1 - feePct/100 - effectiveTaxRate;
+  const listPrice = factor > 0 ? (finalPrice + shipForSuggested) / factor : 0;
 
   $('ml-volw').textContent = volW.toFixed(2) + ' kg';
   $('ml-billw').textContent = billW.toFixed(2) + ' kg';
+  $('ml-precio').textContent = money(simPrice);
   $('ml-feepct-view').textContent = feePct;
-  $('ml-fee').textContent = money(fee);
-  $('ml-isr-view').textContent = isrPct;
-  $('ml-isr').textContent = money(isrAmt);
+  $('ml-fee').textContent = '-' + money(fee);
+  $('ml-ship').textContent = '-' + money(shipCost);
+  $('ml-taxes').textContent = '-' + money(taxesTotal);
   $('ml-ivaret-view').textContent = ivaRetPct;
-  $('ml-ivaret').textContent = money(ivaRetAmt);
-  $('ml-ship').textContent = money(shipCost);
-  $('ml-net').textContent = money(net);
+  $('ml-ivaret').textContent = '-' + money(ivaRetAmt);
+  $('ml-isr-view').textContent = isrPct;
+  $('ml-isr').textContent = '-' + money(isrAmt);
+  $('ml-net').textContent = money(recibes);
+  $('ml-costoprod').textContent = '-' + money(costoProduccion);
+  $('ml-gananciantea').textContent = money(gananciaNeta);
   $('ml-listprice').textContent = money(listPrice);
 }
+$('mlUseSuggestedBtn').addEventListener('click', (e) => {
+  e.preventDefault();
+  $('mlSimPrice').value = (lastCalc ? lastCalc.finalPrice : 0).toFixed(2);
+  calculate();
+});
+$('mlSimPrice').addEventListener('input', () => calculateML(lastCalc ? lastCalc.finalPrice : 0));
+$('mlQuienPaga').addEventListener('change', () => calculateML(lastCalc ? lastCalc.finalPrice : 0));
 
 ['printHours','printWatts','kwhPrice','depreciationRate','laborCost','riskPct','profitPct','ivaPct',
  'mlWeight','mlL','mlA','mlH'].forEach(id => $(id).addEventListener('input', calculate));
@@ -1100,13 +1361,14 @@ $('variantsToggleWrap').onclick = () => {
 // ---------- PRODUCT FORM: RESET / LOAD ----------
 function computeQuoteCostBreakdown(q){
   const matCost = (q.filaments||[]).reduce((sum,f) => sum + (f.priceKg/1000)*f.grams, 0);
+  const packagingCost = (q.packaging||[]).reduce((sum,p) => sum + (p.costoUnitario||0), 0);
   const energyCost = ((q.printWatts||0)/1000) * (q.printHours||0) * (q.kwhPrice||0);
   const depreciationCost = (q.printHours||0) * (q.depreciationRate||0);
-  const directCost = matCost + energyCost + depreciationCost;
+  const directCost = matCost + packagingCost + energyCost + depreciationCost;
   const base = directCost + (q.laborCost||0);
   const riskAmt = base * (q.riskPct||0)/100;
   const totalEst = base + riskAmt;
-  return {matCost, energyCost, depreciationCost, directCost, base, riskAmt, totalEst};
+  return {matCost, packagingCost, energyCost, depreciationCost, directCost, base, riskAmt, totalEst};
 }
 
 async function populateLinkedQuoteOptions(selectedId){
@@ -1559,11 +1821,426 @@ $('genMLCopyBtn').onclick = async () => {
   await markProductsStatus(products, 'ml', 'cargado');
 };
 
+// ---------- FULL: SIZE CLASSIFICATION ----------
+function classifyFullSize(largoCm, anchoCm, altoCm, pesoG){
+  const dims = [largoCm||0, anchoCm||0, altoCm||0].sort((a,b)=>a-b);
+  const weightKg = (pesoG||0)/1000;
+  function fitsIn(catDims){
+    const cd = [...catDims].sort((a,b)=>a-b);
+    return dims[0]<=cd[0] && dims[1]<=cd[1] && dims[2]<=cd[2];
+  }
+  if (weightKg<=18 && fitsIn([12,15,25])) return 'pequeno';
+  if (weightKg<=18 && fitsIn([28,36,51])) return 'mediano';
+  if (weightKg<=18 && fitsIn([50,60,60])) return 'grande';
+  return 'extragrande';
+}
+function getFullSizeRate(id){
+  return settings.fullSizeRates.find(r => r.id === id) || settings.fullSizeRates[0];
+}
+
+// ---------- FULL: STATE ----------
+let fullShipments = [];
+let fullProjections = [];
+
+function renderFullRatesSettings(){
+  const wrap = $('fullRatesList');
+  wrap.innerHTML = '';
+  settings.fullSizeRates.forEach((r, i) => {
+    const div = document.createElement('div');
+    div.className = 'filament-row';
+    div.innerHTML = `
+      <div class="fr-top"><span class="fr-label">${r.label}</span></div>
+      <label>Tarifa diaria por unidad ($)</label>
+      <input type="number" step="0.001" class="fr-daily" data-i="${i}" value="${r.dailyRate}">
+      <div class="row">
+        <div><label>Stock antiguo 4-6 meses ($/u)</label><input type="number" step="0.01" class="fr-m46" data-i="${i}" value="${r.oldStock.m4_6}"></div>
+        <div><label>6-12 meses ($/u)</label><input type="number" step="0.01" class="fr-m612" data-i="${i}" value="${r.oldStock.m6_12}"></div>
+      </div>
+      <label>Más de 12 meses ($/u)</label>
+      <input type="number" step="0.01" class="fr-m12" data-i="${i}" value="${r.oldStock.m12plus}">
+    `;
+    wrap.appendChild(div);
+  });
+  wrap.querySelectorAll('.fr-daily').forEach(el => el.oninput = () => settings.fullSizeRates[+el.dataset.i].dailyRate = +el.value || 0);
+  wrap.querySelectorAll('.fr-m46').forEach(el => el.oninput = () => settings.fullSizeRates[+el.dataset.i].oldStock.m4_6 = +el.value || 0);
+  wrap.querySelectorAll('.fr-m612').forEach(el => el.oninput = () => settings.fullSizeRates[+el.dataset.i].oldStock.m6_12 = +el.value || 0);
+  wrap.querySelectorAll('.fr-m12').forEach(el => el.oninput = () => settings.fullSizeRates[+el.dataset.i].oldStock.m12plus = +el.value || 0);
+}
+
+function fullSizeOptionsHtml(selected){
+  return settings.fullSizeRates.map(r => `<option value="${r.id}" ${r.id===selected?'selected':''}>${r.label}</option>`).join('');
+}
+
+async function saveFullState(){
+  await storageSet('full-shipments', fullShipments);
+  await storageSet('full-projections', fullProjections);
+  fulfillmentDriveQueuePush();
+}
+
+// ---------- FULL: SUB-TAB SWITCHING ----------
+document.querySelectorAll('.subtab-btn').forEach(b => b.onclick = () => {
+  document.querySelectorAll('.subtab-btn').forEach(x => x.classList.remove('active'));
+  document.querySelectorAll('.full-sub').forEach(x => x.style.display = 'none');
+  b.classList.add('active');
+  $(b.dataset.sub).style.display = 'block';
+  if (b.dataset.sub === 'full-eligible') renderFullEligible();
+  if (b.dataset.sub === 'full-active') renderFullActive();
+  if (b.dataset.sub === 'full-projection') { populateProjectionForm(); renderFullProjectionList(); }
+});
+
+// ---------- FULL: ELEGIBLES ----------
+function renderFullEligible(){
+  const wrap = $('fullEligibleList');
+  const activeProductIds = new Set(fullShipments.filter(s => s.estado === 'activo' && !s.eliminado).map(s => s.productId));
+  const eligible = productsCatalog.filter(p => !activeProductIds.has(p.id));
+  if (!eligible.length){
+    wrap.innerHTML = '<div class="empty-state">No hay productos elegibles — o ya están todos en FULL, o tu catálogo está vacío.</div>';
+    return;
+  }
+  wrap.innerHTML = '';
+  const today = new Date().toISOString().slice(0,10);
+  eligible.forEach(p => {
+    const suggested = classifyFullSize(p.largoCm, p.anchoCm, p.altoCm, p.pesoG);
+    const div = document.createElement('div');
+    div.className = 'full-item';
+    div.innerHTML = `
+      <div class="fi-name">${p.nombre}</div>
+      <div class="fi-row"><span>Stock en catálogo</span><b>${p.stock}</b></div>
+      <label>Tamaño sugerido (corrígelo si ML lo clasifica distinto)</label>
+      <select class="fe-tamano">${fullSizeOptionsHtml(suggested)}</select>
+      <div class="row">
+        <div><label>Stock a enviar</label><input type="number" step="1" class="fe-stock" value="${p.stock}"></div>
+        <div><label>Fecha de envío</label><input type="date" class="fe-fecha" value="${today}"></div>
+      </div>
+      <button class="btn btn-accent btn-block" style="margin-top:8px;">Enviar a FULL</button>
+    `;
+    div.querySelector('button').onclick = async () => {
+      const stockEnviado = +div.querySelector('.fe-stock').value || 0;
+      const fechaEnvio = div.querySelector('.fe-fecha').value;
+      const tamanoId = div.querySelector('.fe-tamano').value;
+      if (stockEnviado <= 0){ showToast('Indica cuánto stock envías'); return; }
+      fullShipments.push({id:'ship_'+Date.now(), productId:p.id, tamanoId, stockEnviado, fechaEnvio, estado:'activo', createdAt:new Date().toISOString()});
+      await saveFullState();
+      showToast('Enviado a FULL');
+      renderFullEligible();
+    };
+    wrap.appendChild(div);
+  });
+}
+
+// ---------- FULL: EN FULL (ACTIVOS) ----------
+function renderFullActive(){
+  const wrap = $('fullActiveList');
+  const active = fullShipments.filter(s => s.estado === 'activo' && !s.eliminado);
+  if (!active.length){
+    wrap.innerHTML = '<div class="empty-state">Aún no tienes productos enviados a FULL.</div>';
+    return;
+  }
+  wrap.innerHTML = '';
+  const now = new Date();
+  active.forEach(s => {
+    const p = productsCatalog.find(x => x.id === s.productId);
+    const rate = getFullSizeRate(s.tamanoId);
+    const dias = Math.max(0, Math.floor((now - new Date(s.fechaEnvio)) / 86400000));
+    const costoDiario = rate.dailyRate * s.stockEnviado;
+    const costoAcumulado = costoDiario * dias;
+    const meses = dias / 30.44;
+    let oldStockTier = null, oldStockLabel = '';
+    if (meses >= 12){ oldStockTier = rate.oldStock.m12plus; oldStockLabel = 'más de 12 meses'; }
+    else if (meses >= 6){ oldStockTier = rate.oldStock.m6_12; oldStockLabel = 'de 6 a 12 meses'; }
+    else if (meses >= 4){ oldStockTier = rate.oldStock.m4_6; oldStockLabel = 'de 4 a 6 meses'; }
+    const div = document.createElement('div');
+    div.className = 'full-item';
+    div.innerHTML = `
+      <div class="fi-name">${p ? p.nombre : '(producto eliminado)'}</div>
+      <div class="fi-row"><span>Tamaño</span><b>${rate.label}</b></div>
+      <div class="row">
+        <div><label>Stock enviado</label><input type="number" step="1" class="fa-stock" value="${s.stockEnviado}"></div>
+        <div><label>Fecha de envío</label><input type="date" class="fa-fecha" value="${s.fechaEnvio}"></div>
+      </div>
+      <div class="fi-row"><span>Días en FULL</span><b>${dias}</b></div>
+      <div class="fi-row"><span>Costo por día (actual)</span><b>${money(costoDiario)}</b></div>
+      <div class="fi-row"><span>Costo acumulado estimado</span><b>${money(costoAcumulado)}</b></div>
+      ${oldStockTier ? `<div class="full-warning">⚠ Ya lleva ${oldStockLabel} en FULL — ML aplica un cargo adicional estimado de ${money(oldStockTier)} por unidad (${money(oldStockTier * s.stockEnviado)} en total) mientras siga en este rango.</div>` : ''}
+      <div class="pi-actions">
+        <button class="btn btn-small" data-act="retirar">Marcar como retirado</button>
+        <button class="btn btn-small btn-danger" data-act="del">Eliminar registro</button>
+      </div>
+    `;
+    div.querySelector('.fa-stock').onchange = async (e) => { s.stockEnviado = +e.target.value || 0; await saveFullState(); renderFullActive(); };
+    div.querySelector('.fa-fecha').onchange = async (e) => { s.fechaEnvio = e.target.value; await saveFullState(); renderFullActive(); };
+    div.querySelector('[data-act=retirar]').onclick = async () => { s.estado = 'retirado'; await saveFullState(); renderFullActive(); showToast('Marcado como retirado'); };
+    div.querySelector('[data-act=del]').onclick = async () => {
+      if (!confirm('¿Ocultar este registro de FULL? No se borrará del historial, solo dejará de aparecer en tus listas activas.')) return;
+      s.eliminado = true;
+      await saveFullState();
+      renderFullActive();
+      renderFullEligible();
+    };
+    wrap.appendChild(div);
+  });
+}
+
+// ---------- FULL: PROYECCIÓN ----------
+function populateProjectionForm(){
+  const sel = $('proj-producto');
+  sel.innerHTML = productsCatalog.map(p => `<option value="${p.id}">${p.nombre}${p.linkedQuoteId ? '' : ' (sin cotización — no se podrá calcular costo)'}</option>`).join('');
+  $('proj-tamano').innerHTML = fullSizeOptionsHtml('pequeno');
+  if (sel.value){
+    const p = productsCatalog.find(x => x.id === sel.value);
+    if (p) $('proj-tamano').value = classifyFullSize(p.largoCm, p.anchoCm, p.altoCm, p.pesoG);
+    $('proj-stock').value = p ? p.stock : '';
+  }
+}
+$('proj-producto').addEventListener('change', () => {
+  const p = productsCatalog.find(x => x.id === $('proj-producto').value);
+  if (p){
+    $('proj-tamano').value = classifyFullSize(p.largoCm, p.anchoCm, p.altoCm, p.pesoG);
+    $('proj-stock').value = p.stock;
+  }
+});
+$('addProjectionBtn').onclick = async () => {
+  const productId = $('proj-producto').value;
+  const stock = +$('proj-stock').value || 0;
+  const dias = +$('proj-dias').value || 0;
+  if (!productId){ showToast('Selecciona un producto'); return; }
+  const p = productsCatalog.find(x => x.id === productId);
+  if (!p || !p.linkedQuoteId){ showToast('Ese producto no tiene una cotización vinculada — no puedo calcular su costo'); return; }
+  if (stock <= 0){ showToast('Indica el stock a considerar'); return; }
+  fullProjections.push({
+    id: 'proj_'+Date.now(), productId, tamanoId: $('proj-tamano').value,
+    stockAConsiderar: stock, diasSinVenta: dias, createdAt: new Date().toISOString()
+  });
+  await saveFullState();
+  showToast('Proyección agregada al historial');
+  renderFullProjectionList();
+};
+
+async function renderFullProjectionList(){
+  const wrap = $('fullProjectionList');
+  const visible = fullProjections.filter(p => !p.eliminado);
+  if (!visible.length){
+    wrap.innerHTML = '<div class="empty-state">Aún no tienes proyecciones guardadas.</div>';
+    return;
+  }
+  wrap.innerHTML = '';
+  for (const proj of visible){
+    const p = productsCatalog.find(x => x.id === proj.productId);
+    const rate = getFullSizeRate(proj.tamanoId);
+    const div = document.createElement('div');
+    div.className = 'full-item';
+    if (!p){
+      div.innerHTML = `<div class="fi-name">(producto eliminado)</div><button class="btn btn-small btn-danger" data-act="del">Eliminar</button>`;
+      div.querySelector('[data-act=del]').onclick = async () => { proj.eliminado = true; await saveFullState(); renderFullProjectionList(); };
+      wrap.appendChild(div);
+      continue;
+    }
+    const quote = p.linkedQuoteId ? await storageGet('quote:' + p.linkedQuoteId, null) : null;
+    const breakdown = quote ? computeQuoteCostBreakdown(quote) : null;
+    const costoUnitario = breakdown ? breakdown.totalEst : 0;
+    const inversionProduccion = costoUnitario * proj.stockAConsiderar;
+    const horasTotales = (quote?.printHours || 0) * proj.stockAConsiderar;
+    const costoAlmacenaje = rate.dailyRate * proj.stockAConsiderar * proj.diasSinVenta;
+    const costoTotalInversion = inversionProduccion + costoAlmacenaje;
+    const margenExtraPorUnidad = proj.stockAConsiderar > 0 ? costoAlmacenaje / proj.stockAConsiderar : 0;
+    div.innerHTML = `
+      <div class="fi-name">${p.nombre}</div>
+      <div class="fi-row"><span>Tamaño</span><b>${rate.label}</b></div>
+      <div class="row">
+        <div><label>Stock a enviar</label><input type="number" step="1" class="pr-stock" value="${proj.stockAConsiderar}"></div>
+        <div><label>Días sin venta</label><input type="number" step="1" class="pr-dias" value="${proj.diasSinVenta}"></div>
+      </div>
+      <div class="fi-row"><span>Costo de producción unitario</span><b>${money(costoUnitario)}</b></div>
+      <div class="fi-row"><span>Inversión total en producción</span><b>${money(inversionProduccion)}</b></div>
+      <div class="fi-row"><span>Horas de impresión totales</span><b>${horasTotales.toFixed(1)} h</b></div>
+      <div class="fi-row"><span>Costo de almacenaje proyectado</span><b>${money(costoAlmacenaje)}</b></div>
+      <div class="fi-row"><span>Margen extra sugerido por unidad</span><b>${money(margenExtraPorUnidad)}</b></div>
+      <div class="fi-row" style="border-top:1px solid var(--line-soft); margin-top:6px; padding-top:8px;"><span>Costo total de inversión</span><b style="color:var(--money);">${money(costoTotalInversion)}</b></div>
+      <div class="pi-actions">
+        <button class="btn btn-small btn-danger" data-act="del">Eliminar</button>
+      </div>
+    `;
+    div.querySelector('.pr-stock').onchange = async (e) => { proj.stockAConsiderar = +e.target.value || 0; await saveFullState(); renderFullProjectionList(); };
+    div.querySelector('.pr-dias').onchange = async (e) => { proj.diasSinVenta = +e.target.value || 0; await saveFullState(); renderFullProjectionList(); };
+    div.querySelector('[data-act=del]').onclick = async () => { proj.eliminado = true; await saveFullState(); renderFullProjectionList(); };
+    wrap.appendChild(div);
+  }
+}
+
+// ---------- VENTAS: STATE ----------
+let salesList = [];
+
+const PLATFORM_LABELS = {tiktok:'TikTok Shop', ml:'MercadoLibre', tiendanube:'Tienda Nube', otro:'Otra'};
+
+async function saveSalesState(){
+  await storageSet('ventas-list', salesList);
+  salesDriveQueuePush();
+}
+
+function populateSaleProductSelect(){
+  $('v-producto').innerHTML = productsCatalog.map(p => `<option value="${p.id}">${p.nombre} (stock: ${p.stock})</option>`).join('');
+}
+
+function findActiveShipmentForProduct(productId){
+  // FIFO: pick the oldest active shipment with stock still remaining
+  return fullShipments
+    .filter(s => s.productId === productId && s.estado === 'activo' && !s.eliminado && s.stockEnviado > 0)
+    .sort((a,b) => new Date(a.fechaEnvio) - new Date(b.fechaEnvio))[0] || null;
+}
+
+async function applyStockDeduction(sale){
+  const shipment = findActiveShipmentForProduct(sale.productId);
+  if (shipment){
+    shipment.stockEnviado = Math.max(0, shipment.stockEnviado - sale.cantidad);
+    sale.stockDescontadoDe = 'full';
+    sale.shipmentId = shipment.id;
+    await storageSet('full-shipments', fullShipments);
+    fulfillmentDriveQueuePush();
+  } else {
+    const p = productsCatalog.find(x => x.id === sale.productId);
+    if (p){
+      p.stock = Math.max(0, p.stock - sale.cantidad);
+      await storageSet('products-list', productsCatalog);
+      productsDriveQueuePush();
+    }
+    sale.stockDescontadoDe = 'catalogo';
+    sale.shipmentId = null;
+  }
+}
+
+async function reverseStockDeduction(sale){
+  if (sale.stockDescontadoDe === 'full' && sale.shipmentId){
+    const shipment = fullShipments.find(s => s.id === sale.shipmentId);
+    if (shipment){
+      shipment.stockEnviado += sale.cantidad;
+      await storageSet('full-shipments', fullShipments);
+      fulfillmentDriveQueuePush();
+    }
+  } else if (sale.stockDescontadoDe === 'catalogo'){
+    const p = productsCatalog.find(x => x.id === sale.productId);
+    if (p){
+      p.stock += sale.cantidad;
+      await storageSet('products-list', productsCatalog);
+      productsDriveQueuePush();
+    }
+  }
+}
+
+$('addSaleBtn').onclick = async () => {
+  const productId = $('v-producto').value;
+  if (!productId){ showToast('Selecciona un producto'); return; }
+  const cantidad = +$('v-cantidad').value || 0;
+  if (cantidad <= 0){ showToast('Indica la cantidad vendida'); return; }
+  const ventaId = $('v-ventaId').value.trim();
+  if (!ventaId){ showToast('Indica el ID de la venta'); return; }
+  const fechaVenta = $('v-fecha').value || new Date().toISOString().slice(0,10);
+  const sale = {
+    id: 'sale_' + Date.now(),
+    plataforma: $('v-plataforma').value,
+    ventaId,
+    productId,
+    cantidad,
+    precioVenta: +$('v-precioVenta').value || 0,
+    totalRecibido: +$('v-totalRecibido').value || 0,
+    fechaVenta,
+    estado: 'completada',
+    stockDescontadoDe: null,
+    shipmentId: null,
+    createdAt: new Date().toISOString()
+  };
+  await applyStockDeduction(sale);
+  salesList.unshift(sale);
+  await saveSalesState();
+  showToast('Venta registrada — se descontó del ' + (sale.stockDescontadoDe === 'full' ? 'stock en FULL' : 'catálogo'));
+  $('v-ventaId').value=''; $('v-cantidad').value=1; $('v-precioVenta').value=''; $('v-totalRecibido').value='';
+  populateSaleProductSelect();
+  renderSalesList();
+};
+
+function saleProfit(sale){
+  const p = productsCatalog.find(x => x.id === sale.productId);
+  const costoUnitario = p ? (p.costo || 0) : 0;
+  return sale.totalRecibido - (costoUnitario * sale.cantidad);
+}
+
+async function setSaleEstado(sale, nuevoEstado){
+  const wasDeducted = (sale.estado === 'completada');
+  const willDeduct = (nuevoEstado === 'completada');
+  if (wasDeducted && !willDeduct){
+    await reverseStockDeduction(sale);
+  } else if (!wasDeducted && willDeduct){
+    await applyStockDeduction(sale);
+  }
+  sale.estado = nuevoEstado;
+  await saveSalesState();
+  renderSalesList();
+}
+
+async function deleteSale(sale){
+  if (sale.estado === 'completada'){
+    await reverseStockDeduction(sale);
+  }
+  salesList = salesList.filter(s => s.id !== sale.id);
+  await saveSalesState();
+  renderSalesList();
+  populateSaleProductSelect();
+}
+
+function renderSalesList(filter){
+  const wrap = $('salesList');
+  let list = salesList;
+  if (filter){
+    const f = filter.toLowerCase();
+    list = list.filter(s => {
+      const p = productsCatalog.find(x => x.id === s.productId);
+      return (p && p.nombre.toLowerCase().includes(f)) || s.ventaId.toLowerCase().includes(f);
+    });
+  }
+  if (!list.length){
+    wrap.innerHTML = '<div class="empty-state">Aún no hay ventas registradas.</div>';
+    return;
+  }
+  wrap.innerHTML = '';
+  const estadoColors = {completada:'var(--ok)', cancelada:'var(--danger)', devuelta:'var(--danger)'};
+  list.forEach(sale => {
+    const p = productsCatalog.find(x => x.id === sale.productId);
+    const profit = saleProfit(sale);
+    const div = document.createElement('div');
+    div.className = 'sale-item';
+    div.innerHTML = `
+      <div class="si-top">
+        <div>
+          <div class="si-name">${p ? p.nombre : '(producto eliminado)'}</div>
+          <div class="si-sub">${PLATFORM_LABELS[sale.plataforma]} · ID: ${sale.ventaId} · ${sale.fechaVenta}</div>
+          <div class="si-sub">Cantidad: ${sale.cantidad} · Descontado de: ${sale.stockDescontadoDe === 'full' ? 'FULL' : (sale.stockDescontadoDe === 'catalogo' ? 'Catálogo' : '—')}</div>
+        </div>
+        <div class="si-profit" style="color:${profit >= 0 ? 'var(--ok)' : 'var(--danger)'}">${money(profit)}</div>
+      </div>
+      <div class="fi-row"><span>Precio de venta (unitario)</span><b>${money(sale.precioVenta)}</b></div>
+      <div class="fi-row"><span>Total recibido</span><b>${money(sale.totalRecibido)}</b></div>
+      <label style="margin-top:8px;">Estado</label>
+      <select class="sale-estado">
+        <option value="completada" ${sale.estado==='completada'?'selected':''}>Completada</option>
+        <option value="cancelada" ${sale.estado==='cancelada'?'selected':''}>Cancelada</option>
+        <option value="devuelta" ${sale.estado==='devuelta'?'selected':''}>Devuelta</option>
+      </select>
+      <div class="pi-actions">
+        <button class="btn btn-small btn-danger" data-act="del">Eliminar</button>
+      </div>
+    `;
+    div.querySelector('.sale-estado').onchange = (e) => setSaleEstado(sale, e.target.value);
+    div.querySelector('[data-act=del]').onclick = () => { if(confirm('¿Eliminar este registro de venta? Si estaba completada, se le devolverá el stock.')) deleteSale(sale); };
+    wrap.appendChild(div);
+  });
+}
+$('searchSales').addEventListener('input', (e) => renderSalesList(e.target.value));
+
 // ---------- SAVE / LOAD QUOTES ----------
 function resetForm(){
   currentQuoteId = null;
   $('qName').value = ''; $('qNotes').value = '';
   filaments = []; renderFilaments();
+  quotePackaging = []; populatePackagingSelect(); renderPackagingChips();
   $('printHours').value = 0;
   $('printWatts').value = settings.watts;
   $('kwhPrice').value = settings.kwhPrice;
@@ -1575,6 +2252,8 @@ function resetForm(){
   $('mlSwitch').classList.remove('on'); $('mlBody').classList.remove('show');
   $('mlWeight').value=''; $('mlL').value=''; $('mlA').value=''; $('mlH').value='';
   $('mlMode').value = 'normal';
+  $('mlQuienPaga').value = 'gratis';
+  $('mlSimPrice').value = '';
   populateMlCategorySelect(settings.mlCategories[0] ? settings.mlCategories[0].id : null);
   calculate();
 }
@@ -1589,11 +2268,12 @@ $('saveQuoteBtn').onclick = async () => {
   const quote = {
     id, name, notes: $('qNotes').value,
     filaments: JSON.parse(JSON.stringify(filaments)),
+    packaging: JSON.parse(JSON.stringify(quotePackaging)),
     printHours: +$('printHours').value, printWatts: +$('printWatts').value, kwhPrice: +$('kwhPrice').value, depreciationRate: +$('depreciationRate').value,
     laborCost: +$('laborCost').value, riskPct: +$('riskPct').value, profitPct: +$('profitPct').value, ivaPct: +$('ivaPct').value,
     mlEnabled: $('mlBody').classList.contains('show'),
     mlCategory: $('mlCategory').value,
-    mlWeight: +$('mlWeight').value || 0, mlL: +$('mlL').value||0, mlA: +$('mlA').value||0, mlH: +$('mlH').value||0, mlMode: $('mlMode').value,
+    mlWeight: +$('mlWeight').value || 0, mlL: +$('mlL').value||0, mlA: +$('mlA').value||0, mlH: +$('mlH').value||0, mlMode: $('mlMode').value, mlQuienPaga: $('mlQuienPaga').value,
     finalPrice: calc.finalPrice,
     updatedAt: new Date().toISOString()
   };
@@ -1614,10 +2294,13 @@ async function loadQuote(id){
   currentQuoteId = q.id;
   $('qName').value = q.name; $('qNotes').value = q.notes || '';
   filaments = q.filaments || []; renderFilaments();
+  quotePackaging = q.packaging ? JSON.parse(JSON.stringify(q.packaging)) : []; populatePackagingSelect(); renderPackagingChips();
   $('printHours').value = q.printHours; $('printWatts').value = q.printWatts; $('kwhPrice').value = q.kwhPrice; $('depreciationRate').value = (q.depreciationRate!=null ? q.depreciationRate : settings.depreciationRate);
   $('laborCost').value = q.laborCost; $('riskPct').value = q.riskPct; $('profitPct').value = q.profitPct; $('ivaPct').value = q.ivaPct;
   $('mlWeight').value = q.mlWeight || ''; $('mlL').value = q.mlL||''; $('mlA').value = q.mlA||''; $('mlH').value = q.mlH||'';
   $('mlMode').value = q.mlMode || 'normal';
+  $('mlQuienPaga').value = q.mlQuienPaga || 'gratis';
+  $('mlSimPrice').value = '';
   populateMlCategorySelect(q.mlCategory);
   if (q.mlEnabled){ $('mlSwitch').classList.add('on'); $('mlBody').classList.add('show'); }
   else { $('mlSwitch').classList.remove('on'); $('mlBody').classList.remove('show'); }
@@ -1722,6 +2405,44 @@ function renderCategories(){
 }
 $('addCategoryBtn').onclick = () => { settings.mlCategories.push({id:'cat_'+Date.now(), name:'', feePct:0}); renderCategories(); };
 
+function renderPackagingTypesSettings(){
+  const wrap = $('packagingTypesList');
+  wrap.innerHTML = '';
+  settings.packagingTypes.forEach((t, i) => {
+    const unitCost = t.piezasIncluidas > 0 ? (t.precioTotal / t.piezasIncluidas) : 0;
+    const div = document.createElement('div');
+    div.className = 'filament-row';
+    div.innerHTML = `
+      <div class="fr-top">
+        <span class="fr-label">${t.nombre || 'Tipo ' + (i+1)}</span>
+        <button class="remove-btn" data-i="${i}">quitar ✕</button>
+      </div>
+      <label>Nombre</label>
+      <input type="text" class="pt-nombre" data-i="${i}" value="${t.nombre}" placeholder="ej. Caja chica">
+      <div class="row">
+        <div><label>Precio total del paquete ($)</label><input type="number" step="0.01" class="pt-precio" data-i="${i}" value="${t.precioTotal}"></div>
+        <div><label>Piezas incluidas</label><input type="number" step="1" class="pt-piezas" data-i="${i}" value="${t.piezasIncluidas}"></div>
+      </div>
+      <div class="hint">Costo por pieza: <b class="pt-unitcost">${money(unitCost)}</b></div>
+    `;
+    wrap.appendChild(div);
+  });
+  const updateUnitCost = (i) => {
+    const t = settings.packagingTypes[i];
+    const unitCost = t.piezasIncluidas > 0 ? (t.precioTotal / t.piezasIncluidas) : 0;
+    wrap.children[i].querySelector('.pt-unitcost').textContent = money(unitCost);
+  };
+  wrap.querySelectorAll('.pt-nombre').forEach(el => el.oninput = () => {
+    settings.packagingTypes[+el.dataset.i].nombre = el.value;
+    wrap.children[+el.dataset.i].querySelector('.fr-label').textContent = el.value || ('Tipo ' + (+el.dataset.i+1));
+  });
+  wrap.querySelectorAll('.pt-precio').forEach(el => el.oninput = () => { settings.packagingTypes[+el.dataset.i].precioTotal = +el.value || 0; updateUnitCost(+el.dataset.i); });
+  wrap.querySelectorAll('.pt-piezas').forEach(el => el.oninput = () => { settings.packagingTypes[+el.dataset.i].piezasIncluidas = +el.value || 0; updateUnitCost(+el.dataset.i); });
+  wrap.querySelectorAll('.remove-btn').forEach(b => b.onclick = () => { settings.packagingTypes.splice(+b.dataset.i,1); renderPackagingTypesSettings(); });
+}
+$('addPackagingTypeBtn').onclick = () => { settings.packagingTypes.push({id:'pack_'+Date.now(), nombre:'', precioTotal:0, piezasIncluidas:1}); renderPackagingTypesSettings(); };
+
+
 function fillSettingsForm(){
   $('def-kwh').value = settings.kwhPrice;
   $('def-depreciation').value = settings.depreciationRate;
@@ -1731,9 +2452,13 @@ function fillSettingsForm(){
   $('def-iva').value = settings.ivaPct;
   $('def-isr').value = settings.isrPct;
   $('def-ivaret').value = settings.ivaRetPct;
+  $('def-iva-embebido').value = settings.ivaEmbebidoPct;
+  $('def-ml-ship-discount').value = settings.mlShippingDiscountPct;
   $('def-ml-divisor').value = settings.mlDivisor;
   renderTiers();
   renderCategories();
+  renderFullRatesSettings();
+  renderPackagingTypesSettings();
   $('settingsGlance').textContent = 'kWh $' + settings.kwhPrice + ' · IVA ' + settings.ivaPct + '%';
 }
 
@@ -1746,6 +2471,8 @@ $('saveSettingsBtn').onclick = async () => {
   settings.ivaPct = +$('def-iva').value || 0;
   settings.isrPct = +$('def-isr').value || 0;
   settings.ivaRetPct = +$('def-ivaret').value || 0;
+  settings.ivaEmbebidoPct = +$('def-iva-embebido').value || 0;
+  settings.mlShippingDiscountPct = +$('def-ml-ship-discount').value || 0;
   settings.mlDivisor = +$('def-ml-divisor').value || 5000;
   await storageSet('settings', settings);
   driveQueuePush();
@@ -1763,6 +2490,12 @@ function switchView(viewId){
   if (viewId === 'view-history') renderHistory();
   if (viewId === 'view-filaments') renderFilamentCatalog();
   if (viewId === 'view-products'){ showProductsList(); renderProductsList(); }
+  if (viewId === 'view-full'){ renderFullEligible(); }
+  if (viewId === 'view-sales'){
+    populateSaleProductSelect();
+    if (!$('v-fecha').value) $('v-fecha').value = new Date().toISOString().slice(0,10);
+    renderSalesList();
+  }
 }
 document.querySelectorAll('.tab-btn').forEach(b => b.onclick = () => switchView(b.dataset.view));
 
@@ -1814,15 +2547,110 @@ $('importFile').onchange = (e) => {
   e.target.value = '';
 };
 
+$('exportProductsBtn').onclick = async () => {
+  const backup = {
+    exportedAt: new Date().toISOString(),
+    products: await storageGet('products-list', [])
+  };
+  downloadTextFile('cotiza3d-productos-' + new Date().toISOString().slice(0,10) + '.json', JSON.stringify(backup, null, 2), 'application/json');
+  showToast('Catálogo descargado');
+};
+
+$('importProductsFile').onchange = (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  if (!confirm('Esto reemplazará tu catálogo de productos actual en este dispositivo. ¿Continuar?')) { e.target.value=''; return; }
+  const reader = new FileReader();
+  reader.onload = async (ev) => {
+    try{
+      const backup = JSON.parse(ev.target.result);
+      productsCatalog = backup.products || [];
+      await storageSet('products-list', productsCatalog);
+      showToast('Catálogo importado');
+      renderProductsList();
+      if (document.getElementById('view-full').classList.contains('active')) renderFullEligible();
+    }catch(err){
+      showToast('El archivo no es un catálogo válido');
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+};
+
+$('exportFullBtn').onclick = async () => {
+  const backup = {
+    exportedAt: new Date().toISOString(),
+    fullShipments: await storageGet('full-shipments', []),
+    fullProjections: await storageGet('full-projections', [])
+  };
+  downloadTextFile('cotiza3d-full-' + new Date().toISOString().slice(0,10) + '.json', JSON.stringify(backup, null, 2), 'application/json');
+  showToast('Datos de FULL descargados');
+};
+
+$('importFullFile').onchange = (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  if (!confirm('Esto reemplazará tus envíos y proyecciones de FULL actuales en este dispositivo. ¿Continuar?')) { e.target.value=''; return; }
+  const reader = new FileReader();
+  reader.onload = async (ev) => {
+    try{
+      const backup = JSON.parse(ev.target.result);
+      fullShipments = backup.fullShipments || [];
+      fullProjections = backup.fullProjections || [];
+      await storageSet('full-shipments', fullShipments);
+      await storageSet('full-projections', fullProjections);
+      showToast('Datos de FULL importados');
+      if (document.getElementById('view-full').classList.contains('active')) renderFullEligible();
+    }catch(err){
+      showToast('El archivo no es un respaldo de FULL válido');
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+};
+
+$('exportSalesBtn').onclick = async () => {
+  const backup = {
+    exportedAt: new Date().toISOString(),
+    sales: await storageGet('ventas-list', [])
+  };
+  downloadTextFile('cotiza3d-ventas-' + new Date().toISOString().slice(0,10) + '.json', JSON.stringify(backup, null, 2), 'application/json');
+  showToast('Ventas descargadas');
+};
+
+$('importSalesFile').onchange = (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  if (!confirm('Esto reemplazará tus ventas actuales en este dispositivo (no revierte stock automáticamente). ¿Continuar?')) { e.target.value=''; return; }
+  const reader = new FileReader();
+  reader.onload = async (ev) => {
+    try{
+      const backup = JSON.parse(ev.target.result);
+      salesList = backup.sales || [];
+      await storageSet('ventas-list', salesList);
+      showToast('Ventas importadas');
+      if (document.getElementById('view-sales').classList.contains('active')) renderSalesList();
+    }catch(err){
+      showToast('El archivo no es un respaldo de ventas válido');
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+};
+
 // ---------- GOOGLE DRIVE SYNC ----------
 const DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.file';
 const DRIVE_FILENAME = 'cotiza3d-data.json';
 const DRIVE_PRODUCTS_FILENAME = 'cotiza3d-productos.json';
+const DRIVE_FULFILLMENT_FILENAME = 'cotiza3d-full.json';
+const DRIVE_SALES_FILENAME = 'cotiza3d-ventas.json';
 let googleClientId = localStorage.getItem('cotiza3d_google_client_id') || '';
 let driveTokenClient = null;
 let driveAccessToken = null;
 let driveFileId = localStorage.getItem('cotiza3d_drive_file_id') || null;
 let productsDriveFileId = localStorage.getItem('cotiza3d_drive_products_file_id') || null;
+let fulfillmentDriveFileId = localStorage.getItem('cotiza3d_drive_full_file_id') || null;
+let salesDriveFileId = localStorage.getItem('cotiza3d_drive_sales_file_id') || null;
 let driveConnected = false;
 
 function driveSetStatus(text){
@@ -1882,6 +2710,8 @@ async function onDriveTokenResponse(resp){
   $('driveConnectedActions').style.display = 'block';
   await drivePull(true);
   await productsDrivePull();
+  await fulfillmentDrivePull();
+  await salesDrivePull();
 }
 
 async function driveFindFile(filename){
@@ -1995,6 +2825,7 @@ async function productsDrivePull(){
       localStorage.setItem('cotiza3d_drive_products_file_id', productsDriveFileId);
     }
     if (document.getElementById('view-products').classList.contains('active')) renderProductsList();
+    if (document.getElementById('view-full').classList.contains('active')) renderFullEligible();
   }catch(e){ console.error('products drive pull error', e); }
 }
 
@@ -2018,6 +2849,93 @@ function productsDriveQueuePush(){
   productsDrivePushTimer = setTimeout(productsDrivePush, 1200);
 }
 
+// ---------- DRIVE SYNC: FULL (envíos y proyecciones, archivo propio) ----------
+async function fulfillmentDrivePull(){
+  try{
+    if (!fulfillmentDriveFileId) fulfillmentDriveFileId = await driveFindFile(DRIVE_FULFILLMENT_FILENAME);
+    if (fulfillmentDriveFileId){
+      localStorage.setItem('cotiza3d_drive_full_file_id', fulfillmentDriveFileId);
+      const text = await driveReadFile(fulfillmentDriveFileId);
+      if (text && text.trim()){
+        const data = JSON.parse(text);
+        fullShipments = data.fullShipments || [];
+        fullProjections = data.fullProjections || [];
+        await storageSet('full-shipments', fullShipments);
+        await storageSet('full-projections', fullProjections);
+      }
+    } else {
+      fullShipments = await storageGet('full-shipments', []);
+      fullProjections = await storageGet('full-projections', []);
+      const payload = JSON.stringify({exportedAt: new Date().toISOString(), fullShipments, fullProjections}, null, 2);
+      fulfillmentDriveFileId = await driveCreateFile(payload, DRIVE_FULFILLMENT_FILENAME);
+      localStorage.setItem('cotiza3d_drive_full_file_id', fulfillmentDriveFileId);
+    }
+    if (document.getElementById('view-full').classList.contains('active')) renderFullEligible();
+  }catch(e){ console.error('full drive pull error', e); }
+}
+
+async function fulfillmentDrivePush(){
+  if (!driveConnected || !driveAccessToken) return;
+  try{
+    const payload = JSON.stringify({exportedAt: new Date().toISOString(), fullShipments, fullProjections}, null, 2);
+    if (!fulfillmentDriveFileId) fulfillmentDriveFileId = await driveFindFile(DRIVE_FULFILLMENT_FILENAME);
+    if (!fulfillmentDriveFileId){
+      fulfillmentDriveFileId = await driveCreateFile(payload, DRIVE_FULFILLMENT_FILENAME);
+      localStorage.setItem('cotiza3d_drive_full_file_id', fulfillmentDriveFileId);
+    } else {
+      await driveWriteFile(fulfillmentDriveFileId, payload);
+    }
+  }catch(e){ console.error('full drive push error', e); }
+}
+let fulfillmentDrivePushTimer = null;
+function fulfillmentDriveQueuePush(){
+  if (!driveConnected) return;
+  clearTimeout(fulfillmentDrivePushTimer);
+  fulfillmentDrivePushTimer = setTimeout(fulfillmentDrivePush, 1200);
+}
+
+// ---------- DRIVE SYNC: VENTAS (archivo propio) ----------
+async function salesDrivePull(){
+  try{
+    if (!salesDriveFileId) salesDriveFileId = await driveFindFile(DRIVE_SALES_FILENAME);
+    if (salesDriveFileId){
+      localStorage.setItem('cotiza3d_drive_sales_file_id', salesDriveFileId);
+      const text = await driveReadFile(salesDriveFileId);
+      if (text && text.trim()){
+        const data = JSON.parse(text);
+        salesList = data.sales || [];
+        await storageSet('ventas-list', salesList);
+      }
+    } else {
+      salesList = await storageGet('ventas-list', []);
+      const payload = JSON.stringify({exportedAt: new Date().toISOString(), sales: salesList}, null, 2);
+      salesDriveFileId = await driveCreateFile(payload, DRIVE_SALES_FILENAME);
+      localStorage.setItem('cotiza3d_drive_sales_file_id', salesDriveFileId);
+    }
+    if (document.getElementById('view-sales').classList.contains('active')) renderSalesList();
+  }catch(e){ console.error('sales drive pull error', e); }
+}
+
+async function salesDrivePush(){
+  if (!driveConnected || !driveAccessToken) return;
+  try{
+    const payload = JSON.stringify({exportedAt: new Date().toISOString(), sales: salesList}, null, 2);
+    if (!salesDriveFileId) salesDriveFileId = await driveFindFile(DRIVE_SALES_FILENAME);
+    if (!salesDriveFileId){
+      salesDriveFileId = await driveCreateFile(payload, DRIVE_SALES_FILENAME);
+      localStorage.setItem('cotiza3d_drive_sales_file_id', salesDriveFileId);
+    } else {
+      await driveWriteFile(salesDriveFileId, payload);
+    }
+  }catch(e){ console.error('sales drive push error', e); }
+}
+let salesDrivePushTimer = null;
+function salesDriveQueuePush(){
+  if (!driveConnected) return;
+  clearTimeout(salesDrivePushTimer);
+  salesDrivePushTimer = setTimeout(salesDrivePush, 1200);
+}
+
 $('saveClientIdBtn').onclick = () => {
   const val = $('googleClientId').value.trim();
   if (!val.endsWith('.apps.googleusercontent.com')){ showToast('Ese Client ID no se ve completo'); return; }
@@ -2031,8 +2949,8 @@ $('driveConnectBtn').onclick = () => {
   if (!driveTokenClient){ showToast('Primero guarda tu Client ID'); return; }
   driveTokenClient.requestAccessToken({prompt: driveAccessToken ? '' : 'consent'});
 };
-$('drivePullBtn').onclick = () => drivePull(false).then(() => productsDrivePull());
-$('drivePushBtn').onclick = () => Promise.all([drivePush(), productsDrivePush()]).then(() => showToast('Cambios subidos a Drive'));
+$('drivePullBtn').onclick = () => drivePull(false).then(() => productsDrivePull()).then(() => fulfillmentDrivePull()).then(() => salesDrivePull());
+$('drivePushBtn').onclick = () => Promise.all([drivePush(), productsDrivePush(), fulfillmentDrivePush(), salesDrivePush()]).then(() => showToast('Cambios subidos a Drive'));
 $('driveDisconnectBtn').onclick = () => {
   driveConnected = false; driveAccessToken = null;
   $('driveConnectBtn').style.display = 'block';
@@ -2048,9 +2966,14 @@ $('driveDisconnectBtn').onclick = () => {
     settings = {...settings, ...saved};
     if (saved.mlCategories) settings.mlCategories = saved.mlCategories;
     if (saved.tiers) settings.tiers = saved.tiers;
+    if (saved.fullSizeRates) settings.fullSizeRates = saved.fullSizeRates;
+    if (saved.packagingTypes) settings.packagingTypes = saved.packagingTypes;
   }
   await loadCatalog();
   productsCatalog = await storageGet('products-list', []);
+  fullShipments = await storageGet('full-shipments', []);
+  fullProjections = await storageGet('full-projections', []);
+  salesList = await storageGet('ventas-list', []);
   fillSettingsForm();
   resetForm();
   renderHistory();
