@@ -461,6 +461,16 @@ textarea{
       <div class="hint" id="fc-preview" style="margin-top:8px;"></div>
       <button class="btn btn-accent btn-block" id="addFilCatBtn" style="margin-top:12px;">Agregar a mi catálogo</button>
     </div>
+    <div class="card" style="padding:12px 16px;">
+      <input type="text" id="searchFilaments" placeholder="Buscar por marca o color...">
+      <label style="margin-top:10px;">Ordenar por</label>
+      <select id="sortFilaments">
+        <option value="marca_asc">Marca (A-Z)</option>
+        <option value="marca_desc">Marca (Z-A)</option>
+        <option value="precio_asc">Precio/kg (menor a mayor)</option>
+        <option value="precio_desc">Precio/kg (mayor a menor)</option>
+      </select>
+    </div>
     <div id="filCatList"></div>
   </div>
 
@@ -501,6 +511,27 @@ textarea{
       <div class="row" style="margin-top:10px;">
         <button class="btn" id="selectAllProductsBtn">☑ Seleccionar todos</button>
         <button class="btn" id="selectNoneProductsBtn">☐ Ninguno</button>
+      </div>
+
+      <div class="card" style="padding:12px 16px; margin-top:12px;">
+        <input type="text" id="searchProducts" placeholder="Buscar por nombre o SKU...">
+        <label style="margin-top:10px;">Filtrar por estado de carga</label>
+        <select id="filterProducts">
+          <option value="todos">Todos</option>
+          <option value="pendiente">Con algo pendiente</option>
+          <option value="cargado">Todo cargado</option>
+          <option value="fallo">Con algún fallo</option>
+        </select>
+        <label style="margin-top:10px;">Ordenar por</label>
+        <select id="sortProducts">
+          <option value="reciente">Más reciente primero</option>
+          <option value="nombre_asc">Nombre (A-Z)</option>
+          <option value="nombre_desc">Nombre (Z-A)</option>
+          <option value="precio_asc">Precio TikTok (menor a mayor)</option>
+          <option value="precio_desc">Precio TikTok (mayor a menor)</option>
+          <option value="stock_asc">Stock (menor a mayor)</option>
+          <option value="stock_desc">Stock (mayor a menor)</option>
+        </select>
       </div>
       <div id="productsList" style="margin-top:12px;"></div>
     </div>
@@ -741,6 +772,28 @@ textarea{
 
     <div class="card" style="padding:12px 16px;">
       <input type="text" id="searchSales" placeholder="Buscar por producto o ID de venta...">
+      <label style="margin-top:10px;">Plataforma</label>
+      <select id="filterSalesPlataforma">
+        <option value="todas">Todas</option>
+        <option value="tiktok">TikTok Shop</option>
+        <option value="ml">MercadoLibre</option>
+        <option value="tiendanube">Tienda Nube</option>
+        <option value="otro">Otra</option>
+      </select>
+      <label style="margin-top:10px;">Estado</label>
+      <select id="filterSalesEstado">
+        <option value="todas">Todas</option>
+        <option value="completada">Completada</option>
+        <option value="cancelada">Cancelada</option>
+        <option value="devuelta">Devuelta</option>
+      </select>
+      <label style="margin-top:10px;">Ordenar por</label>
+      <select id="sortSales">
+        <option value="fecha_desc">Fecha (más reciente primero)</option>
+        <option value="fecha_asc">Fecha (más antigua primero)</option>
+        <option value="ganancia_desc">Ganancia (mayor a menor)</option>
+        <option value="ganancia_asc">Ganancia (menor a mayor)</option>
+      </select>
     </div>
     <div id="salesList"></div>
   </div>
@@ -1038,8 +1091,24 @@ function renderFilamentCatalog(){
     wrap.innerHTML = '<div class="empty-state">Tu catálogo está vacío. Agrega tu primer filamento arriba.</div>';
     return;
   }
+  const search = ($('searchFilaments').value || '').toLowerCase();
+  const sortBy = $('sortFilaments').value;
+  let list = filamentCatalog.filter(c =>
+    !search || c.marca.toLowerCase().includes(search) || c.color.toLowerCase().includes(search)
+  );
+  list = [...list].sort((a,b) => {
+    if (sortBy === 'marca_asc') return a.marca.localeCompare(b.marca) || a.color.localeCompare(b.color);
+    if (sortBy === 'marca_desc') return b.marca.localeCompare(a.marca) || b.color.localeCompare(a.color);
+    if (sortBy === 'precio_asc') return a.priceKg - b.priceKg;
+    if (sortBy === 'precio_desc') return b.priceKg - a.priceKg;
+    return 0;
+  });
+  if (!list.length){
+    wrap.innerHTML = '<div class="empty-state">Ningún filamento coincide con tu búsqueda.</div>';
+    return;
+  }
   wrap.innerHTML = '';
-  filamentCatalog.forEach(c => {
+  list.forEach(c => {
     const div = document.createElement('div');
     div.className = 'fil-cat-item';
     div.innerHTML = `
@@ -1065,6 +1134,8 @@ function renderFilamentCatalog(){
 }
 
 // ---------- FILAMENTS (in a quote) ----------
+$('searchFilaments').addEventListener('input', () => renderFilamentCatalog());
+$('sortFilaments').addEventListener('change', () => renderFilamentCatalog());
 function addFilament(data){
   filaments.push(data || {catalogId:'custom', name:'', priceKg:0, grams:0});
   renderFilaments();
@@ -1605,14 +1676,43 @@ function statusBadgeHtml(label, est){
   return `<span class="platform-badge" style="color:${colorMap[estado]}; border-color:${colorMap[estado]};"${title}>${label}: ${textMap[estado]}</span>`;
 }
 
+function productEstadoMatches(p, filterVal){
+  if (filterVal === 'todos') return true;
+  const estados = ['tiktok','ml','tiendanube'].map(k => p.estadoCarga?.[k]?.estado || 'pendiente');
+  if (filterVal === 'pendiente') return estados.includes('pendiente');
+  if (filterVal === 'cargado') return estados.every(e => e === 'cargado');
+  if (filterVal === 'fallo') return estados.includes('fallo');
+  return true;
+}
+
 function renderProductsList(){
   const wrap = $('productsList');
   if (!productsCatalog.length){
     wrap.innerHTML = '<div class="empty-state">Aún no tienes productos en tu catálogo.<br>Agrega el primero arriba.</div>';
     return;
   }
+  const search = ($('searchProducts').value || '').toLowerCase();
+  const filterVal = $('filterProducts').value;
+  const sortBy = $('sortProducts').value;
+  let list = productsCatalog.filter(p =>
+    (!search || p.nombre.toLowerCase().includes(search) || (p.sku||'').toLowerCase().includes(search)) &&
+    productEstadoMatches(p, filterVal)
+  );
+  list = [...list].sort((a,b) => {
+    if (sortBy === 'nombre_asc') return a.nombre.localeCompare(b.nombre);
+    if (sortBy === 'nombre_desc') return b.nombre.localeCompare(a.nombre);
+    if (sortBy === 'precio_asc') return (a.precioTiktok||0) - (b.precioTiktok||0);
+    if (sortBy === 'precio_desc') return (b.precioTiktok||0) - (a.precioTiktok||0);
+    if (sortBy === 'stock_asc') return (a.stock||0) - (b.stock||0);
+    if (sortBy === 'stock_desc') return (b.stock||0) - (a.stock||0);
+    return new Date(b.updatedAt||0) - new Date(a.updatedAt||0); // reciente
+  });
+  if (!list.length){
+    wrap.innerHTML = '<div class="empty-state">Ningún producto coincide con tu búsqueda/filtro.</div>';
+    return;
+  }
   wrap.innerHTML = '';
-  productsCatalog.forEach(p => {
+  list.forEach(p => {
     const div = document.createElement('div');
     div.className = 'product-item';
     const checked = selectedProductIds.has(p.id) ? 'checked' : '';
@@ -1649,6 +1749,9 @@ function renderProductsList(){
 }
 $('selectAllProductsBtn').onclick = () => { productsCatalog.forEach(p => selectedProductIds.add(p.id)); renderProductsList(); };
 $('selectNoneProductsBtn').onclick = () => { selectedProductIds.clear(); renderProductsList(); };
+$('searchProducts').addEventListener('input', () => renderProductsList());
+$('filterProducts').addEventListener('change', () => renderProductsList());
+$('sortProducts').addEventListener('change', () => renderProductsList());
 
 // ---------- GENERATORS: shared helpers ----------
 function slugify(text){
@@ -2232,18 +2335,27 @@ async function deleteSale(sale){
   populateSaleProductSelect();
 }
 
-function renderSalesList(filter){
+function renderSalesList(){
   const wrap = $('salesList');
-  let list = salesList;
-  if (filter){
-    const f = filter.toLowerCase();
-    list = list.filter(s => {
-      const p = productsCatalog.find(x => x.id === s.productId);
-      return (p && p.nombre.toLowerCase().includes(f)) || s.ventaId.toLowerCase().includes(f);
-    });
-  }
+  const search = ($('searchSales').value || '').toLowerCase();
+  const plataformaFilter = $('filterSalesPlataforma').value;
+  const estadoFilter = $('filterSalesEstado').value;
+  const sortBy = $('sortSales').value;
+  let list = salesList.filter(s => {
+    const p = productsCatalog.find(x => x.id === s.productId);
+    const matchesSearch = !search || (p && p.nombre.toLowerCase().includes(search)) || s.ventaId.toLowerCase().includes(search);
+    const matchesPlataforma = plataformaFilter === 'todas' || s.plataforma === plataformaFilter;
+    const matchesEstado = estadoFilter === 'todas' || s.estado === estadoFilter;
+    return matchesSearch && matchesPlataforma && matchesEstado;
+  });
+  list = [...list].sort((a,b) => {
+    if (sortBy === 'fecha_asc') return new Date(a.fechaVenta) - new Date(b.fechaVenta);
+    if (sortBy === 'ganancia_desc') return saleProfit(b) - saleProfit(a);
+    if (sortBy === 'ganancia_asc') return saleProfit(a) - saleProfit(b);
+    return new Date(b.fechaVenta) - new Date(a.fechaVenta); // fecha_desc (default)
+  });
   if (!list.length){
-    wrap.innerHTML = '<div class="empty-state">Aún no hay ventas registradas.</div>';
+    wrap.innerHTML = '<div class="empty-state">Aún no hay ventas registradas, o ninguna coincide con tu búsqueda/filtro.</div>';
     return;
   }
   wrap.innerHTML = '';
@@ -2279,7 +2391,10 @@ function renderSalesList(filter){
     wrap.appendChild(div);
   });
 }
-$('searchSales').addEventListener('input', (e) => renderSalesList(e.target.value));
+$('searchSales').addEventListener('input', () => renderSalesList());
+$('filterSalesPlataforma').addEventListener('change', () => renderSalesList());
+$('filterSalesEstado').addEventListener('change', () => renderSalesList());
+$('sortSales').addEventListener('change', () => renderSalesList());
 
 // ---------- SAVE / LOAD QUOTES ----------
 function resetForm(){
