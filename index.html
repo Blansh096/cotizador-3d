@@ -248,6 +248,32 @@ textarea{
   width:18px; height:18px; font-size:11px; line-height:1; cursor:pointer; display:flex; align-items:center; justify-content:center;
 }
 .chip .chip-x:hover{background:var(--danger); color:#fff;}
+
+.filter-bar{margin-bottom:12px;}
+.filter-bar input[type=text]{margin-bottom:8px;}
+
+.dropdown-row{display:flex; gap:8px; margin-bottom:10px;}
+.dropdown-wrap{position:relative; flex:1;}
+.dropdown-btn{
+  width:100%; display:flex; justify-content:space-between; align-items:center; gap:6px;
+  background:var(--panel-alt); border:1px solid var(--line); border-radius:12px;
+  padding:9px 12px; font-family:'Quicksand'; font-weight:600; font-size:12.5px; color:var(--text); cursor:pointer;
+}
+.dropdown-btn.has-active{border-color:var(--accent); color:var(--accent);}
+.dropdown-btn .caret{font-size:9px; color:var(--muted);}
+.dropdown-panel{
+  position:absolute; top:calc(100% + 6px); left:0; right:0; background:var(--panel); border:1px solid var(--line);
+  border-radius:12px; padding:12px; z-index:30; box-shadow:0 8px 24px rgba(0,0,0,0.18); max-height:320px; overflow-y:auto;
+}
+.dropdown-panel.hidden{display:none;}
+.filter-group-title{font-family:'Fredoka'; font-weight:600; font-size:12px; color:var(--accent); margin:12px 0 6px;}
+.filter-group-title:first-child{margin-top:0;}
+.filter-check-row{display:flex; align-items:center; gap:8px; padding:5px 2px; font-size:12.5px;}
+.filter-check-row input{width:16px; height:16px; accent-color:var(--accent); margin:0; flex-shrink:0;}
+.sort-option{padding:9px 8px; font-size:12.5px; cursor:pointer; border-radius:8px;}
+.sort-option:hover{background:var(--panel-alt);}
+.sort-option.active{background:var(--accent); color:var(--bg); font-weight:600;}
+.filter-empty-note{font-size:11.5px; color:var(--muted); padding:4px 2px;}
 </style>
 </head>
 <body>
@@ -294,24 +320,6 @@ textarea{
     <div class="card">
       <div class="section-head">
         <div class="section-num">2</div>
-        <div class="section-title">Embalaje</div>
-      </div>
-      <div class="row">
-        <div style="flex:2;">
-          <label>Tipo de embalaje</label>
-          <select id="packagingSelect"></select>
-        </div>
-        <div style="flex:1; display:flex; align-items:flex-end;">
-          <button class="btn btn-accent btn-block" id="addPackagingBtn">+ Agregar</button>
-        </div>
-      </div>
-      <div class="chip-wrap" id="packagingChips"></div>
-      <div class="hint" id="noPackagingHint" style="display:none;">Aún no tienes tipos de embalaje. Agrégalos en Ajustes.</div>
-    </div>
-
-    <div class="card">
-      <div class="section-head">
-        <div class="section-num">3</div>
         <div class="section-title">Tiempo de impresión, energía y desgaste</div>
       </div>
       <div class="row">
@@ -332,11 +340,29 @@ textarea{
 
     <div class="card">
       <div class="section-head">
-        <div class="section-num">4</div>
+        <div class="section-num">3</div>
         <div class="section-title">Mano de obra</div>
       </div>
       <label>Costo operativo / mano de obra ($, monto fijo)</label>
       <input type="number" step="1" id="laborCost" value="0">
+    </div>
+
+    <div class="card">
+      <div class="section-head">
+        <div class="section-num">4</div>
+        <div class="section-title">Embalaje</div>
+      </div>
+      <div class="row">
+        <div style="flex:2;">
+          <label>Tipo de embalaje</label>
+          <select id="packagingSelect"></select>
+        </div>
+        <div style="flex:1; display:flex; align-items:flex-end;">
+          <button class="btn btn-accent btn-block" id="addPackagingBtn">+ Agregar</button>
+        </div>
+      </div>
+      <div class="chip-wrap" id="packagingChips"></div>
+      <div class="hint" id="noPackagingHint" style="display:none;">Aún no tienes tipos de embalaje. Agrégalos en Ajustes.</div>
     </div>
 
     <div class="card">
@@ -369,9 +395,23 @@ textarea{
     </div>
 
     <div class="card">
+      <div class="section-head">
+        <div class="section-num">6</div>
+        <div class="section-title">Dimensiones del paquete</div>
+      </div>
+      <div class="hint" style="margin-bottom:8px;">Se usan para el cálculo de envío de Mercado Libre y para prellenar el producto en E-Commerce — llénalas aunque no uses ML.</div>
+      <label>Dimensiones del paquete (cm) — largo × ancho × alto</label>
+      <div class="row">
+        <div><input type="number" step="0.1" id="pkgLargo" placeholder="largo"></div>
+        <div><input type="number" step="0.1" id="pkgAncho" placeholder="ancho"></div>
+        <div><input type="number" step="0.1" id="pkgAlto" placeholder="alto"></div>
+      </div>
+    </div>
+
+    <div class="card">
       <div class="ml-toggle-wrap" id="mlToggleWrap">
         <div class="section-head" style="margin-bottom:0">
-          <div class="section-num">6</div>
+          <div class="section-num">7</div>
           <div class="section-title">Mercado Libre (opcional)</div>
         </div>
         <div class="switch" id="mlSwitch"></div>
@@ -402,12 +442,7 @@ textarea{
           <input type="checkbox" id="mlApplyRepDiscount" checked style="width:18px; height:18px; accent-color:var(--accent); margin:0;">
           <label style="margin:0; font-size:12.5px;" for="mlApplyRepDiscount">Aplicar mi % de descuento por reputación (<span id="mlRepDiscountPctView">50</span>%, editable en Ajustes)</label>
         </div>
-        <label>Dimensiones del paquete (cm) — largo × ancho × alto</label>
-        <div class="row">
-          <div><input type="number" step="0.1" id="mlL" placeholder="largo"></div>
-          <div><input type="number" step="0.1" id="mlA" placeholder="ancho"></div>
-          <div><input type="number" step="0.1" id="mlH" placeholder="alto"></div>
-        </div>
+        <div class="hint" style="margin-top:8px;">Usa las dimensiones del paso 6 (Dimensiones del paquete) para este cálculo.</div>
         <div class="summary-line"><span class="lbl">Peso volumétrico</span><span id="ml-volw">0.00 kg</span></div>
         <div class="summary-line"><span class="lbl">Peso facturable (mayor de los dos)</span><span id="ml-billw">0.00 kg</span></div>
 
@@ -436,7 +471,20 @@ textarea{
 
     <div class="quote-sub" id="quote-historial" style="display:none;">
       <div class="card" style="padding:12px 16px;">
-        <input type="text" id="searchQuotes" placeholder="Buscar por nombre...">
+        <div style="display:flex; gap:8px; align-items:center;">
+          <input type="text" id="searchQuotes" placeholder="Buscar por nombre..." style="flex:1;">
+          <div class="dropdown-wrap" style="flex:0 0 auto; width:auto;">
+            <button class="dropdown-btn" id="historySortBtn" style="white-space:nowrap;">Ordenar <span class="caret">▾</span></button>
+            <div class="dropdown-panel hidden" id="historySortPanel" style="left:auto; right:0; width:220px;">
+              <div class="sort-option active" data-sort="fecha_desc">Más reciente primero</div>
+              <div class="sort-option" data-sort="fecha_asc">Más antigua primero</div>
+              <div class="sort-option" data-sort="nombre_asc">Nombre (A-Z)</div>
+              <div class="sort-option" data-sort="nombre_desc">Nombre (Z-A)</div>
+              <div class="sort-option" data-sort="precio_desc">Precio (mayor a menor)</div>
+              <div class="sort-option" data-sort="precio_asc">Precio (menor a mayor)</div>
+            </div>
+          </div>
+        </div>
       </div>
       <div id="historyList"></div>
     </div>
@@ -461,15 +509,23 @@ textarea{
       <div class="hint" id="fc-preview" style="margin-top:8px;"></div>
       <button class="btn btn-accent btn-block" id="addFilCatBtn" style="margin-top:12px;">Agregar a mi catálogo</button>
     </div>
-    <div class="card" style="padding:12px 16px;">
-      <input type="text" id="searchFilaments" placeholder="Buscar por marca o color...">
-      <label style="margin-top:10px;">Ordenar por</label>
-      <select id="sortFilaments">
-        <option value="marca_asc">Marca (A-Z)</option>
-        <option value="marca_desc">Marca (Z-A)</option>
-        <option value="precio_asc">Precio/kg (menor a mayor)</option>
-        <option value="precio_desc">Precio/kg (mayor a menor)</option>
-      </select>
+    <div class="card">
+      <input type="text" id="searchFilaments" placeholder="Buscar por marca o color..." style="margin-bottom:10px;">
+      <div class="dropdown-row">
+        <div class="dropdown-wrap">
+          <button class="dropdown-btn" id="filamentFiltersBtn">Filtros <span class="caret">▾</span></button>
+          <div class="dropdown-panel hidden" id="filamentFiltersPanel"></div>
+        </div>
+        <div class="dropdown-wrap">
+          <button class="dropdown-btn" id="filamentSortBtn">Ordenar <span class="caret">▾</span></button>
+          <div class="dropdown-panel hidden" id="filamentSortPanel">
+            <div class="sort-option active" data-sort="marca_asc">Marca (A-Z)</div>
+            <div class="sort-option" data-sort="marca_desc">Marca (Z-A)</div>
+            <div class="sort-option" data-sort="precio_asc">Precio/kg (menor a mayor)</div>
+            <div class="sort-option" data-sort="precio_desc">Precio/kg (mayor a menor)</div>
+          </div>
+        </div>
+      </div>
     </div>
     <div id="filCatList"></div>
   </div>
@@ -513,25 +569,31 @@ textarea{
         <button class="btn" id="selectNoneProductsBtn">☐ Ninguno</button>
       </div>
 
-      <div class="card" style="padding:12px 16px; margin-top:12px;">
-        <input type="text" id="searchProducts" placeholder="Buscar por nombre o SKU...">
-        <label style="margin-top:10px;">Filtrar por estado de carga</label>
-        <select id="filterProducts">
-          <option value="todos">Todos</option>
-          <option value="pendiente">Con algo pendiente</option>
-          <option value="cargado">Todo cargado</option>
-          <option value="fallo">Con algún fallo</option>
-        </select>
-        <label style="margin-top:10px;">Ordenar por</label>
-        <select id="sortProducts">
-          <option value="reciente">Más reciente primero</option>
-          <option value="nombre_asc">Nombre (A-Z)</option>
-          <option value="nombre_desc">Nombre (Z-A)</option>
-          <option value="precio_asc">Precio TikTok (menor a mayor)</option>
-          <option value="precio_desc">Precio TikTok (mayor a menor)</option>
-          <option value="stock_asc">Stock (menor a mayor)</option>
-          <option value="stock_desc">Stock (mayor a menor)</option>
-        </select>
+      <div class="card" style="margin-top:12px;">
+        <input type="text" id="searchProducts" placeholder="Buscar por nombre o SKU..." style="margin-bottom:10px;">
+        <div class="dropdown-row">
+          <div class="dropdown-wrap">
+            <button class="dropdown-btn" id="productFiltersBtn">Filtros <span class="caret">▾</span></button>
+            <div class="dropdown-panel hidden" id="productFiltersPanel">
+              <div class="filter-group-title">Estado de carga</div>
+              <label class="filter-check-row"><input type="checkbox" class="pf-estado" value="pendiente"> Con algo pendiente</label>
+              <label class="filter-check-row"><input type="checkbox" class="pf-estado" value="cargado"> Todo cargado</label>
+              <label class="filter-check-row"><input type="checkbox" class="pf-estado" value="fallo"> Con algún fallo</label>
+            </div>
+          </div>
+          <div class="dropdown-wrap">
+            <button class="dropdown-btn" id="productSortBtn">Ordenar <span class="caret">▾</span></button>
+            <div class="dropdown-panel hidden" id="productSortPanel">
+              <div class="sort-option active" data-sort="reciente">Más reciente</div>
+              <div class="sort-option" data-sort="nombre_asc">Nombre (A-Z)</div>
+              <div class="sort-option" data-sort="nombre_desc">Nombre (Z-A)</div>
+              <div class="sort-option" data-sort="precio_desc">Precio TikTok (mayor a menor)</div>
+              <div class="sort-option" data-sort="precio_asc">Precio TikTok (menor a mayor)</div>
+              <div class="sort-option" data-sort="stock_desc">Stock (mayor a menor)</div>
+              <div class="sort-option" data-sort="stock_asc">Stock (menor a mayor)</div>
+            </div>
+          </div>
+        </div>
       </div>
       <div id="productsList" style="margin-top:12px;"></div>
     </div>
@@ -541,7 +603,11 @@ textarea{
         <div class="section-title" style="margin-bottom:6px;">Cotización de origen</div>
         <div class="hint" style="margin-bottom:10px;">Todo producto debe venir de una cotización guardada — de ahí sale tu costo real y el precio sugerido. Cada cotización solo se puede usar en un producto.</div>
         <label>Cotización</label>
-        <select id="p-linkedQuote"><option value="">— Selecciona una cotización —</option></select>
+        <div class="dropdown-wrap" style="width:100%;">
+          <input type="text" id="p-linkedQuote-search" placeholder="Buscar cotización disponible..." autocomplete="off">
+          <input type="hidden" id="p-linkedQuote">
+          <div class="dropdown-panel hidden" id="p-linkedQuote-panel" style="left:0; right:0;"></div>
+        </div>
       </div>
 
       <div class="card">
@@ -770,30 +836,33 @@ textarea{
       <button class="btn btn-accent btn-block" id="addSaleBtn" style="margin-top:10px;">Registrar venta</button>
     </div>
 
-    <div class="card" style="padding:12px 16px;">
-      <input type="text" id="searchSales" placeholder="Buscar por producto o ID de venta...">
-      <label style="margin-top:10px;">Plataforma</label>
-      <select id="filterSalesPlataforma">
-        <option value="todas">Todas</option>
-        <option value="tiktok">TikTok Shop</option>
-        <option value="ml">MercadoLibre</option>
-        <option value="tiendanube">Tienda Nube</option>
-        <option value="otro">Otra</option>
-      </select>
-      <label style="margin-top:10px;">Estado</label>
-      <select id="filterSalesEstado">
-        <option value="todas">Todas</option>
-        <option value="completada">Completada</option>
-        <option value="cancelada">Cancelada</option>
-        <option value="devuelta">Devuelta</option>
-      </select>
-      <label style="margin-top:10px;">Ordenar por</label>
-      <select id="sortSales">
-        <option value="fecha_desc">Fecha (más reciente primero)</option>
-        <option value="fecha_asc">Fecha (más antigua primero)</option>
-        <option value="ganancia_desc">Ganancia (mayor a menor)</option>
-        <option value="ganancia_asc">Ganancia (menor a mayor)</option>
-      </select>
+    <div class="card">
+      <input type="text" id="searchSales" placeholder="Buscar por producto o ID de venta..." style="margin-bottom:10px;">
+      <div class="dropdown-row">
+        <div class="dropdown-wrap">
+          <button class="dropdown-btn" id="salesFiltersBtn">Filtros <span class="caret">▾</span></button>
+          <div class="dropdown-panel hidden" id="salesFiltersPanel">
+            <div class="filter-group-title">Plataforma</div>
+            <label class="filter-check-row"><input type="checkbox" class="sf-plataforma" value="tiktok"> TikTok Shop</label>
+            <label class="filter-check-row"><input type="checkbox" class="sf-plataforma" value="ml"> MercadoLibre</label>
+            <label class="filter-check-row"><input type="checkbox" class="sf-plataforma" value="tiendanube"> Tienda Nube</label>
+            <label class="filter-check-row"><input type="checkbox" class="sf-plataforma" value="otro"> Otra</label>
+            <div class="filter-group-title">Estado</div>
+            <label class="filter-check-row"><input type="checkbox" class="sf-estado" value="completada"> Completada</label>
+            <label class="filter-check-row"><input type="checkbox" class="sf-estado" value="cancelada"> Cancelada</label>
+            <label class="filter-check-row"><input type="checkbox" class="sf-estado" value="devuelta"> Devuelta</label>
+          </div>
+        </div>
+        <div class="dropdown-wrap">
+          <button class="dropdown-btn" id="salesSortBtn">Ordenar <span class="caret">▾</span></button>
+          <div class="dropdown-panel hidden" id="salesSortPanel">
+            <div class="sort-option active" data-sort="fecha_desc">Más reciente</div>
+            <div class="sort-option" data-sort="fecha_asc">Más antigua</div>
+            <div class="sort-option" data-sort="ganancia_desc">Mayor ganancia</div>
+            <div class="sort-option" data-sort="ganancia_asc">Menor ganancia</div>
+          </div>
+        </div>
+      </div>
     </div>
     <div id="salesList"></div>
   </div>
@@ -935,7 +1004,7 @@ textarea{
 <div class="tabbar">
   <button class="tab-btn active" data-view="view-new"><span>Cotización</span><span class="dot"></span></button>
   <button class="tab-btn" data-view="view-filaments"><span>Filamentos</span><span class="dot"></span></button>
-  <button class="tab-btn" data-view="view-products"><span>E-Commerce</span><span class="dot"></span></button>
+  <button class="tab-btn" data-view="view-products"><span>e-commerce</span><span class="dot"></span></button>
   <button class="tab-btn" data-view="view-full"><span>FULL</span><span class="dot"></span></button>
   <button class="tab-btn" data-view="view-sales"><span>Ventas</span><span class="dot"></span></button>
   <button class="tab-btn" data-view="view-settings"><span>Ajustes</span><span class="dot"></span></button>
@@ -996,6 +1065,29 @@ const TT_MATERIAL_OPTIONS = {
 const TT_ESTILO_OPTIONS = ['Japonés','Vintage','Glam','Tradicional','Clásico','Retro','Industrial','Tropical','French Country','Rústico','Antiguo','Jardín','Sudeste Asiático','Asiático','Moderno'];
 const TT_PATRON_OPTIONS = ['Animales','Geométrico','Acuarela','Camuflaje','Eslogan','Figura','Floral','Plantas','Lunares','Impreso','Sólido','Rayas'];
 const TT_CARACTERISTICA_OPTIONS = ['Inducción','Duradero','Resistente al óxido','Seguro','Inquebrantable','A prueba de agua'];
+
+// ---------- GENERIC DROPDOWN (Filtros / Ordenar buttons) ----------
+function setupDropdown(btnId, panelId){
+  const btn = $(btnId), panel = $(panelId);
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const willOpen = panel.classList.contains('hidden');
+    document.querySelectorAll('.dropdown-panel').forEach(p => p.classList.add('hidden'));
+    if (willOpen) panel.classList.remove('hidden');
+  });
+  panel.addEventListener('click', (e) => e.stopPropagation());
+}
+document.addEventListener('click', () => {
+  document.querySelectorAll('.dropdown-panel').forEach(p => p.classList.add('hidden'));
+});
+function setupSortPanel(panelId, onSelect){
+  $(panelId).querySelectorAll('.sort-option').forEach(opt => opt.onclick = () => {
+    $(panelId).querySelectorAll('.sort-option').forEach(o => o.classList.remove('active'));
+    opt.classList.add('active');
+    $(panelId).classList.add('hidden');
+    onSelect(opt.dataset.sort);
+  });
+}
 
 function showToast(msg){
   const t = $('toast'); t.textContent = msg; t.classList.add('show');
@@ -1085,26 +1177,61 @@ $('addFilCatBtn').onclick = async () => {
   showToast('Filamento agregado al catálogo');
 };
 
+let filamentSortValue = 'marca_asc';
+let filamentSelectedMarcas = new Set();
+let filamentSelectedColores = new Set();
+
+function renderFilamentFiltersPanel(){
+  const panel = $('filamentFiltersPanel');
+  const marcas = [...new Set(filamentCatalog.map(c => c.marca))].sort();
+  const colores = [...new Set(filamentCatalog.map(c => c.color))].sort();
+  if (!marcas.length){
+    panel.innerHTML = '<div class="filter-empty-note">Agrega filamentos para poder filtrarlos.</div>';
+    return;
+  }
+  panel.innerHTML = `
+    <div class="filter-group-title">Marca</div>
+    ${marcas.map(m => `<label class="filter-check-row"><input type="checkbox" class="ff-marca" value="${m}" ${filamentSelectedMarcas.has(m)?'checked':''}> ${m}</label>`).join('')}
+    <div class="filter-group-title">Color</div>
+    ${colores.map(c => `<label class="filter-check-row"><input type="checkbox" class="ff-color" value="${c}" ${filamentSelectedColores.has(c)?'checked':''}> ${c}</label>`).join('')}
+  `;
+  panel.querySelectorAll('.ff-marca').forEach(el => el.onchange = () => {
+    el.checked ? filamentSelectedMarcas.add(el.value) : filamentSelectedMarcas.delete(el.value);
+    updateFilamentFiltersBtnState();
+    renderFilamentCatalog();
+  });
+  panel.querySelectorAll('.ff-color').forEach(el => el.onchange = () => {
+    el.checked ? filamentSelectedColores.add(el.value) : filamentSelectedColores.delete(el.value);
+    updateFilamentFiltersBtnState();
+    renderFilamentCatalog();
+  });
+}
+function updateFilamentFiltersBtnState(){
+  $('filamentFiltersBtn').classList.toggle('has-active', filamentSelectedMarcas.size > 0 || filamentSelectedColores.size > 0);
+}
+
 function renderFilamentCatalog(){
   const wrap = $('filCatList');
+  renderFilamentFiltersPanel();
   if (!filamentCatalog.length){
     wrap.innerHTML = '<div class="empty-state">Tu catálogo está vacío. Agrega tu primer filamento arriba.</div>';
     return;
   }
   const search = ($('searchFilaments').value || '').toLowerCase();
-  const sortBy = $('sortFilaments').value;
   let list = filamentCatalog.filter(c =>
-    !search || c.marca.toLowerCase().includes(search) || c.color.toLowerCase().includes(search)
+    (!search || c.marca.toLowerCase().includes(search) || c.color.toLowerCase().includes(search)) &&
+    (filamentSelectedMarcas.size === 0 || filamentSelectedMarcas.has(c.marca)) &&
+    (filamentSelectedColores.size === 0 || filamentSelectedColores.has(c.color))
   );
   list = [...list].sort((a,b) => {
-    if (sortBy === 'marca_asc') return a.marca.localeCompare(b.marca) || a.color.localeCompare(b.color);
-    if (sortBy === 'marca_desc') return b.marca.localeCompare(a.marca) || b.color.localeCompare(a.color);
-    if (sortBy === 'precio_asc') return a.priceKg - b.priceKg;
-    if (sortBy === 'precio_desc') return b.priceKg - a.priceKg;
+    if (filamentSortValue === 'marca_asc') return a.marca.localeCompare(b.marca) || a.color.localeCompare(b.color);
+    if (filamentSortValue === 'marca_desc') return b.marca.localeCompare(a.marca) || b.color.localeCompare(a.color);
+    if (filamentSortValue === 'precio_asc') return a.priceKg - b.priceKg;
+    if (filamentSortValue === 'precio_desc') return b.priceKg - a.priceKg;
     return 0;
   });
   if (!list.length){
-    wrap.innerHTML = '<div class="empty-state">Ningún filamento coincide con tu búsqueda.</div>';
+    wrap.innerHTML = '<div class="empty-state">Ningún filamento coincide con tu búsqueda/filtro.</div>';
     return;
   }
   wrap.innerHTML = '';
@@ -1135,7 +1262,9 @@ function renderFilamentCatalog(){
 
 // ---------- FILAMENTS (in a quote) ----------
 $('searchFilaments').addEventListener('input', () => renderFilamentCatalog());
-$('sortFilaments').addEventListener('change', () => renderFilamentCatalog());
+setupDropdown('filamentFiltersBtn', 'filamentFiltersPanel');
+setupDropdown('filamentSortBtn', 'filamentSortPanel');
+setupSortPanel('filamentSortPanel', (val) => { filamentSortValue = val; renderFilamentCatalog(); });
 function addFilament(data){
   filaments.push(data || {catalogId:'custom', name:'', priceKg:0, grams:0});
   renderFilaments();
@@ -1269,7 +1398,7 @@ function populateMlCategorySelect(selectedId){
 function calculateML(finalPrice){
   if (!$('mlBody').classList.contains('show')) return;
   const weightG = +$('mlWeight').value || 0;
-  const l = +$('mlL').value || 0, a = +$('mlA').value || 0, h = +$('mlH').value || 0;
+  const l = +$('pkgLargo').value || 0, a = +$('pkgAncho').value || 0, h = +$('pkgAlto').value || 0;
   const volW = (l*a*h) / (settings.mlDivisor || 5000);
   const realKg = weightG/1000;
   const billW = Math.max(realKg, volW);
@@ -1343,7 +1472,7 @@ $('mlQuienPaga').addEventListener('change', () => calculateML(lastCalc ? lastCal
 $('mlApplyRepDiscount').addEventListener('change', () => calculateML(lastCalc ? lastCalc.finalPrice : 0));
 
 ['printHours','printWatts','kwhPrice','depreciationRate','laborCost','riskPct','profitPct','ivaPct',
- 'mlWeight','mlL','mlA','mlH'].forEach(id => $(id).addEventListener('input', calculate));
+ 'mlWeight','pkgLargo','pkgAncho','pkgAlto'].forEach(id => $(id).addEventListener('input', calculate));
 $('mlMode').addEventListener('change', calculate);
 $('mlCategory').addEventListener('change', calculate);
 
@@ -1470,31 +1599,66 @@ function computeQuoteCostBreakdown(q){
   return {matCost, packagingCost, energyCost, depreciationCost, directCost, base, riskAmt, totalEst};
 }
 
+let availableQuotesForLink = [];
+
 async function populateLinkedQuoteOptions(selectedId){
   const index = await storageGet('quotes-index', []);
   const usedByOtherProduct = new Set(
     productsCatalog.filter(p => p.linkedQuoteId && p.id !== currentProductId).map(p => p.linkedQuoteId)
   );
-  const sel = $('p-linkedQuote');
-  sel.innerHTML = '<option value="">— Selecciona una cotización —</option>' +
-    index.map(q => {
-      const taken = usedByOtherProduct.has(q.id) && q.id !== selectedId;
-      return `<option value="${q.id}" ${q.id===selectedId?'selected':''} ${taken?'disabled':''}>${q.name} (${money(q.finalPrice)})${taken?' — ya usada':''}</option>`;
-    }).join('');
+  availableQuotesForLink = index.filter(q => !usedByOtherProduct.has(q.id) || q.id === selectedId);
+  if (selectedId){
+    const sel = availableQuotesForLink.find(q => q.id === selectedId);
+    $('p-linkedQuote').value = selectedId;
+    $('p-linkedQuote-search').value = sel ? `${sel.name} (${money(sel.finalPrice)})` : '';
+  } else {
+    $('p-linkedQuote').value = '';
+    $('p-linkedQuote-search').value = '';
+  }
+  renderLinkedQuotePanel('');
 }
-$('p-linkedQuote').addEventListener('change', async () => {
-  const id = $('p-linkedQuote').value;
-  if (!id) return;
+
+function renderLinkedQuotePanel(filterText){
+  const panel = $('p-linkedQuote-panel');
+  const f = (filterText||'').toLowerCase();
+  const list = availableQuotesForLink.filter(q => !f || q.name.toLowerCase().includes(f));
+  if (!list.length){
+    panel.innerHTML = `<div class="filter-empty-note">${availableQuotesForLink.length ? 'Ninguna coincide con tu búsqueda.' : 'No hay cotizaciones disponibles (o todas ya están vinculadas a otro producto).'}</div>`;
+    return;
+  }
+  panel.innerHTML = list.map(q => `<div class="sort-option" data-id="${q.id}">${q.name} (${money(q.finalPrice)})</div>`).join('');
+  panel.querySelectorAll('.sort-option').forEach(opt => opt.onclick = () => selectLinkedQuote(opt.dataset.id));
+}
+
+async function selectLinkedQuote(id){
+  $('p-linkedQuote').value = id;
+  $('p-linkedQuote-panel').classList.add('hidden');
   const q = await storageGet('quote:' + id, null);
   if (q){
+    $('p-linkedQuote-search').value = `${q.name} (${money(q.finalPrice)})`;
     const breakdown = computeQuoteCostBreakdown(q);
     $('p-costo').value = breakdown.totalEst.toFixed(2);
     $('p-precio-tiktok').value = q.finalPrice.toFixed(2);
     $('p-precio-ml').value = (q.mlSimPrice != null ? q.mlSimPrice : q.finalPrice).toFixed(2);
     $('p-precio-tiendanube').value = q.finalPrice.toFixed(2);
+    if (q.largoCm) $('p-largo').value = q.largoCm;
+    if (q.anchoCm) $('p-ancho').value = q.anchoCm;
+    if (q.altoCm) $('p-alto').value = q.altoCm;
     if (!$('p-nombre').value.trim()) $('p-nombre').value = q.name;
   }
+}
+$('p-linkedQuote-search').addEventListener('click', (e) => e.stopPropagation());
+$('p-linkedQuote-search').addEventListener('focus', () => {
+  document.querySelectorAll('.dropdown-panel').forEach(p => p.classList.add('hidden'));
+  renderLinkedQuotePanel($('p-linkedQuote-search').value.includes('(') ? '' : $('p-linkedQuote-search').value);
+  $('p-linkedQuote-panel').classList.remove('hidden');
 });
+$('p-linkedQuote-search').addEventListener('input', () => {
+  if ($('p-linkedQuote').value) { $('p-linkedQuote').value = ''; } // typing again clears the previous exact selection
+  renderLinkedQuotePanel($('p-linkedQuote-search').value);
+  $('p-linkedQuote-panel').classList.remove('hidden');
+});
+$('p-linkedQuote-panel').addEventListener('click', (e) => e.stopPropagation());
 
 ['p-status-tiktok','p-status-ml','p-status-tiendanube'].forEach(id => {
   $(id).addEventListener('change', () => {
@@ -1676,13 +1840,16 @@ function statusBadgeHtml(label, est){
   return `<span class="platform-badge" style="color:${colorMap[estado]}; border-color:${colorMap[estado]};"${title}>${label}: ${textMap[estado]}</span>`;
 }
 
-function productEstadoMatches(p, filterVal){
-  if (filterVal === 'todos') return true;
+let productSortValue = 'reciente';
+let productSelectedEstados = new Set();
+
+function productEstadoMatches(p){
+  if (productSelectedEstados.size === 0) return true;
   const estados = ['tiktok','ml','tiendanube'].map(k => p.estadoCarga?.[k]?.estado || 'pendiente');
-  if (filterVal === 'pendiente') return estados.includes('pendiente');
-  if (filterVal === 'cargado') return estados.every(e => e === 'cargado');
-  if (filterVal === 'fallo') return estados.includes('fallo');
-  return true;
+  return [...productSelectedEstados].some(f => {
+    if (f === 'cargado') return estados.every(e => e === 'cargado');
+    return estados.includes(f);
+  });
 }
 
 function renderProductsList(){
@@ -1692,19 +1859,17 @@ function renderProductsList(){
     return;
   }
   const search = ($('searchProducts').value || '').toLowerCase();
-  const filterVal = $('filterProducts').value;
-  const sortBy = $('sortProducts').value;
   let list = productsCatalog.filter(p =>
     (!search || p.nombre.toLowerCase().includes(search) || (p.sku||'').toLowerCase().includes(search)) &&
-    productEstadoMatches(p, filterVal)
+    productEstadoMatches(p)
   );
   list = [...list].sort((a,b) => {
-    if (sortBy === 'nombre_asc') return a.nombre.localeCompare(b.nombre);
-    if (sortBy === 'nombre_desc') return b.nombre.localeCompare(a.nombre);
-    if (sortBy === 'precio_asc') return (a.precioTiktok||0) - (b.precioTiktok||0);
-    if (sortBy === 'precio_desc') return (b.precioTiktok||0) - (a.precioTiktok||0);
-    if (sortBy === 'stock_asc') return (a.stock||0) - (b.stock||0);
-    if (sortBy === 'stock_desc') return (b.stock||0) - (a.stock||0);
+    if (productSortValue === 'nombre_asc') return a.nombre.localeCompare(b.nombre);
+    if (productSortValue === 'nombre_desc') return b.nombre.localeCompare(a.nombre);
+    if (productSortValue === 'precio_asc') return (a.precioTiktok||0) - (b.precioTiktok||0);
+    if (productSortValue === 'precio_desc') return (b.precioTiktok||0) - (a.precioTiktok||0);
+    if (productSortValue === 'stock_asc') return (a.stock||0) - (b.stock||0);
+    if (productSortValue === 'stock_desc') return (b.stock||0) - (a.stock||0);
     return new Date(b.updatedAt||0) - new Date(a.updatedAt||0); // reciente
   });
   if (!list.length){
@@ -1750,8 +1915,14 @@ function renderProductsList(){
 $('selectAllProductsBtn').onclick = () => { productsCatalog.forEach(p => selectedProductIds.add(p.id)); renderProductsList(); };
 $('selectNoneProductsBtn').onclick = () => { selectedProductIds.clear(); renderProductsList(); };
 $('searchProducts').addEventListener('input', () => renderProductsList());
-$('filterProducts').addEventListener('change', () => renderProductsList());
-$('sortProducts').addEventListener('change', () => renderProductsList());
+setupDropdown('productFiltersBtn', 'productFiltersPanel');
+setupDropdown('productSortBtn', 'productSortPanel');
+setupSortPanel('productSortPanel', (val) => { productSortValue = val; renderProductsList(); });
+document.querySelectorAll('.pf-estado').forEach(el => el.onchange = () => {
+  el.checked ? productSelectedEstados.add(el.value) : productSelectedEstados.delete(el.value);
+  $('productFiltersBtn').classList.toggle('has-active', productSelectedEstados.size > 0);
+  renderProductsList();
+});
 
 // ---------- GENERATORS: shared helpers ----------
 function slugify(text){
@@ -2335,23 +2506,24 @@ async function deleteSale(sale){
   populateSaleProductSelect();
 }
 
+let salesSortValue = 'fecha_desc';
+let salesSelectedPlataformas = new Set();
+let salesSelectedEstados = new Set();
+
 function renderSalesList(){
   const wrap = $('salesList');
   const search = ($('searchSales').value || '').toLowerCase();
-  const plataformaFilter = $('filterSalesPlataforma').value;
-  const estadoFilter = $('filterSalesEstado').value;
-  const sortBy = $('sortSales').value;
   let list = salesList.filter(s => {
     const p = productsCatalog.find(x => x.id === s.productId);
     const matchesSearch = !search || (p && p.nombre.toLowerCase().includes(search)) || s.ventaId.toLowerCase().includes(search);
-    const matchesPlataforma = plataformaFilter === 'todas' || s.plataforma === plataformaFilter;
-    const matchesEstado = estadoFilter === 'todas' || s.estado === estadoFilter;
+    const matchesPlataforma = salesSelectedPlataformas.size === 0 || salesSelectedPlataformas.has(s.plataforma);
+    const matchesEstado = salesSelectedEstados.size === 0 || salesSelectedEstados.has(s.estado);
     return matchesSearch && matchesPlataforma && matchesEstado;
   });
   list = [...list].sort((a,b) => {
-    if (sortBy === 'fecha_asc') return new Date(a.fechaVenta) - new Date(b.fechaVenta);
-    if (sortBy === 'ganancia_desc') return saleProfit(b) - saleProfit(a);
-    if (sortBy === 'ganancia_asc') return saleProfit(a) - saleProfit(b);
+    if (salesSortValue === 'fecha_asc') return new Date(a.fechaVenta) - new Date(b.fechaVenta);
+    if (salesSortValue === 'ganancia_desc') return saleProfit(b) - saleProfit(a);
+    if (salesSortValue === 'ganancia_asc') return saleProfit(a) - saleProfit(b);
     return new Date(b.fechaVenta) - new Date(a.fechaVenta); // fecha_desc (default)
   });
   if (!list.length){
@@ -2392,9 +2564,22 @@ function renderSalesList(){
   });
 }
 $('searchSales').addEventListener('input', () => renderSalesList());
-$('filterSalesPlataforma').addEventListener('change', () => renderSalesList());
-$('filterSalesEstado').addEventListener('change', () => renderSalesList());
-$('sortSales').addEventListener('change', () => renderSalesList());
+setupDropdown('salesFiltersBtn', 'salesFiltersPanel');
+setupDropdown('salesSortBtn', 'salesSortPanel');
+setupSortPanel('salesSortPanel', (val) => { salesSortValue = val; renderSalesList(); });
+function updateSalesFiltersBtnState(){
+  $('salesFiltersBtn').classList.toggle('has-active', salesSelectedPlataformas.size > 0 || salesSelectedEstados.size > 0);
+}
+document.querySelectorAll('.sf-plataforma').forEach(el => el.onchange = () => {
+  el.checked ? salesSelectedPlataformas.add(el.value) : salesSelectedPlataformas.delete(el.value);
+  updateSalesFiltersBtnState();
+  renderSalesList();
+});
+document.querySelectorAll('.sf-estado').forEach(el => el.onchange = () => {
+  el.checked ? salesSelectedEstados.add(el.value) : salesSelectedEstados.delete(el.value);
+  updateSalesFiltersBtnState();
+  renderSalesList();
+});
 
 // ---------- SAVE / LOAD QUOTES ----------
 function resetForm(){
@@ -2411,7 +2596,7 @@ function resetForm(){
   $('profitPct').value = settings.profitPct;
   $('ivaPct').value = settings.ivaPct;
   $('mlSwitch').classList.remove('on'); $('mlBody').classList.remove('show');
-  $('mlWeight').value=''; $('mlL').value=''; $('mlA').value=''; $('mlH').value='';
+  $('mlWeight').value=''; $('pkgLargo').value=''; $('pkgAncho').value=''; $('pkgAlto').value='';
   $('mlMode').value = 'normal';
   $('mlQuienPaga').value = 'gratis';
   $('mlApplyRepDiscount').checked = true;
@@ -2435,7 +2620,7 @@ $('saveQuoteBtn').onclick = async () => {
     laborCost: +$('laborCost').value, riskPct: +$('riskPct').value, profitPct: +$('profitPct').value, ivaPct: +$('ivaPct').value,
     mlEnabled: $('mlBody').classList.contains('show'),
     mlCategory: $('mlCategory').value,
-    mlWeight: +$('mlWeight').value || 0, mlL: +$('mlL').value||0, mlA: +$('mlA').value||0, mlH: +$('mlH').value||0, mlMode: $('mlMode').value, mlQuienPaga: $('mlQuienPaga').value, mlApplyRepDiscount: $('mlApplyRepDiscount').checked, mlSimPrice: $('mlSimPrice').value ? (+$('mlSimPrice').value) : null,
+    mlWeight: +$('mlWeight').value || 0, largoCm: +$('pkgLargo').value||0, anchoCm: +$('pkgAncho').value||0, altoCm: +$('pkgAlto').value||0, mlMode: $('mlMode').value, mlQuienPaga: $('mlQuienPaga').value, mlApplyRepDiscount: $('mlApplyRepDiscount').checked, mlSimPrice: $('mlSimPrice').value ? (+$('mlSimPrice').value) : null,
     finalPrice: calc.finalPrice,
     updatedAt: new Date().toISOString()
   };
@@ -2459,7 +2644,7 @@ async function loadQuote(id){
   quotePackaging = q.packaging ? JSON.parse(JSON.stringify(q.packaging)) : []; populatePackagingSelect(); renderPackagingChips();
   $('printHours').value = q.printHours; $('printWatts').value = q.printWatts; $('kwhPrice').value = q.kwhPrice; $('depreciationRate').value = (q.depreciationRate!=null ? q.depreciationRate : settings.depreciationRate);
   $('laborCost').value = q.laborCost; $('riskPct').value = q.riskPct; $('profitPct').value = q.profitPct; $('ivaPct').value = q.ivaPct;
-  $('mlWeight').value = q.mlWeight || ''; $('mlL').value = q.mlL||''; $('mlA').value = q.mlA||''; $('mlH').value = q.mlH||'';
+  $('mlWeight').value = q.mlWeight || ''; $('pkgLargo').value = q.largoCm||''; $('pkgAncho').value = q.anchoCm||''; $('pkgAlto').value = q.altoCm||'';
   $('mlMode').value = q.mlMode || 'normal';
   $('mlQuienPaga').value = q.mlQuienPaga || 'gratis';
   $('mlApplyRepDiscount').checked = q.mlApplyRepDiscount != null ? q.mlApplyRepDiscount : true;
@@ -2490,10 +2675,19 @@ async function deleteQuote(id){
   showToast('Cotización eliminada');
 }
 
+let historySortValue = 'fecha_desc';
 async function renderHistory(filter){
   const list = $('historyList');
   let index = await storageGet('quotes-index', []);
   if (filter) index = index.filter(q => q.name.toLowerCase().includes(filter.toLowerCase()));
+  index = [...index].sort((a,b) => {
+    if (historySortValue === 'fecha_asc') return new Date(a.updatedAt) - new Date(b.updatedAt);
+    if (historySortValue === 'nombre_asc') return a.name.localeCompare(b.name);
+    if (historySortValue === 'nombre_desc') return b.name.localeCompare(a.name);
+    if (historySortValue === 'precio_desc') return b.finalPrice - a.finalPrice;
+    if (historySortValue === 'precio_asc') return a.finalPrice - b.finalPrice;
+    return new Date(b.updatedAt) - new Date(a.updatedAt); // fecha_desc (default)
+  });
   if (!index.length){
     list.innerHTML = '<div class="empty-state">Aún no tienes cotizaciones guardadas.<br>Crea una en la pestaña "Nueva".</div>';
     return;
@@ -2525,6 +2719,8 @@ async function renderHistory(filter){
 }
 
 $('searchQuotes').addEventListener('input', (e) => renderHistory(e.target.value));
+setupDropdown('historySortBtn', 'historySortPanel');
+setupSortPanel('historySortPanel', (val) => { historySortValue = val; renderHistory($('searchQuotes').value); });
 
 // ---------- SETTINGS: SHIPPING TIERS ----------
 function renderTiers(){
