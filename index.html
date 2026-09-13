@@ -537,7 +537,7 @@ textarea{
 
       <div class="card">
         <div class="section-title" style="margin-bottom:6px;">Precio por plataforma</div>
-        <div class="hint" style="margin-bottom:10px;">Cada plataforma cobra comisiones distintas — se prellenan con el precio sugerido de tu cotización, ajústalos si quieres compensar comisiones diferentes.</div>
+        <div class="hint" style="margin-bottom:10px;">Cada plataforma cobra comisiones distintas — se prellenan con el precio sugerido de tu cotización (el de MercadoLibre toma el "Precio a simular en ML" si lo usaste ahí), ajústalos si quieres compensar comisiones diferentes.</div>
         <label>Precio para TikTok Shop</label>
         <input type="number" step="0.01" id="p-precio-tiktok">
         <label>Precio para MercadoLibre</label>
@@ -1419,7 +1419,7 @@ $('p-linkedQuote').addEventListener('change', async () => {
     const breakdown = computeQuoteCostBreakdown(q);
     $('p-costo').value = breakdown.totalEst.toFixed(2);
     $('p-precio-tiktok').value = q.finalPrice.toFixed(2);
-    $('p-precio-ml').value = q.finalPrice.toFixed(2);
+    $('p-precio-ml').value = (q.mlSimPrice != null ? q.mlSimPrice : q.finalPrice).toFixed(2);
     $('p-precio-tiendanube').value = q.finalPrice.toFixed(2);
     if (!$('p-nombre').value.trim()) $('p-nombre').value = q.name;
   }
@@ -2320,7 +2320,7 @@ $('saveQuoteBtn').onclick = async () => {
     laborCost: +$('laborCost').value, riskPct: +$('riskPct').value, profitPct: +$('profitPct').value, ivaPct: +$('ivaPct').value,
     mlEnabled: $('mlBody').classList.contains('show'),
     mlCategory: $('mlCategory').value,
-    mlWeight: +$('mlWeight').value || 0, mlL: +$('mlL').value||0, mlA: +$('mlA').value||0, mlH: +$('mlH').value||0, mlMode: $('mlMode').value, mlQuienPaga: $('mlQuienPaga').value, mlApplyRepDiscount: $('mlApplyRepDiscount').checked,
+    mlWeight: +$('mlWeight').value || 0, mlL: +$('mlL').value||0, mlA: +$('mlA').value||0, mlH: +$('mlH').value||0, mlMode: $('mlMode').value, mlQuienPaga: $('mlQuienPaga').value, mlApplyRepDiscount: $('mlApplyRepDiscount').checked, mlSimPrice: $('mlSimPrice').value ? (+$('mlSimPrice').value) : null,
     finalPrice: calc.finalPrice,
     updatedAt: new Date().toISOString()
   };
@@ -2348,7 +2348,7 @@ async function loadQuote(id){
   $('mlMode').value = q.mlMode || 'normal';
   $('mlQuienPaga').value = q.mlQuienPaga || 'gratis';
   $('mlApplyRepDiscount').checked = q.mlApplyRepDiscount != null ? q.mlApplyRepDiscount : true;
-  $('mlSimPrice').value = '';
+  $('mlSimPrice').value = q.mlSimPrice != null ? q.mlSimPrice : '';
   populateMlCategorySelect(q.mlCategory);
   if (q.mlEnabled){ $('mlSwitch').classList.add('on'); $('mlBody').classList.add('show'); }
   else { $('mlSwitch').classList.remove('on'); $('mlBody').classList.remove('show'); }
