@@ -73,11 +73,12 @@ h1,h2,h3,.headline{font-family:'Fredoka', sans-serif;}
 
 label{display:block; font-size:11.5px; color:var(--muted); margin-bottom:4px; margin-top:10px;}
 label:first-child{margin-top:0;}
-input[type=text], input[type=number], select{
+input[type=text], input[type=number], input[type=date], select{
   width:100%; background:var(--panel-alt); border:1px solid var(--line);
   color:var(--text); border-radius:12px; padding:9px 10px; font-size:14px;
   font-family:'Quicksand', sans-serif;
 }
+input[type=date]{color-scheme: light;}
 input:focus, select:focus{outline:none; border-color:var(--accent);}
 input:disabled{opacity:0.6;}
 .row{display:flex; gap:10px;}
@@ -274,6 +275,16 @@ textarea{
 .sort-option:hover{background:var(--panel-alt);}
 .sort-option.active{background:var(--accent); color:var(--bg); font-weight:600;}
 .filter-empty-note{font-size:11.5px; color:var(--muted); padding:4px 2px;}
+
+.ml-compare-grid{
+  display:grid; grid-template-columns: 1.4fr 1fr 1fr; gap:5px 6px; align-items:center;
+  margin-top:8px; font-size:12.5px;
+}
+.ml-compare-grid > div{text-align:right;}
+.ml-compare-grid .mlc-label{text-align:left; color:var(--muted);}
+.ml-compare-grid .mlc-head{font-family:'Fredoka'; font-weight:700; color:var(--accent); font-size:11.5px; padding-bottom:4px; border-bottom:1px solid var(--line-soft);}
+.ml-compare-grid .mlc-total{font-family:'Fredoka'; font-weight:700; color:var(--money); border-top:1px solid var(--line); padding-top:6px;}
+.ml-compare-grid .mlc-label.mlc-total{color:var(--text);}
 </style>
 </head>
 <body>
@@ -446,19 +457,57 @@ textarea{
 
         <div class="subsection">
           <label>Precio a simular en ML <button class="btn btn-small" id="mlUseSuggestedBtn" style="float:right; padding:3px 8px;">usar precio sugerido</button></label>
-          <input type="number" step="0.01" id="mlSimPrice">
+          <div class="row">
+            <div><input type="number" step="0.01" id="mlSimPrice" placeholder="Precio"></div>
+            <div><input type="number" step="1" id="mlDiscountPct" placeholder="% desc." value="0"></div>
+            <div><input type="text" id="mlDiscountedPriceView" readonly placeholder="Precio c/desc." style="opacity:0.85;"></div>
+          </div>
+          <div class="hint" style="margin-top:4px;">El % de descuento es opcional — úsalo si vas a correr una promoción en ML. Se guarda con la cotización.</div>
         </div>
 
-        <div class="summary-line" style="margin-top:10px;"><span class="lbl">Precio</span><span id="ml-precio">$0.00</span></div>
-        <div class="summary-line"><span class="lbl">Cargo por venta (<span id="ml-feepct-view">-</span>%)</span><span id="ml-fee">-$0.00</span></div>
-        <div class="summary-line"><span class="lbl">Costo por envío</span><span id="ml-ship">-$0.00</span></div>
-        <div class="summary-line"><span class="lbl">Impuestos</span><span id="ml-taxes">-$0.00</span></div>
-        <div class="summary-line" style="padding-left:14px;"><span class="lbl">IVA retenido (<span id="ml-ivaret-view">-</span>%)</span><span id="ml-ivaret">-$0.00</span></div>
-        <div class="summary-line" style="padding-left:14px;"><span class="lbl">ISR retenido (<span id="ml-isr-view">-</span>%)</span><span id="ml-isr">-$0.00</span></div>
-        <div class="summary-line total"><span class="lbl">= Recibes</span><span id="ml-net">$0.00</span></div>
-        <div class="summary-line" style="margin-top:8px;"><span class="lbl">Costo de producción</span><span id="ml-costoprod">-$0.00</span></div>
-        <div class="summary-line total"><span class="lbl">= Ganancia neta</span><span id="ml-gananciantea">$0.00</span></div>
-        <div class="summary-line" style="margin-top:8px;"><span class="lbl">Precio sugerido para conservar tu margen original</span><span id="ml-listprice">$0.00</span></div>
+        <div class="ml-compare-grid" id="mlCompareGrid">
+          <div></div>
+          <div class="mlc-head">Sin descuento</div>
+          <div class="mlc-head">Con descuento</div>
+
+          <div class="mlc-label">Precio</div>
+          <div id="ml-precio-nd">$0.00</div>
+          <div id="ml-precio-cd">$0.00</div>
+
+          <div class="mlc-label">Cargo por venta (<span id="ml-feepct-view">-</span>%)</div>
+          <div id="ml-fee-nd">-$0.00</div>
+          <div id="ml-fee-cd">-$0.00</div>
+
+          <div class="mlc-label">Costo por envío</div>
+          <div id="ml-ship-nd">-$0.00</div>
+          <div id="ml-ship-cd">-$0.00</div>
+
+          <div class="mlc-label">Impuestos</div>
+          <div id="ml-taxes-nd">-$0.00</div>
+          <div id="ml-taxes-cd">-$0.00</div>
+
+          <div class="mlc-label" style="padding-left:10px;">IVA retenido (<span id="ml-ivaret-view">-</span>%)</div>
+          <div id="ml-ivaret-nd">-$0.00</div>
+          <div id="ml-ivaret-cd">-$0.00</div>
+
+          <div class="mlc-label" style="padding-left:10px;">ISR retenido (<span id="ml-isr-view">-</span>%)</div>
+          <div id="ml-isr-nd">-$0.00</div>
+          <div id="ml-isr-cd">-$0.00</div>
+
+          <div class="mlc-label mlc-total">= Recibes</div>
+          <div class="mlc-total" id="ml-net-nd">$0.00</div>
+          <div class="mlc-total" id="ml-net-cd">$0.00</div>
+
+          <div class="mlc-label" style="margin-top:6px;">Costo de producción</div>
+          <div id="ml-costoprod-nd" style="margin-top:6px;">-$0.00</div>
+          <div id="ml-costoprod-cd" style="margin-top:6px;">-$0.00</div>
+
+          <div class="mlc-label mlc-total">= Ganancia neta</div>
+          <div class="mlc-total" id="ml-gananciantea-nd">$0.00</div>
+          <div class="mlc-total" id="ml-gananciantea-cd">$0.00</div>
+        </div>
+
+        <div class="summary-line" style="margin-top:10px;"><span class="lbl">Precio sugerido para conservar tu margen original</span><span id="ml-listprice">$0.00</span></div>
         <div class="hint">Comisión según categoría, envío nominal según tabla de peso — ambas editables en Ajustes. Si ofreces envío gratis, se aplica tu % de descuento por reputación sobre ese costo nominal (también editable). Impuestos calculados sobre el precio sin el IVA que ML asume incluido. FULL sigue sin costo de envío calculado aquí hasta que tengamos sus tablas.</div>
       </div>
     </div>
@@ -831,6 +880,11 @@ textarea{
       <div class="row">
         <div><label>Precio de venta (unitario)</label><input type="number" step="0.01" id="v-precioVenta"></div>
         <div><label>Total recibido</label><input type="number" step="0.01" id="v-totalRecibido"></div>
+      </div>
+      <div style="display:flex; align-items:center; gap:8px; margin-top:10px;">
+        <input type="checkbox" id="v-descuentoAplicado" style="width:18px; height:18px; accent-color:var(--accent); margin:0;">
+        <label style="margin:0; font-size:12.5px;" for="v-descuentoAplicado">Descuento aplicado</label>
+        <input type="text" id="v-descuentoPctView" readonly disabled style="width:80px; flex:0 0 auto; text-align:center; font-size:12px;" placeholder="—">
       </div>
       <button class="btn btn-accent btn-block" id="addSaleBtn" style="margin-top:10px;">Registrar venta</button>
     </div>
@@ -1406,59 +1460,76 @@ function calculateML(finalPrice){
 
   if (!$('mlSimPrice').value) $('mlSimPrice').value = finalPrice.toFixed(2);
   const simPrice = +$('mlSimPrice').value || 0;
+  const discountPct = +$('mlDiscountPct').value || 0;
+  const discountedPrice = simPrice * (1 - discountPct/100);
+  $('mlDiscountedPriceView').value = money(discountedPrice);
 
   const catId = $('mlCategory').value;
   const cat = settings.mlCategories.find(c => c.id === catId) || {feePct:0};
   const feePct = cat.feePct;
-  const fee = simPrice * feePct/100;
 
   const isrPct = settings.isrPct || 0;
   const ivaRetPct = settings.ivaRetPct || 0;
   const ivaEmbebidoPct = settings.ivaEmbebidoPct != null ? settings.ivaEmbebidoPct : 16;
-  const taxBase = simPrice / (1 + ivaEmbebidoPct/100);
-  const isrAmt = taxBase * isrPct/100;
-  const ivaRetAmt = taxBase * ivaRetPct/100;
-  const taxesTotal = isrAmt + ivaRetAmt;
 
   let nominalShip = 0;
   const sortedTiers = [...settings.tiers].sort((x,y)=>x.max-y.max);
   for (const t of sortedTiers){ if (billW <= t.max){ nominalShip = t.cost; break; } }
   if (sortedTiers.length && billW > sortedTiers[sortedTiers.length-1].max) nominalShip = sortedTiers[sortedTiers.length-1].cost;
 
-  let shipCost = 0;
   const applyRepDiscount = $('mlApplyRepDiscount').checked;
   $('mlRepDiscountPctView').textContent = settings.mlShippingDiscountPct || 0;
   $('mlRepDiscountWrap').style.display = (mode !== 'full' && quienPaga === 'gratis') ? 'flex' : 'none';
+  let shipCost = 0;
   if (mode !== 'full'){
     if (quienPaga === 'gratis') shipCost = nominalShip * (applyRepDiscount ? (1 - (settings.mlShippingDiscountPct||0)/100) : 1);
-    else shipCost = 0; // lo paga el comprador: no le cuesta al vendedor
+    else shipCost = 0; // lo paga el comprador: no le cuesta al vendedor (misma en ambos escenarios, no depende del precio)
   }
 
-  const recibes = simPrice - fee - shipCost - taxesTotal;
-
   const costoProduccion = lastCalc ? lastCalc.totalEst : 0;
-  const gananciaNeta = recibes - costoProduccion;
 
-  // precio sugerido para conservar el margen de la cotización (usa finalPrice como "recibes" objetivo)
+  function scenario(price){
+    const fee = price * feePct/100;
+    const taxBase = price / (1 + ivaEmbebidoPct/100);
+    const isrAmt = taxBase * isrPct/100;
+    const ivaRetAmt = taxBase * ivaRetPct/100;
+    const taxesTotal = isrAmt + ivaRetAmt;
+    const recibes = price - fee - shipCost - taxesTotal;
+    const gananciaNeta = recibes - costoProduccion;
+    return {price, fee, isrAmt, ivaRetAmt, taxesTotal, recibes, gananciaNeta};
+  }
+  const nd = scenario(simPrice);
+  const cd = scenario(discountedPrice);
+
+  // precio sugerido para conservar el margen de la cotización (usa finalPrice como "recibes" objetivo, escenario sin descuento)
   const effectiveTaxRate = (isrPct + ivaRetPct)/100 / (1 + ivaEmbebidoPct/100);
-  const shipForSuggested = (mode !== 'full' && quienPaga === 'gratis') ? nominalShip * (applyRepDiscount ? (1 - (settings.mlShippingDiscountPct||0)/100) : 1) : 0;
   const factor = 1 - feePct/100 - effectiveTaxRate;
-  const listPrice = factor > 0 ? (finalPrice + shipForSuggested) / factor : 0;
+  const listPrice = factor > 0 ? (finalPrice + shipCost) / factor : 0;
 
   $('ml-volw').textContent = volW.toFixed(2) + ' kg';
   $('ml-billw').textContent = billW.toFixed(2) + ' kg';
-  $('ml-precio').textContent = money(simPrice);
   $('ml-feepct-view').textContent = feePct;
-  $('ml-fee').textContent = '-' + money(fee);
-  $('ml-ship').textContent = '-' + money(shipCost);
-  $('ml-taxes').textContent = '-' + money(taxesTotal);
   $('ml-ivaret-view').textContent = ivaRetPct;
-  $('ml-ivaret').textContent = '-' + money(ivaRetAmt);
   $('ml-isr-view').textContent = isrPct;
-  $('ml-isr').textContent = '-' + money(isrAmt);
-  $('ml-net').textContent = money(recibes);
-  $('ml-costoprod').textContent = '-' + money(costoProduccion);
-  $('ml-gananciantea').textContent = money(gananciaNeta);
+
+  $('ml-precio-nd').textContent = money(nd.price);
+  $('ml-precio-cd').textContent = money(cd.price);
+  $('ml-fee-nd').textContent = '-' + money(nd.fee);
+  $('ml-fee-cd').textContent = '-' + money(cd.fee);
+  $('ml-ship-nd').textContent = '-' + money(shipCost);
+  $('ml-ship-cd').textContent = '-' + money(shipCost);
+  $('ml-taxes-nd').textContent = '-' + money(nd.taxesTotal);
+  $('ml-taxes-cd').textContent = '-' + money(cd.taxesTotal);
+  $('ml-ivaret-nd').textContent = '-' + money(nd.ivaRetAmt);
+  $('ml-ivaret-cd').textContent = '-' + money(cd.ivaRetAmt);
+  $('ml-isr-nd').textContent = '-' + money(nd.isrAmt);
+  $('ml-isr-cd').textContent = '-' + money(cd.isrAmt);
+  $('ml-net-nd').textContent = money(nd.recibes);
+  $('ml-net-cd').textContent = money(cd.recibes);
+  $('ml-costoprod-nd').textContent = '-' + money(costoProduccion);
+  $('ml-costoprod-cd').textContent = '-' + money(costoProduccion);
+  $('ml-gananciantea-nd').textContent = money(nd.gananciaNeta);
+  $('ml-gananciantea-cd').textContent = money(cd.gananciaNeta);
   $('ml-listprice').textContent = money(listPrice);
 }
 $('mlUseSuggestedBtn').addEventListener('click', (e) => {
@@ -1467,6 +1538,7 @@ $('mlUseSuggestedBtn').addEventListener('click', (e) => {
   calculate();
 });
 $('mlSimPrice').addEventListener('input', () => calculateML(lastCalc ? lastCalc.finalPrice : 0));
+$('mlDiscountPct').addEventListener('input', () => calculateML(lastCalc ? lastCalc.finalPrice : 0));
 $('mlQuienPaga').addEventListener('change', () => calculateML(lastCalc ? lastCalc.finalPrice : 0));
 $('mlApplyRepDiscount').addEventListener('change', () => calculateML(lastCalc ? lastCalc.finalPrice : 0));
 
@@ -2437,6 +2509,38 @@ function populateSaleProductSelect(){
   $('v-producto').innerHTML = productsCatalog.map(p => `<option value="${p.id}">${p.nombre} (stock: ${p.stock})</option>`).join('');
 }
 
+async function updateVentaPrecioAutofill(){
+  const product = productsCatalog.find(p => p.id === $('v-producto').value);
+  if (!product) return;
+  const plataforma = $('v-plataforma').value;
+  const descuentoAplicado = $('v-descuentoAplicado').checked;
+
+  let discountInfo = null;
+  if (descuentoAplicado && product.linkedQuoteId){
+    const q = await storageGet('quote:' + product.linkedQuoteId, null);
+    if (q && q.mlEnabled && q.mlDiscountPct){
+      const simPrice = q.mlSimPrice != null ? q.mlSimPrice : q.finalPrice;
+      discountInfo = {pct: q.mlDiscountPct, price: simPrice * (1 - q.mlDiscountPct/100)};
+    }
+  }
+
+  if (descuentoAplicado){
+    if (discountInfo){
+      $('v-precioVenta').value = discountInfo.price.toFixed(2);
+      $('v-descuentoPctView').value = discountInfo.pct + '%';
+    } else {
+      $('v-descuentoPctView').value = '';
+      $('v-precioVenta').value = (plataforma === 'ml') ? (product.precioMl || '') : '';
+    }
+  } else {
+    $('v-descuentoPctView').value = '';
+    if (plataforma === 'ml') $('v-precioVenta').value = product.precioMl || '';
+  }
+}
+$('v-producto').addEventListener('change', updateVentaPrecioAutofill);
+$('v-plataforma').addEventListener('change', updateVentaPrecioAutofill);
+$('v-descuentoAplicado').addEventListener('change', updateVentaPrecioAutofill);
+
 function findActiveShipmentForProduct(productId){
   // FIFO: pick the oldest active shipment with stock still remaining
   return fullShipments
@@ -2489,6 +2593,8 @@ $('addSaleBtn').onclick = async () => {
   if (cantidad <= 0){ showToast('Indica la cantidad vendida'); return; }
   const ventaId = $('v-ventaId').value.trim();
   if (!ventaId){ showToast('Indica el ID de la venta'); return; }
+  const precioVenta = +$('v-precioVenta').value || 0;
+  if (precioVenta <= 0){ showToast('Indica el precio de venta (unitario)'); return; }
   const fechaVenta = $('v-fecha').value || new Date().toISOString().slice(0,10);
   const sale = {
     id: 'sale_' + Date.now(),
@@ -2496,7 +2602,7 @@ $('addSaleBtn').onclick = async () => {
     ventaId,
     productId,
     cantidad,
-    precioVenta: +$('v-precioVenta').value || 0,
+    precioVenta,
     totalRecibido: +$('v-totalRecibido').value || 0,
     fechaVenta,
     estado: 'completada',
@@ -2509,6 +2615,7 @@ $('addSaleBtn').onclick = async () => {
   await saveSalesState();
   showToast('Venta registrada — se descontó del ' + (sale.stockDescontadoDe === 'full' ? 'stock en FULL' : 'catálogo'));
   $('v-ventaId').value=''; $('v-cantidad').value=1; $('v-precioVenta').value=''; $('v-totalRecibido').value='';
+  $('v-descuentoAplicado').checked = false; $('v-descuentoPctView').value = '';
   populateSaleProductSelect();
   renderSalesList();
 };
@@ -2637,6 +2744,7 @@ function resetForm(){
   $('mlQuienPaga').value = 'gratis';
   $('mlApplyRepDiscount').checked = true;
   $('mlSimPrice').value = '';
+  $('mlDiscountPct').value = 0;
   populateMlCategorySelect(settings.mlCategories[0] ? settings.mlCategories[0].id : null);
   calculate();
 }
@@ -2656,7 +2764,7 @@ $('saveQuoteBtn').onclick = async () => {
     laborCost: +$('laborCost').value, riskPct: +$('riskPct').value, profitPct: +$('profitPct').value, ivaPct: +$('ivaPct').value,
     mlEnabled: $('mlBody').classList.contains('show'),
     mlCategory: $('mlCategory').value,
-    pesoG: +$('pkgPeso').value || 0, largoCm: +$('pkgLargo').value||0, anchoCm: +$('pkgAncho').value||0, altoCm: +$('pkgAlto').value||0, mlMode: $('mlMode').value, mlQuienPaga: $('mlQuienPaga').value, mlApplyRepDiscount: $('mlApplyRepDiscount').checked, mlSimPrice: $('mlSimPrice').value ? (+$('mlSimPrice').value) : null,
+    pesoG: +$('pkgPeso').value || 0, largoCm: +$('pkgLargo').value||0, anchoCm: +$('pkgAncho').value||0, altoCm: +$('pkgAlto').value||0, mlMode: $('mlMode').value, mlQuienPaga: $('mlQuienPaga').value, mlApplyRepDiscount: $('mlApplyRepDiscount').checked, mlSimPrice: $('mlSimPrice').value ? (+$('mlSimPrice').value) : null, mlDiscountPct: +$('mlDiscountPct').value || 0,
     finalPrice: calc.finalPrice,
     updatedAt: new Date().toISOString()
   };
@@ -2685,6 +2793,7 @@ async function loadQuote(id){
   $('mlQuienPaga').value = q.mlQuienPaga || 'gratis';
   $('mlApplyRepDiscount').checked = q.mlApplyRepDiscount != null ? q.mlApplyRepDiscount : true;
   $('mlSimPrice').value = q.mlSimPrice != null ? q.mlSimPrice : '';
+  $('mlDiscountPct').value = q.mlDiscountPct || 0;
   populateMlCategorySelect(q.mlCategory);
   if (q.mlEnabled){ $('mlSwitch').classList.add('on'); $('mlBody').classList.add('show'); }
   else { $('mlSwitch').classList.remove('on'); $('mlBody').classList.remove('show'); }
@@ -2895,6 +3004,7 @@ function switchView(viewId){
   if (viewId === 'view-sales'){
     populateSaleProductSelect();
     if (!$('v-fecha').value) $('v-fecha').value = new Date().toISOString().slice(0,10);
+    updateVentaPrecioAutofill();
     renderSalesList();
   }
 }
