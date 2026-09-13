@@ -276,6 +276,13 @@ textarea{
 .sort-option.active{background:var(--accent); color:var(--bg); font-weight:600;}
 .filter-empty-note{font-size:11.5px; color:var(--muted); padding:4px 2px;}
 
+.drive-banner{
+  display:flex; align-items:center; justify-content:space-between; gap:10px;
+  background:rgba(224,69,123,0.14); border:1px solid var(--danger); color:var(--text);
+  border-radius:10px; padding:10px 12px; margin-bottom:14px; font-size:12px;
+}
+.drive-banner.hidden{display:none;}
+
 .ml-compare-grid{
   display:grid; grid-template-columns: 1.4fr 1fr 1fr; gap:5px 6px; align-items:center;
   margin-top:8px; font-size:12.5px;
@@ -290,6 +297,13 @@ textarea{
 <body>
 
 <div class="app">
+  <div class="drive-banner hidden" id="driveBanner">
+    <span>☁ No se pudo reconectar a Drive solo — tus cambios de momento solo viven en este navegador.</span>
+    <div style="display:flex; gap:6px; flex-shrink:0;">
+      <button class="btn btn-small" id="driveBannerConnectBtn">Conectar</button>
+      <button class="chip-x" id="driveBannerCloseBtn">✕</button>
+    </div>
+  </div>
   <div class="topbar">
     <div>
       <div class="logo">cotiza<span>3D</span></div>
@@ -3049,6 +3063,7 @@ $('importFile').onchange = (e) => {
           if (backup.quotes[id]) await storageSet('quote:' + id, backup.quotes[id]);
         }
       }
+      markLocalChange('main');
       showToast('Respaldo importado, recargando...');
       setTimeout(() => location.reload(), 900);
     }catch(err){
@@ -3079,6 +3094,7 @@ $('importProductsFile').onchange = (e) => {
       const backup = JSON.parse(ev.target.result);
       productsCatalog = backup.products || [];
       await storageSet('products-list', productsCatalog);
+      markLocalChange('products');
       showToast('Catálogo importado');
       renderProductsList();
       if (document.getElementById('view-full').classList.contains('active')) renderFullEligible();
@@ -3113,6 +3129,7 @@ $('importFullFile').onchange = (e) => {
       fullProjections = backup.fullProjections || [];
       await storageSet('full-shipments', fullShipments);
       await storageSet('full-projections', fullProjections);
+      markLocalChange('full');
       showToast('Datos de FULL importados');
       if (document.getElementById('view-full').classList.contains('active')) renderFullEligible();
     }catch(err){
@@ -3143,6 +3160,7 @@ $('importSalesFile').onchange = (e) => {
       const backup = JSON.parse(ev.target.result);
       salesList = backup.sales || [];
       await storageSet('ventas-list', salesList);
+      markLocalChange('sales');
       showToast('Ventas importadas');
       if (document.getElementById('view-sales').classList.contains('active')) renderSalesList();
     }catch(err){
@@ -3206,6 +3224,16 @@ async function applyBackupObject(backup){
   renderFilamentCatalog();
 }
 
+let driveSilentAttemptInProgress = false;
+function showDriveBanner(){ $('driveBanner').classList.remove('hidden'); }
+function hideDriveBanner(){ $('driveBanner').classList.add('hidden'); }
+$('driveBannerCloseBtn').onclick = () => hideDriveBanner();
+$('driveBannerConnectBtn').onclick = () => {
+  hideDriveBanner();
+  switchView('view-settings');
+  document.querySelector('.settings-subtab-btn[data-sub="settings-sync"]').click();
+  $('driveConnectBtn')?.click();
+};
 function initGoogleClient(){
   if (!googleClientId || typeof google === 'undefined' || !google.accounts) return;
   driveTokenClient = google.accounts.oauth2.initTokenClient({
@@ -3214,10 +3242,17 @@ function initGoogleClient(){
     callback: onDriveTokenResponse
   });
   $('driveConnectSection').style.display = 'block';
+  driveSilentAttemptInProgress = true;
+  driveTokenClient.requestAccessToken({prompt: ''});
 }
 
 async function onDriveTokenResponse(resp){
-  if (resp.error){ driveSetStatus('error al conectar'); showToast('No se pudo conectar con Google'); return; }
+  if (resp.error){
+    if (driveSilentAttemptInProgress){ driveSilentAttemptInProgress = false; showDriveBanner(); return; }
+    driveSetStatus('error al conectar'); showToast('No se pudo conectar con Google'); return;
+  }
+  driveSilentAttemptInProgress = false;
+  hideDriveBanner();
   driveAccessToken = resp.access_token;
   driveConnected = true;
   driveSetStatus('conectando...');
@@ -3279,7 +3314,11 @@ async function drivePull(isInitial){
       const text = await driveReadFile(driveFileId);
       if (text && text.trim()){
         const backup = JSON.parse(text);
-        await applyBackupObject(backup);
+        if (localIsNewer('main', backup.exportedAt)){
+          await drivePush();
+        } else {
+          await applyBackupObject(backup);
+        }
       }
     } else {
       // no file yet in Drive: push what we currently have locally
@@ -3315,7 +3354,16 @@ async function drivePush(){
   }
 }
 let drivePushTimer = null;
+function markLocalChange(domain){
+  localStorage.setItem('cotiza3d_last_change_' + domain, new Date().toISOString());
+}
+function localIsNewer(domain, driveExportedAt){
+  const localStr = localStorage.getItem('cotiza3d_last_change_' + domain);
+  if (!localStr || !driveExportedAt) return false;
+  return new Date(localStr) > new Date(driveExportedAt);
+}
 function driveQueuePush(){
+  markLocalChange('main');
   if (!driveConnected) return;
   clearTimeout(drivePushTimer);
   drivePushTimer = setTimeout(drivePush, 1200);
@@ -3330,8 +3378,12 @@ async function productsDrivePull(){
       const text = await driveReadFile(productsDriveFileId);
       if (text && text.trim()){
         const data = JSON.parse(text);
-        productsCatalog = data.products || [];
-        await storageSet('products-list', productsCatalog);
+        if (localIsNewer('products', data.exportedAt)){
+          await productsDrivePush();
+        } else {
+          productsCatalog = data.products || [];
+          await storageSet('products-list', productsCatalog);
+        }
       }
     } else {
       productsCatalog = await storageGet('products-list', []);
@@ -3359,6 +3411,7 @@ async function productsDrivePush(){
 }
 let productsDrivePushTimer = null;
 function productsDriveQueuePush(){
+  markLocalChange('products');
   if (!driveConnected) return;
   clearTimeout(productsDrivePushTimer);
   productsDrivePushTimer = setTimeout(productsDrivePush, 1200);
@@ -3373,10 +3426,14 @@ async function fulfillmentDrivePull(){
       const text = await driveReadFile(fulfillmentDriveFileId);
       if (text && text.trim()){
         const data = JSON.parse(text);
-        fullShipments = data.fullShipments || [];
-        fullProjections = data.fullProjections || [];
-        await storageSet('full-shipments', fullShipments);
-        await storageSet('full-projections', fullProjections);
+        if (localIsNewer('full', data.exportedAt)){
+          await fulfillmentDrivePush();
+        } else {
+          fullShipments = data.fullShipments || [];
+          fullProjections = data.fullProjections || [];
+          await storageSet('full-shipments', fullShipments);
+          await storageSet('full-projections', fullProjections);
+        }
       }
     } else {
       fullShipments = await storageGet('full-shipments', []);
@@ -3404,6 +3461,7 @@ async function fulfillmentDrivePush(){
 }
 let fulfillmentDrivePushTimer = null;
 function fulfillmentDriveQueuePush(){
+  markLocalChange('full');
   if (!driveConnected) return;
   clearTimeout(fulfillmentDrivePushTimer);
   fulfillmentDrivePushTimer = setTimeout(fulfillmentDrivePush, 1200);
@@ -3418,8 +3476,12 @@ async function salesDrivePull(){
       const text = await driveReadFile(salesDriveFileId);
       if (text && text.trim()){
         const data = JSON.parse(text);
-        salesList = data.sales || [];
-        await storageSet('ventas-list', salesList);
+        if (localIsNewer('sales', data.exportedAt)){
+          await salesDrivePush();
+        } else {
+          salesList = data.sales || [];
+          await storageSet('ventas-list', salesList);
+        }
       }
     } else {
       salesList = await storageGet('ventas-list', []);
@@ -3446,6 +3508,7 @@ async function salesDrivePush(){
 }
 let salesDrivePushTimer = null;
 function salesDriveQueuePush(){
+  markLocalChange('sales');
   if (!driveConnected) return;
   clearTimeout(salesDrivePushTimer);
   salesDrivePushTimer = setTimeout(salesDrivePush, 1200);
