@@ -335,7 +335,6 @@ textarea{
       <div class="section-head">
         <div class="section-num">1</div>
         <div class="section-title">Consumo de materiales</div>
-        <span class="tag" style="margin-left:auto">máx. 4 colores</span>
       </div>
       <div id="filamentList"></div>
       <button class="btn btn-block" id="addFilamentBtn">+ agregar filamento</button>
@@ -1381,7 +1380,6 @@ function renderFilaments(){
 }
 
 $('addFilamentBtn').onclick = () => {
-  if (filaments.length >= 4){ showToast('Máximo 4 colores'); return; }
   addFilament();
 };
 
@@ -2000,7 +1998,11 @@ function renderProductsList(){
             <div class="pi-sub">SKU: ${p.sku || '—'} · Stock: ${p.stock}${p.variantes && p.variantes.length ? ' · ' + p.variantes.length + ' variantes' : ''}</div>
           </div>
         </div>
-        <div class="pi-price">${money(p.precioTiktok||0)}</div>
+        <div style="text-align:right;">
+          <div class="pi-price">${money(p.precioTiktok||0)}</div>
+          <div style="font-size:9.5px; color:var(--muted); margin-top:-2px;">TikTok</div>
+          <div style="font-size:10.5px; color:var(--muted); margin-top:4px;">ML: ${money(p.precioMl||0)}</div>
+        </div>
       </div>
       <div class="platform-badges">
         ${statusBadgeHtml('TikTok', p.estadoCarga?.tiktok)}
@@ -2789,9 +2791,29 @@ $('saveQuoteBtn').onclick = async () => {
   await storageSet('quotes-index', index);
   driveQueuePush();
   currentQuoteId = id;
-  showToast('Cotización guardada');
+  const syncedProductName = await syncLinkedProductFromQuote(id, quote);
+  showToast(syncedProductName ? `Cotización guardada — se actualizó "${syncedProductName}" en e-commerce` : 'Cotización guardada');
   renderHistory();
 };
+
+async function syncLinkedProductFromQuote(quoteId, quote){
+  const product = productsCatalog.find(p => p.linkedQuoteId === quoteId);
+  if (!product) return null;
+  const breakdown = computeQuoteCostBreakdown(quote);
+  product.costo = breakdown.totalEst;
+  product.precioTiktok = quote.finalPrice;
+  product.precioMl = quote.mlSimPrice != null ? quote.mlSimPrice : quote.finalPrice;
+  product.precioTiendaNube = quote.finalPrice;
+  if (quote.pesoG) product.pesoG = quote.pesoG;
+  if (quote.largoCm) product.largoCm = quote.largoCm;
+  if (quote.anchoCm) product.anchoCm = quote.anchoCm;
+  if (quote.altoCm) product.altoCm = quote.altoCm;
+  product.updatedAt = new Date().toISOString();
+  await storageSet('products-list', productsCatalog);
+  productsDriveQueuePush();
+  if (document.getElementById('view-products').classList.contains('active')) renderProductsList();
+  return product.nombre;
+}
 
 async function loadQuote(id){
   const q = await storageGet('quote:' + id, null);
