@@ -552,8 +552,8 @@ textarea{
 
   <!-- FILAMENTOS -->
   <div class="view" id="view-filaments">
-    <div class="card">
-      <div class="section-title" style="margin-bottom:12px;">Agregar filamento al catálogo</div>
+    <div class="card" id="filamentFormCard">
+      <div class="section-title" style="margin-bottom:12px;" id="filamentFormTitle">Agregar filamento al catálogo</div>
       <div class="row">
         <div>
           <label>Marca</label>
@@ -568,6 +568,7 @@ textarea{
       <input type="number" step="0.1" id="fc-precio">
       <div class="hint" id="fc-preview" style="margin-top:8px;"></div>
       <button class="btn btn-accent btn-block" id="addFilCatBtn" style="margin-top:12px;">Agregar a mi catálogo</button>
+      <button class="btn btn-block" id="cancelFilEditBtn" style="margin-top:8px; display:none;">Cancelar edición</button>
     </div>
     <div class="card">
       <input type="text" id="searchFilaments" placeholder="Buscar por marca o color..." style="margin-bottom:10px;">
@@ -1222,6 +1223,8 @@ async function loadCatalog(){
   filamentCatalog = await storageGet('filaments-catalog', []);
 }
 
+let editingFilamentId = null;
+
 function fcPreview(){
   const marca = $('fc-marca').value.trim();
   const color = $('fc-color').value.trim();
@@ -1230,11 +1233,42 @@ function fcPreview(){
 }
 ['fc-marca','fc-color','fc-precio'].forEach(id => $(id).addEventListener('input', fcPreview));
 
+function startEditFilament(c){
+  editingFilamentId = c.id;
+  $('fc-marca').value = c.marca;
+  $('fc-color').value = c.color;
+  $('fc-precio').value = c.priceKg;
+  fcPreview();
+  $('filamentFormTitle').textContent = 'Editar filamento';
+  $('addFilCatBtn').textContent = 'Guardar cambios';
+  $('cancelFilEditBtn').style.display = 'block';
+  $('filamentFormCard').scrollIntoView({behavior:'smooth', block:'start'});
+}
+function stopEditFilament(){
+  editingFilamentId = null;
+  $('fc-marca').value=''; $('fc-color').value=''; $('fc-precio').value=''; $('fc-preview').textContent='';
+  $('filamentFormTitle').textContent = 'Agregar filamento al catálogo';
+  $('addFilCatBtn').textContent = 'Agregar a mi catálogo';
+  $('cancelFilEditBtn').style.display = 'none';
+}
+$('cancelFilEditBtn').onclick = stopEditFilament;
+
 $('addFilCatBtn').onclick = async () => {
   const marca = $('fc-marca').value.trim();
   const color = $('fc-color').value.trim();
   const precio = +$('fc-precio').value || 0;
   if (!marca || !color || !precio){ showToast('Completa marca, color y precio'); return; }
+  if (editingFilamentId){
+    const existing = filamentCatalog.find(x => x.id === editingFilamentId);
+    if (existing){ existing.marca = marca; existing.color = color; existing.priceKg = precio; }
+    await storageSet('filaments-catalog', filamentCatalog);
+    driveQueuePush();
+    stopEditFilament();
+    renderFilamentCatalog();
+    renderFilaments();
+    showToast('Filamento actualizado');
+    return;
+  }
   filamentCatalog.push({id:'fil_'+Date.now(), marca, color, priceKg: precio});
   await storageSet('filaments-catalog', filamentCatalog);
   driveQueuePush();
@@ -1311,9 +1345,11 @@ function renderFilamentCatalog(){
       </div>
       <div class="fil-cat-actions">
         <div class="fc-price">$${(c.priceKg/1000).toFixed(3)}/g</div>
+        <button class="btn btn-small" data-act="edit" data-id="${c.id}">Editar</button>
         <button class="remove-btn" data-id="${c.id}">✕</button>
       </div>
     `;
+    div.querySelector('[data-act=edit]').onclick = () => startEditFilament(c);
     div.querySelector('.remove-btn').onclick = async () => {
       if (!confirm(`¿Eliminar ${c.marca} ${c.color} del catálogo?`)) return;
       filamentCatalog = filamentCatalog.filter(x => x.id !== c.id);
