@@ -1143,7 +1143,7 @@ textarea{
           <div><label>Cantidad</label><input type="number" step="1" id="carCantidad" value="1"></div>
         </div>
         <button class="btn btn-accent btn-block" id="addCarItemBtn" style="margin-top:8px;">+ Agregar al carrito</button>
-        <div class="hint" id="noCarProductsHint" style="display:none; margin-top:8px;">Aún no tienes productos cotizados (ni en e-commerce ni en papelería) para agregar.</div>
+        <div class="hint" id="noCarProductsHint" style="display:none; margin-top:8px;">Aún no tienes cotizaciones guardadas (ni en Cotización ni en Papelería) para agregar.</div>
       </div>
 
       <div class="card">
@@ -3596,19 +3596,20 @@ document.querySelectorAll('.car-subtab-btn').forEach(b => b.onclick = () => {
 // ---------- CARRITO ----------
 let carritos = [];
 let currentCarritoId = null;
-let carItems = []; // {source:'3d'|'pap', refId, nombre, precioUnitario, cantidad}
+let carItems = []; // {source:'cot'|'pap', refId, nombre, precioUnitario, cantidad}
 
-function getCarritoSourceOptions(){
+async function getCarritoSourceOptions(){
   const items = [];
-  productsCatalog.forEach(p => items.push({source:'3d', refId:p.id, nombre:p.nombre, precio:p.precioTiktok||0}));
+  const quotesIdx = await storageGet('quotes-index', []);
+  quotesIdx.forEach(q => items.push({source:'cot', refId:q.id, nombre:q.name, precio:q.finalPrice||0}));
   papeleriaQuotes.forEach(q => items.push({source:'pap', refId:q.id, nombre:q.name, precio:q.finalPrice||0}));
   return items;
 }
-function populateCarProductoSelect(){
-  const items = getCarritoSourceOptions();
+async function populateCarProductoSelect(){
+  const items = await getCarritoSourceOptions();
   $('noCarProductsHint').style.display = items.length ? 'none' : 'block';
   $('carProductoSelect').innerHTML = items.map(it =>
-    `<option value="${it.source}:${it.refId}">${it.source === '3d' ? '🖨️' : '✂️'} ${it.nombre} — ${money(it.precio)}</option>`
+    `<option value="${it.source}:${it.refId}">${it.source === 'cot' ? '🧾' : '✂️'} ${it.nombre} — ${money(it.precio)}</option>`
   ).join('');
 }
 
@@ -3626,7 +3627,7 @@ function renderCarItemsList(){
     div.innerHTML = `
       <div class="pi-top">
         <div>
-          <div class="pi-name">${it.source === '3d' ? '🖨️' : '✂️'} ${it.nombre}</div>
+          <div class="pi-name">${it.source === 'cot' ? '🧾' : '✂️'} ${it.nombre}</div>
           <div class="pi-sub">${money(it.precioUnitario)} c/u × ${it.cantidad} = ${money(it.precioUnitario*it.cantidad)}</div>
         </div>
         <button class="remove-btn" data-i="${i}">✕</button>
@@ -3636,13 +3637,13 @@ function renderCarItemsList(){
     wrap.appendChild(div);
   });
 }
-$('addCarItemBtn').onclick = () => {
+$('addCarItemBtn').onclick = async () => {
   const val = $('carProductoSelect').value;
-  if (!val){ showToast('No hay productos para agregar'); return; }
+  if (!val){ showToast('No hay cotizaciones para agregar'); return; }
   const [source, refId] = val.split(':');
   const cantidad = +$('carCantidad').value || 0;
   if (cantidad <= 0){ showToast('Indica la cantidad'); return; }
-  const items = getCarritoSourceOptions();
+  const items = await getCarritoSourceOptions();
   const found = items.find(it => it.source === source && it.refId === refId);
   if (!found) return;
   carItems.push({source, refId, nombre: found.nombre, precioUnitario: found.precio, cantidad});
