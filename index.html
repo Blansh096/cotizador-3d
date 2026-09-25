@@ -213,11 +213,11 @@ textarea{
 .generate-card .gc-title{font-family:'Fredoka'; font-weight:600; font-size:13.5px; margin-bottom:6px;}
 
 .subtab-bar{display:flex; gap:6px; margin-bottom:14px; flex-wrap:wrap;}
-.subtab-btn, .settings-subtab-btn, .quote-subtab-btn{
+.subtab-btn, .settings-subtab-btn, .quote-subtab-btn, .pap-subtab-btn, .car-subtab-btn{
   flex:1; min-width:90px; border:1px solid var(--line); background:var(--panel-alt); color:var(--muted);
   padding:9px 6px; border-radius:20px; font-family:'Fredoka'; font-weight:600; font-size:11.5px; cursor:pointer; text-align:center;
 }
-.subtab-btn.active, .settings-subtab-btn.active, .quote-subtab-btn.active{background:var(--accent); color:var(--bg); border-color:var(--accent);}
+.subtab-btn.active, .settings-subtab-btn.active, .quote-subtab-btn.active, .pap-subtab-btn.active, .car-subtab-btn.active{background:var(--accent); color:var(--bg); border-color:var(--accent);}
 .full-item{
   background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
   padding:14px; margin-bottom:10px; box-shadow:0 4px 14px rgba(214,51,108,0.10);
@@ -292,6 +292,8 @@ textarea{
 .ml-compare-grid .mlc-head{font-family:'Fredoka'; font-weight:700; color:var(--accent); font-size:11.5px; padding-bottom:4px; border-bottom:1px solid var(--line-soft);}
 .ml-compare-grid .mlc-total{font-family:'Fredoka'; font-weight:700; color:var(--money); border-top:1px solid var(--line); padding-top:6px;}
 .ml-compare-grid .mlc-label.mlc-total{color:var(--text);}
+.ml-compare-grid .mlc-recibes{font-size:15px;}
+.ml-compare-grid .mlc-ganancia{font-size:19px;}
 </style>
 </head>
 <body>
@@ -327,8 +329,6 @@ textarea{
     <div class="card">
       <label>Nombre del producto / cotización</label>
       <input type="text" id="qName" placeholder="ej. Maceta hexagonal 10cm">
-      <label>Notas (opcional)</label>
-      <textarea id="qNotes" placeholder="detalles, cliente, variante..."></textarea>
     </div>
 
     <div class="card">
@@ -338,7 +338,7 @@ textarea{
       </div>
       <div id="filamentList"></div>
       <button class="btn btn-block" id="addFilamentBtn">+ agregar filamento</button>
-      <div class="hint" id="noCatalogHint" style="display:none;">Aún no tienes filamentos en tu catálogo. Ve a la pestaña "Filamentos" para agregarlos, o usa "Personalizado" aquí mismo.</div>
+      <div class="hint" id="noCatalogHint" style="display:none;">Aún no tienes filamentos en tu catálogo. Ve a la pestaña "Filamentos" para agregarlos.</div>
     </div>
 
     <div class="card">
@@ -356,10 +356,16 @@ textarea{
           <input type="number" step="1" id="printWatts">
         </div>
       </div>
-      <label>Precio por kWh ($)</label>
-      <input type="number" step="0.01" id="kwhPrice">
-      <label>Costo desgaste / depreciación de máquina ($/hora)</label>
-      <input type="number" step="0.01" id="depreciationRate">
+      <div class="row">
+        <div>
+          <label>Precio por kWh ($)</label>
+          <input type="number" step="0.01" id="kwhPrice">
+        </div>
+        <div>
+          <label>Costo desgaste / depreciación ($/hora)</label>
+          <input type="number" step="0.01" id="depreciationRate">
+        </div>
+      </div>
     </div>
 
     <div class="card">
@@ -386,7 +392,6 @@ textarea{
         </div>
       </div>
       <div class="chip-wrap" id="packagingChips"></div>
-      <div class="hint" id="noPackagingHint" style="display:none;">Aún no tienes tipos de embalaje. Agrégalos en Ajustes.</div>
     </div>
 
     <div class="card">
@@ -423,7 +428,6 @@ textarea{
         <div class="section-num">6</div>
         <div class="section-title">Peso y dimensiones del paquete</div>
       </div>
-      <div class="hint" style="margin-bottom:8px;">Se usan para el cálculo de envío de Mercado Libre y para prellenar el producto en e-commerce — llénalas aunque no uses ML.</div>
       <label>Peso (g)</label>
       <input type="number" step="1" id="pkgPeso">
       <label>Dimensiones del paquete (cm) — largo × ancho × alto</label>
@@ -464,7 +468,6 @@ textarea{
           <input type="checkbox" id="mlApplyRepDiscount" checked style="width:18px; height:18px; accent-color:var(--accent); margin:0;">
           <label style="margin:0; font-size:12.5px;" for="mlApplyRepDiscount">Aplicar mi % de descuento por reputación (<span id="mlRepDiscountPctView">50</span>%, editable en Ajustes)</label>
         </div>
-        <div class="hint" style="margin-top:8px;">Usa las dimensiones del paso 6 (Dimensiones del paquete) para este cálculo.</div>
         <div class="summary-line"><span class="lbl">Peso volumétrico</span><span id="ml-volw">0.00 kg</span></div>
         <div class="summary-line"><span class="lbl">Peso facturable (mayor de los dos)</span><span id="ml-billw">0.00 kg</span></div>
 
@@ -475,7 +478,6 @@ textarea{
             <div><input type="number" step="1" id="mlDiscountPct" placeholder="% desc." value="0"></div>
             <div><input type="text" id="mlDiscountedPriceView" readonly placeholder="Precio c/desc." style="opacity:0.85;"></div>
           </div>
-          <div class="hint" style="margin-top:4px;">El % de descuento es opcional — úsalo si vas a correr una promoción en ML. Se guarda con la cotización.</div>
         </div>
 
         <div class="ml-compare-grid" id="mlCompareGrid">
@@ -508,20 +510,18 @@ textarea{
           <div id="ml-isr-cd">-$0.00</div>
 
           <div class="mlc-label mlc-total">= Recibes</div>
-          <div class="mlc-total" id="ml-net-nd">$0.00</div>
-          <div class="mlc-total" id="ml-net-cd">$0.00</div>
+          <div class="mlc-total mlc-recibes" id="ml-net-nd">$0.00</div>
+          <div class="mlc-total mlc-recibes" id="ml-net-cd">$0.00</div>
 
           <div class="mlc-label" style="margin-top:6px;">Costo de producción</div>
           <div id="ml-costoprod-nd" style="margin-top:6px;">-$0.00</div>
           <div id="ml-costoprod-cd" style="margin-top:6px;">-$0.00</div>
 
           <div class="mlc-label mlc-total">= Ganancia neta</div>
-          <div class="mlc-total" id="ml-gananciantea-nd">$0.00</div>
-          <div class="mlc-total" id="ml-gananciantea-cd">$0.00</div>
+          <div class="mlc-total mlc-ganancia" id="ml-gananciantea-nd">$0.00</div>
+          <div class="mlc-total mlc-ganancia" id="ml-gananciantea-cd">$0.00</div>
         </div>
 
-        <div class="summary-line" style="margin-top:10px;"><span class="lbl">Precio sugerido para conservar tu margen original</span><span id="ml-listprice">$0.00</span></div>
-        <div class="hint">Comisión según categoría, envío nominal según tabla de peso — ambas editables en Ajustes. Si ofreces envío gratis, se aplica tu % de descuento por reputación sobre ese costo nominal (también editable). Impuestos calculados sobre el precio sin el IVA que ML asume incluido. FULL sigue sin costo de envío calculado aquí hasta que tengamos sus tablas.</div>
       </div>
     </div>
 
@@ -934,6 +934,269 @@ textarea{
     <div id="salesList"></div>
   </div>
 
+  <!-- PAPELERÍA -->
+  <div class="view" id="view-papeleria">
+    <div class="subtab-bar">
+      <button class="pap-subtab-btn active" data-sub="pap-materiales">Materiales</button>
+      <button class="pap-subtab-btn" data-sub="pap-cotizar">Cotizar</button>
+      <button class="pap-subtab-btn" data-sub="pap-historial">Historial</button>
+    </div>
+
+    <!-- Sub: Materiales -->
+    <div class="pap-sub" id="pap-materiales">
+      <div class="card" id="papMaterialFormCard">
+        <div class="section-title" style="margin-bottom:10px;" id="papMaterialFormTitle">Agregar material</div>
+        <label>Tipo de material</label>
+        <select id="pm-tipo">
+          <option value="pieza">Pieza / hoja (cartulina, stickers, listones...)</option>
+          <option value="metro">Metro lineal con ancho fijo (vinil, foil...)</option>
+          <option value="cartucho">Tinta (lote de uno o varios colores, rinde X hojas)</option>
+          <option value="compuesto">Compuesto (combina otros materiales ya registrados)</option>
+        </select>
+        <label>Nombre</label>
+        <input type="text" id="pm-nombre" placeholder="ej. Cartulina rosa">
+
+        <div id="pm-fields-pieza">
+          <div class="row">
+            <div><label>Costo total pagado ($)</label><input type="number" step="0.01" id="pm-pieza-costo"></div>
+            <div><label>Piezas/hojas compradas</label><input type="number" step="1" id="pm-pieza-cantidad"></div>
+          </div>
+        </div>
+
+        <div id="pm-fields-metro" style="display:none;">
+          <div class="row">
+            <div><label>Costo total pagado ($)</label><input type="number" step="0.01" id="pm-metro-costo"></div>
+            <div><label>Metros lineales comprados</label><input type="number" step="0.01" id="pm-metro-cantidad"></div>
+          </div>
+          <label>Ancho del rollo (cm)</label>
+          <input type="number" step="0.1" id="pm-metro-ancho" value="60">
+        </div>
+
+        <div id="pm-fields-cartucho" style="display:none;">
+          <div class="hint" style="margin-bottom:6px;">Registra el lote completo de tinta tal como lo compras (sin importar cuántos colores incluye) y cuántas hojas rendiste con ese lote antes de tener que reponerlo.</div>
+          <div class="row">
+            <div><label>Costo total del lote de tinta ($)</label><input type="number" step="0.01" id="pm-cartucho-costo"></div>
+            <div><label>Hojas rendidas con ese lote</label><input type="number" step="1" id="pm-cartucho-rendimiento"></div>
+          </div>
+        </div>
+
+        <div id="pm-fields-compuesto" style="display:none;">
+          <div class="hint" style="margin-bottom:8px;">Agrega los materiales que forman este producto compuesto — pueden ser hojas, tinta, otro compuesto ya armado (ej. "hoja impresa"), vinil/foil por área, etc.</div>
+          <div class="row">
+            <div style="flex:2;">
+              <label>Material a agregar</label>
+              <select id="pm-comp-select"></select>
+            </div>
+          </div>
+          <div id="pm-comp-qty-wrap" class="row">
+            <div><label>Cantidad</label><input type="number" step="1" id="pm-comp-cantidad" value="1"></div>
+          </div>
+          <div id="pm-comp-area-wrap" class="row" style="display:none;">
+            <div><label>Ancho usado (cm)</label><input type="number" step="0.1" id="pm-comp-ancho"></div>
+            <div><label>Alto usado (cm)</label><input type="number" step="0.1" id="pm-comp-alto"></div>
+          </div>
+          <button class="btn btn-block" id="addCompComponentBtn" style="margin-top:6px;">+ Agregar componente</button>
+          <div class="chip-wrap" id="compComponentsChips" style="margin-top:10px;"></div>
+        </div>
+
+        <div class="hint" id="pm-preview" style="margin-top:10px;"></div>
+        <button class="btn btn-accent btn-block" id="addMaterialBtn" style="margin-top:12px;">Agregar material</button>
+        <button class="btn btn-block" id="cancelMaterialEditBtn" style="margin-top:8px; display:none;">Cancelar edición</button>
+      </div>
+
+      <div id="papMaterialsList"></div>
+    </div>
+
+    <!-- Sub: Cotizar -->
+    <div class="pap-sub" id="pap-cotizar" style="display:none;">
+      <div class="card">
+        <label>Nombre del producto / cotización</label>
+        <input type="text" id="ppName" placeholder="ej. Cake topper personalizado">
+        <label>Notas (opcional)</label>
+        <textarea id="ppNotes" placeholder="Detalles, cliente, variante..."></textarea>
+      </div>
+
+      <div class="card">
+        <div class="section-head">
+          <div class="section-num">1</div>
+          <div class="section-title">Materiales usados</div>
+        </div>
+        <div class="row">
+          <div style="flex:2;">
+            <label>Material</label>
+            <select id="pp-mat-select"></select>
+          </div>
+        </div>
+        <div id="pp-mat-qty-wrap" class="row">
+          <div><label>Cantidad</label><input type="number" step="1" id="pp-mat-cantidad" value="1"></div>
+        </div>
+        <div id="pp-mat-area-wrap" class="row" style="display:none;">
+          <div><label>Ancho usado (cm)</label><input type="number" step="0.1" id="pp-mat-ancho"></div>
+          <div><label>Alto usado (cm)</label><input type="number" step="0.1" id="pp-mat-alto"></div>
+        </div>
+        <button class="btn btn-block" id="addPpMaterialBtn">+ Agregar material</button>
+        <div class="chip-wrap" id="ppMaterialsChips" style="margin-top:10px;"></div>
+        <div class="hint" id="noPapMaterialsHint" style="display:none;">Aún no tienes materiales registrados — agrégalos en la sub-pestaña "Materiales".</div>
+      </div>
+
+      <div class="card">
+        <div class="section-head">
+          <div class="section-num">2</div>
+          <div class="section-title">Embalaje</div>
+        </div>
+        <div class="row">
+          <div style="flex:2;">
+            <label>Tipo de embalaje</label>
+            <select id="ppPackagingSelect"></select>
+          </div>
+          <div style="flex:1; display:flex; align-items:flex-end;">
+            <button class="btn btn-accent btn-block" id="addPpPackagingBtn">+ Agregar</button>
+          </div>
+        </div>
+        <div class="chip-wrap" id="ppPackagingChips"></div>
+      </div>
+
+      <div class="card">
+        <div class="section-head">
+          <div class="section-num">3</div>
+          <div class="section-title">Mano de obra</div>
+        </div>
+        <label>Costo operativo / mano de obra ($, monto fijo)</label>
+        <input type="number" step="1" id="ppLaborCost" value="0">
+      </div>
+
+      <div class="card">
+        <div class="section-head">
+          <div class="section-num">4</div>
+          <div class="section-title">Resumen y precio de venta</div>
+        </div>
+        <div class="summary-line"><span class="lbl">Subtotal materiales</span><span id="pp-s-mat">$0.00</span></div>
+        <div class="summary-line"><span class="lbl">Subtotal embalaje</span><span id="pp-s-packaging">$0.00</span></div>
+        <div class="summary-line"><span class="lbl">= Subtotal costo directo</span><span id="pp-s-direct">$0.00</span></div>
+        <div class="summary-line"><span class="lbl">Mano de obra</span><span id="pp-s-labor">$0.00</span></div>
+        <div class="summary-line"><span class="lbl">= Costo base producción</span><span id="pp-s-base">$0.00</span></div>
+        <div class="summary-line">
+          <span class="lbl">Margen de riesgo / fallas (%)</span>
+          <input type="number" step="0.5" id="ppRiskPct" value="8">
+        </div>
+        <div class="summary-line"><span class="lbl">= Costo total estimado</span><span id="pp-s-total-est">$0.00</span></div>
+        <div class="summary-line">
+          <span class="lbl">Margen de ganancia (%)</span>
+          <input type="number" step="1" id="ppProfitPct" value="30">
+        </div>
+        <div class="summary-line"><span class="lbl">Precio de venta (sin IVA)</span><span id="pp-s-price-noiva">$0.00</span></div>
+        <div class="summary-line">
+          <span class="lbl">IVA (%)</span>
+          <input type="number" step="0.5" id="ppIvaPct" value="16">
+        </div>
+        <div class="summary-line total"><span class="lbl">= PRECIO FINAL SUGERIDO</span><span id="pp-s-final">$0.00</span></div>
+      </div>
+
+      <button class="btn btn-accent btn-block" id="savePpQuoteBtn" style="padding:13px; font-size:14px;">Guardar cotización</button>
+      <button class="btn btn-block" id="newPpQuoteBtn" style="margin-top:8px;">Limpiar / nueva cotización</button>
+    </div>
+
+    <!-- Sub: Historial -->
+    <div class="pap-sub" id="pap-historial" style="display:none;">
+      <div class="card" style="padding:12px 16px;">
+        <div style="display:flex; gap:8px; align-items:center;">
+          <input type="text" id="searchPpQuotes" placeholder="Buscar por nombre..." style="flex:1;">
+          <div class="dropdown-wrap" style="flex:0 0 auto; width:auto;">
+            <button class="dropdown-btn" id="ppHistorySortBtn" style="white-space:nowrap;">Ordenar <span class="caret">▾</span></button>
+            <div class="dropdown-panel hidden" id="ppHistorySortPanel" style="left:auto; right:0; width:220px;">
+              <div class="sort-option active" data-sort="fecha_desc">Más reciente primero</div>
+              <div class="sort-option" data-sort="fecha_asc">Más antigua primero</div>
+              <div class="sort-option" data-sort="nombre_asc">Nombre (A-Z)</div>
+              <div class="sort-option" data-sort="nombre_desc">Nombre (Z-A)</div>
+              <div class="sort-option" data-sort="precio_desc">Precio (mayor a menor)</div>
+              <div class="sort-option" data-sort="precio_asc">Precio (menor a mayor)</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="ppHistoryList"></div>
+    </div>
+  </div>
+
+  <!-- CARRITO -->
+  <div class="view" id="view-carrito">
+    <div class="subtab-bar">
+      <button class="car-subtab-btn active" data-sub="car-armar">Armar</button>
+      <button class="car-subtab-btn" data-sub="car-historial">Historial</button>
+    </div>
+
+    <div class="car-sub" id="car-armar">
+      <div class="card">
+        <label>Nombre del cliente</label>
+        <input type="text" id="carCliente" placeholder="ej. María Pérez">
+        <label>Fecha</label>
+        <input type="date" id="carFecha">
+        <label>Notas (opcional)</label>
+        <textarea id="carNotas" placeholder="Detalles del pedido..."></textarea>
+      </div>
+
+      <div class="card">
+        <div class="section-title" style="margin-bottom:10px;">Agregar producto</div>
+        <label>Producto ya cotizado</label>
+        <select id="carProductoSelect"></select>
+        <div class="row">
+          <div><label>Cantidad</label><input type="number" step="1" id="carCantidad" value="1"></div>
+        </div>
+        <button class="btn btn-accent btn-block" id="addCarItemBtn" style="margin-top:8px;">+ Agregar al carrito</button>
+        <div class="hint" id="noCarProductsHint" style="display:none; margin-top:8px;">Aún no tienes productos cotizados (ni en e-commerce ni en papelería) para agregar.</div>
+      </div>
+
+      <div class="card">
+        <div class="section-title" style="margin-bottom:10px;">Productos en el carrito</div>
+        <div id="carItemsList"></div>
+        <div class="hint" id="carEmptyHint">Aún no has agregado productos.</div>
+      </div>
+
+      <div class="card">
+        <div class="summary-line"><span class="lbl">Subtotal</span><span id="car-subtotal">$0.00</span></div>
+        <div class="row">
+          <div>
+            <label>Descuento</label>
+            <select id="carDescuentoTipo">
+              <option value="pct">%</option>
+              <option value="monto">$ (monto fijo)</option>
+            </select>
+          </div>
+          <div>
+            <label>Valor</label>
+            <input type="number" step="0.01" id="carDescuentoValor" value="0">
+          </div>
+        </div>
+        <div class="summary-line"><span class="lbl">Descuento aplicado</span><span id="car-descuento">-$0.00</span></div>
+        <label>Costo de envío ($)</label>
+        <input type="number" step="0.01" id="carEnvio" value="0">
+        <div class="summary-line total"><span class="lbl">= TOTAL</span><span id="car-total">$0.00</span></div>
+      </div>
+
+      <button class="btn btn-accent btn-block" id="saveCarritoBtn" style="padding:13px; font-size:14px;">Guardar pedido</button>
+      <button class="btn btn-block" id="newCarritoBtn" style="margin-top:8px;">Limpiar / nuevo pedido</button>
+    </div>
+
+    <div class="car-sub" id="car-historial" style="display:none;">
+      <div class="card" style="padding:12px 16px;">
+        <div style="display:flex; gap:8px; align-items:center;">
+          <input type="text" id="searchCarritos" placeholder="Buscar por cliente..." style="flex:1;">
+          <div class="dropdown-wrap" style="flex:0 0 auto; width:auto;">
+            <button class="dropdown-btn" id="carHistorySortBtn" style="white-space:nowrap;">Ordenar <span class="caret">▾</span></button>
+            <div class="dropdown-panel hidden" id="carHistorySortPanel" style="left:auto; right:0; width:220px;">
+              <div class="sort-option active" data-sort="fecha_desc">Más reciente primero</div>
+              <div class="sort-option" data-sort="fecha_asc">Más antigua primero</div>
+              <div class="sort-option" data-sort="cliente_asc">Cliente (A-Z)</div>
+              <div class="sort-option" data-sort="total_desc">Total (mayor a menor)</div>
+              <div class="sort-option" data-sort="total_asc">Total (menor a mayor)</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="carHistoryList"></div>
+    </div>
+  </div>
+
   <!-- AJUSTES -->
   <div class="view" id="view-settings">
     <div class="subtab-bar">
@@ -1061,6 +1324,20 @@ textarea{
           <label style="margin-top:10px;">Importar (reemplaza tus ventas actuales)</label>
           <input type="file" id="importSalesFile" accept="application/json">
         </div>
+
+        <div class="subsection">
+          <div class="subsection-title">Papelería (materiales y cotizaciones)</div>
+          <button class="btn btn-block" id="exportPapeleriaBtn">⬇ Descargar JSON</button>
+          <label style="margin-top:10px;">Importar (reemplaza tus materiales y cotizaciones actuales)</label>
+          <input type="file" id="importPapeleriaFile" accept="application/json">
+        </div>
+
+        <div class="subsection">
+          <div class="subsection-title">Carrito (pedidos a clientes)</div>
+          <button class="btn btn-block" id="exportCarritoBtn">⬇ Descargar JSON</button>
+          <label style="margin-top:10px;">Importar (reemplaza tus pedidos actuales)</label>
+          <input type="file" id="importCarritoFile" accept="application/json">
+        </div>
       </div>
     </div>
 
@@ -1074,6 +1351,8 @@ textarea{
   <button class="tab-btn" data-view="view-products"><span>e-commerce</span><span class="dot"></span></button>
   <button class="tab-btn" data-view="view-full"><span>FULL</span><span class="dot"></span></button>
   <button class="tab-btn" data-view="view-sales"><span>Ventas</span><span class="dot"></span></button>
+  <button class="tab-btn" data-view="view-papeleria"><span>Papelería</span><span class="dot"></span></button>
+  <button class="tab-btn" data-view="view-carrito"><span>Carrito</span><span class="dot"></span></button>
   <button class="tab-btn" data-view="view-settings"><span>Ajustes</span><span class="dot"></span></button>
 </div>
 
@@ -1211,7 +1490,10 @@ async function storageListKeysWithPrefix(prefix){
 
 // ---------- FILAMENT CATALOG ----------
 function catalogOptionsHtml(selectedId){
-  let html = `<option value="custom">— Personalizado (capturar manual) —</option>`;
+  if (!filamentCatalog.length){
+    return `<option value="">— agrega filamentos en la pestaña Filamentos —</option>`;
+  }
+  let html = '';
   filamentCatalog.forEach(c => {
     const pg = (c.priceKg/1000).toFixed(3);
     html += `<option value="${c.id}" ${c.id===selectedId?'selected':''}>${c.marca} · ${c.color} — $${pg}/g</option>`;
@@ -1368,7 +1650,9 @@ setupDropdown('filamentFiltersBtn', 'filamentFiltersPanel');
 setupDropdown('filamentSortBtn', 'filamentSortPanel');
 setupSortPanel('filamentSortPanel', (val) => { filamentSortValue = val; renderFilamentCatalog(); });
 function addFilament(data){
-  filaments.push(data || {catalogId:'custom', name:'', priceKg:0, grams:0});
+  if (!data && !filamentCatalog.length){ showToast('Agrega primero filamentos en la pestaña Filamentos'); return; }
+  const first = filamentCatalog[0];
+  filaments.push(data || {catalogId: first.id, name: first.marca + ' ' + first.color, priceKg: first.priceKg, grams: 0});
   renderFilaments();
 }
 function renderFilaments(){
@@ -1378,7 +1662,6 @@ function renderFilaments(){
   filaments.forEach((f, i) => {
     const div = document.createElement('div');
     div.className = 'filament-row';
-    const isCustom = !f.catalogId || f.catalogId === 'custom';
     div.innerHTML = `
       <div class="fr-top">
         <span class="fr-label">Filamento ${i+1}</span>
@@ -1386,12 +1669,6 @@ function renderFilaments(){
       </div>
       <label>Selecciona de tu catálogo</label>
       <select class="f-catalog" data-i="${i}">${catalogOptionsHtml(f.catalogId)}</select>
-      <div class="f-custom-fields" data-i="${i}" style="display:${isCustom?'block':'none'}">
-        <label>Color / nombre</label>
-        <input type="text" class="f-name" data-i="${i}" value="${f.name}" placeholder="ej. PLA negro">
-        <label>Precio por kg ($)</label>
-        <input type="number" step="0.1" class="f-price" data-i="${i}" value="${f.priceKg}">
-      </div>
       <label>Gramos usados</label>
       <input type="number" step="0.1" class="f-grams" data-i="${i}" value="${f.grams}">
     `;
@@ -1404,14 +1681,10 @@ function renderFilaments(){
     const i = +el.dataset.i;
     const val = el.value;
     filaments[i].catalogId = val;
-    if (val !== 'custom'){
-      const c = filamentCatalog.find(x => x.id === val);
-      if (c){ filaments[i].name = c.marca + ' ' + c.color; filaments[i].priceKg = c.priceKg; }
-    }
+    const c = filamentCatalog.find(x => x.id === val);
+    if (c){ filaments[i].name = c.marca + ' ' + c.color; filaments[i].priceKg = c.priceKg; }
     renderFilaments(); calculate();
   });
-  wrap.querySelectorAll('.f-name').forEach(el => el.oninput = () => { filaments[+el.dataset.i].name = el.value; });
-  wrap.querySelectorAll('.f-price').forEach(el => el.oninput = () => { filaments[+el.dataset.i].priceKg = +el.value || 0; calculate(); });
   wrap.querySelectorAll('.f-grams').forEach(el => el.oninput = () => { filaments[+el.dataset.i].grams = +el.value || 0; calculate(); });
 }
 
@@ -1422,7 +1695,10 @@ $('addFilamentBtn').onclick = () => {
 // ---------- PACKAGING (Embalaje) ----------
 function populatePackagingSelect(){
   const sel = $('packagingSelect');
-  $('noPackagingHint').style.display = settings.packagingTypes.length ? 'none' : 'block';
+  if (!settings.packagingTypes.length){
+    sel.innerHTML = '<option value="">— No hay tipos de embalaje, agrégalos en Ajustes —</option>';
+    return;
+  }
   sel.innerHTML = settings.packagingTypes.map(t => {
     const unitCost = t.piezasIncluidas > 0 ? (t.precioTotal / t.piezasIncluidas) : 0;
     return `<option value="${t.id}">${t.nombre || '(sin nombre)'} — ${money(unitCost)}/pieza</option>`;
@@ -1549,11 +1825,6 @@ function calculateML(finalPrice){
   const nd = scenario(simPrice);
   const cd = scenario(discountedPrice);
 
-  // precio sugerido para conservar el margen de la cotización (usa finalPrice como "recibes" objetivo, escenario sin descuento)
-  const effectiveTaxRate = (isrPct + ivaRetPct)/100 / (1 + ivaEmbebidoPct/100);
-  const factor = 1 - feePct/100 - effectiveTaxRate;
-  const listPrice = factor > 0 ? (finalPrice + shipCost) / factor : 0;
-
   $('ml-volw').textContent = volW.toFixed(2) + ' kg';
   $('ml-billw').textContent = billW.toFixed(2) + ' kg';
   $('ml-feepct-view').textContent = feePct;
@@ -1578,7 +1849,6 @@ function calculateML(finalPrice){
   $('ml-costoprod-cd').textContent = '-' + money(costoProduccion);
   $('ml-gananciantea-nd').textContent = money(nd.gananciaNeta);
   $('ml-gananciantea-cd').textContent = money(cd.gananciaNeta);
-  $('ml-listprice').textContent = money(listPrice);
 }
 $('mlUseSuggestedBtn').addEventListener('click', (e) => {
   e.preventDefault();
@@ -2337,6 +2607,17 @@ function showQuoteSubtab(id){
 }
 document.querySelectorAll('.quote-subtab-btn').forEach(b => b.onclick = () => showQuoteSubtab(b.dataset.sub));
 
+// ---------- PAPELERÍA: SUB-TAB SWITCHING ----------
+document.querySelectorAll('.pap-subtab-btn').forEach(b => b.onclick = () => {
+  document.querySelectorAll('.pap-subtab-btn').forEach(x => x.classList.remove('active'));
+  document.querySelectorAll('.pap-sub').forEach(x => x.style.display = 'none');
+  b.classList.add('active');
+  $(b.dataset.sub).style.display = 'block';
+  if (b.dataset.sub === 'pap-materiales') renderMaterialsList();
+  if (b.dataset.sub === 'pap-cotizar'){ populatePpMaterialSelect(); populatePpPackagingSelect(); }
+  if (b.dataset.sub === 'pap-historial') renderPpHistory($('searchPpQuotes').value);
+});
+
 // ---------- SETTINGS: SUB-TAB SWITCHING ----------
 document.querySelectorAll('.settings-subtab-btn').forEach(b => b.onclick = () => {
   document.querySelectorAll('.settings-subtab-btn').forEach(x => x.classList.remove('active'));
@@ -2776,10 +3057,728 @@ document.querySelectorAll('.sf-estado').forEach(el => el.onchange = () => {
   renderSalesList();
 });
 
+// ---------- PAPELERÍA: MATERIALES ----------
+let papMaterials = [];
+let editingMaterialId = null;
+let currentCompComponents = []; // {materialId, cantidad} para pieza/cartucho/compuesto, o {materialId, anchoCm, altoCm} para metro
+
+function materialDependsOn(materialId, targetId, visited){
+  visited = visited || new Set();
+  if (visited.has(materialId)) return false; // ya recorrido, evita bucle infinito
+  visited.add(materialId);
+  const m = papMaterials.find(x => x.id === materialId);
+  if (!m || m.tipo !== 'compuesto' || !m.componentes) return false;
+  return m.componentes.some(c => c.materialId === targetId || materialDependsOn(c.materialId, targetId, visited));
+}
+
+function materialUnitCost(m, visited){
+  visited = visited || new Set();
+  if (visited.has(m.id)) return 0; // corta ciclos por seguridad
+  visited.add(m.id);
+  if (m.tipo === 'pieza'){
+    return m.cantidad > 0 ? m.costo / m.cantidad : 0;
+  }
+  if (m.tipo === 'metro'){
+    const areaM2Total = m.cantidad * (m.anchoCm / 100);
+    return areaM2Total > 0 ? m.costo / areaM2Total : 0; // $ por m²
+  }
+  if (m.tipo === 'cartucho'){
+    return m.cantidad > 0 ? m.costo / m.cantidad : 0; // $ por hoja rendida
+  }
+  if (m.tipo === 'compuesto'){
+    return (m.componentes || []).reduce((sum, c) => {
+      const comp = papMaterials.find(x => x.id === c.materialId);
+      if (!comp) return sum;
+      const unitCost = materialUnitCost(comp, visited);
+      if (comp.tipo === 'metro'){
+        const areaM2 = ((c.anchoCm||0) * (c.altoCm||0)) / 10000;
+        return sum + unitCost * areaM2;
+      }
+      return sum + unitCost * (c.cantidad || 0);
+    }, 0);
+  }
+  return 0;
+}
+function materialUnitLabel(m){
+  if (m.tipo === 'pieza') return '/pieza';
+  if (m.tipo === 'metro') return '/m²';
+  if (m.tipo === 'cartucho') return '/hoja';
+  if (m.tipo === 'compuesto') return '/pieza';
+  return '';
+}
+function materialTypeLabel(tipo){
+  return {pieza:'Pieza/hoja', metro:'Metro lineal (por área)', cartucho:'Tinta (lote de colores)', compuesto:'Compuesto'}[tipo] || tipo;
+}
+
+async function savePapMaterialsState(){
+  await storageSet('papeleria-materials', papMaterials);
+  papeleriaDriveQueuePush();
+}
+
+function updatePmFieldsVisibility(){
+  const tipo = $('pm-tipo').value;
+  $('pm-fields-pieza').style.display = tipo === 'pieza' ? 'block' : 'none';
+  $('pm-fields-metro').style.display = tipo === 'metro' ? 'block' : 'none';
+  $('pm-fields-cartucho').style.display = tipo === 'cartucho' ? 'block' : 'none';
+  $('pm-fields-compuesto').style.display = tipo === 'compuesto' ? 'block' : 'none';
+  if (tipo === 'compuesto') populateCompSelect();
+  updateMaterialPreview();
+}
+$('pm-tipo').addEventListener('change', updatePmFieldsVisibility);
+
+function populateCompSelect(){
+  // excluye el material que se está editando y cualquiera que dependa de él (evita ciclos)
+  const options = papMaterials.filter(m =>
+    m.id !== editingMaterialId && !materialDependsOn(m.id, editingMaterialId)
+  );
+  if (!options.length){
+    $('pm-comp-select').innerHTML = '<option value="">— agrega primero otros materiales —</option>';
+    return;
+  }
+  $('pm-comp-select').innerHTML = options.map(m =>
+    `<option value="${m.id}">${m.nombre} (${materialTypeLabel(m.tipo)}) — ${money(materialUnitCost(m))}${materialUnitLabel(m)}</option>`
+  ).join('');
+  updateCompQtyFieldVisibility();
+}
+function updateCompQtyFieldVisibility(){
+  const selected = papMaterials.find(m => m.id === $('pm-comp-select').value);
+  const isMetro = selected && selected.tipo === 'metro';
+  $('pm-comp-qty-wrap').style.display = isMetro ? 'none' : 'flex';
+  $('pm-comp-area-wrap').style.display = isMetro ? 'flex' : 'none';
+}
+$('pm-comp-select').addEventListener('change', updateCompQtyFieldVisibility);
+
+function renderCompComponentsChips(){
+  const wrap = $('compComponentsChips');
+  wrap.innerHTML = '';
+  currentCompComponents.forEach((c, i) => {
+    const mat = papMaterials.find(x => x.id === c.materialId);
+    const label = mat ? mat.nombre : '(material eliminado)';
+    let detail = '';
+    let lineCost = 0;
+    if (mat){
+      const unitCost = materialUnitCost(mat);
+      if (mat.tipo === 'metro'){
+        const areaM2 = ((c.anchoCm||0) * (c.altoCm||0)) / 10000;
+        lineCost = unitCost * areaM2;
+        detail = `${c.anchoCm}×${c.altoCm}cm`;
+      } else {
+        lineCost = unitCost * (c.cantidad||0);
+        detail = `×${c.cantidad}`;
+      }
+    }
+    const chip = document.createElement('div');
+    chip.className = 'chip';
+    chip.innerHTML = `<span>${label} ${detail}</span> <span class="chip-cost">${money(lineCost)}</span> <button class="chip-x" data-i="${i}">✕</button>`;
+    chip.querySelector('.chip-x').onclick = () => { currentCompComponents.splice(i,1); renderCompComponentsChips(); updateMaterialPreview(); };
+    wrap.appendChild(chip);
+  });
+}
+$('addCompComponentBtn').onclick = () => {
+  const materialId = $('pm-comp-select').value;
+  if (!materialId){ showToast('Selecciona un material'); return; }
+  const mat = papMaterials.find(m => m.id === materialId);
+  if (mat.tipo === 'metro'){
+    const anchoCm = +$('pm-comp-ancho').value || 0, altoCm = +$('pm-comp-alto').value || 0;
+    if (anchoCm <= 0 || altoCm <= 0){ showToast('Indica el ancho y alto usados'); return; }
+    currentCompComponents.push({materialId, anchoCm, altoCm});
+    $('pm-comp-ancho').value=''; $('pm-comp-alto').value='';
+  } else {
+    const cantidad = +$('pm-comp-cantidad').value || 0;
+    if (cantidad <= 0){ showToast('Indica la cantidad'); return; }
+    currentCompComponents.push({materialId, cantidad});
+    $('pm-comp-cantidad').value = 1;
+  }
+  renderCompComponentsChips();
+  updateMaterialPreview();
+};
+
+function updateMaterialPreview(){
+  const tipo = $('pm-tipo').value;
+  let preview = '';
+  if (tipo === 'pieza'){
+    const costo = +$('pm-pieza-costo').value || 0, cant = +$('pm-pieza-cantidad').value || 0;
+    if (cant > 0) preview = `Costo por pieza: ${money(costo/cant)}`;
+  } else if (tipo === 'metro'){
+    const costo = +$('pm-metro-costo').value || 0, metros = +$('pm-metro-cantidad').value || 0, ancho = +$('pm-metro-ancho').value || 0;
+    const areaTotal = metros * (ancho/100);
+    if (areaTotal > 0) preview = `Costo por m²: ${money(costo/areaTotal)} (área total comprada: ${areaTotal.toFixed(2)} m²)`;
+  } else if (tipo === 'cartucho'){
+    const costo = +$('pm-cartucho-costo').value || 0, rend = +$('pm-cartucho-rendimiento').value || 0;
+    if (rend > 0) preview = `Costo por hoja: ${money(costo/rend)}`;
+  } else if (tipo === 'compuesto'){
+    const tempMaterial = {id: editingMaterialId || '__preview__', tipo:'compuesto', componentes: currentCompComponents};
+    const withTemp = papMaterials.filter(x => x.id !== tempMaterial.id).concat([tempMaterial]);
+    const prevMaterials = papMaterials;
+    papMaterials = withTemp; // temporal, para reutilizar materialUnitCost tal cual
+    const total = materialUnitCost(tempMaterial);
+    papMaterials = prevMaterials;
+    preview = currentCompComponents.length ? `Costo total de este compuesto: ${money(total)}` : '';
+  }
+  $('pm-preview').textContent = preview;
+}
+['pm-pieza-costo','pm-pieza-cantidad','pm-metro-costo','pm-metro-cantidad','pm-metro-ancho','pm-cartucho-costo','pm-cartucho-rendimiento']
+  .forEach(id => $(id).addEventListener('input', updateMaterialPreview));
+
+function resetMaterialForm(){
+  editingMaterialId = null;
+  currentCompComponents = [];
+  $('pm-tipo').value = 'pieza';
+  $('pm-nombre').value = '';
+  $('pm-pieza-costo').value=''; $('pm-pieza-cantidad').value='';
+  $('pm-metro-costo').value=''; $('pm-metro-cantidad').value=''; $('pm-metro-ancho').value=60;
+  $('pm-cartucho-costo').value=''; $('pm-cartucho-rendimiento').value='';
+  $('pm-comp-cantidad').value = 1; $('pm-comp-ancho').value=''; $('pm-comp-alto').value='';
+  renderCompComponentsChips();
+  $('papMaterialFormTitle').textContent = 'Agregar material';
+  $('addMaterialBtn').textContent = 'Agregar material';
+  $('cancelMaterialEditBtn').style.display = 'none';
+  updatePmFieldsVisibility();
+}
+$('cancelMaterialEditBtn').onclick = resetMaterialForm;
+
+function startEditMaterial(m){
+  editingMaterialId = m.id;
+  $('pm-tipo').value = m.tipo;
+  $('pm-nombre').value = m.nombre;
+  if (m.tipo === 'pieza'){ $('pm-pieza-costo').value = m.costo; $('pm-pieza-cantidad').value = m.cantidad; }
+  else if (m.tipo === 'metro'){ $('pm-metro-costo').value = m.costo; $('pm-metro-cantidad').value = m.cantidad; $('pm-metro-ancho').value = m.anchoCm; }
+  else if (m.tipo === 'cartucho'){ $('pm-cartucho-costo').value = m.costo; $('pm-cartucho-rendimiento').value = m.cantidad; }
+  else if (m.tipo === 'compuesto'){ currentCompComponents = JSON.parse(JSON.stringify(m.componentes || [])); }
+  updatePmFieldsVisibility();
+  renderCompComponentsChips();
+  updateMaterialPreview();
+  $('papMaterialFormTitle').textContent = 'Editar material';
+  $('addMaterialBtn').textContent = 'Guardar cambios';
+  $('cancelMaterialEditBtn').style.display = 'block';
+  $('papMaterialFormCard').scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+$('addMaterialBtn').onclick = async () => {
+  const tipo = $('pm-tipo').value;
+  const nombre = $('pm-nombre').value.trim();
+  if (!nombre){ showToast('Ponle un nombre al material'); return; }
+  let material = {id: editingMaterialId || ('mat_'+Date.now()), tipo, nombre};
+  if (tipo === 'pieza'){
+    material.costo = +$('pm-pieza-costo').value || 0;
+    material.cantidad = +$('pm-pieza-cantidad').value || 0;
+    if (material.cantidad <= 0){ showToast('Indica cuántas piezas compraste'); return; }
+  } else if (tipo === 'metro'){
+    material.costo = +$('pm-metro-costo').value || 0;
+    material.cantidad = +$('pm-metro-cantidad').value || 0;
+    material.anchoCm = +$('pm-metro-ancho').value || 0;
+    if (material.cantidad <= 0 || material.anchoCm <= 0){ showToast('Indica metros comprados y ancho del rollo'); return; }
+  } else if (tipo === 'cartucho'){
+    material.costo = +$('pm-cartucho-costo').value || 0;
+    material.cantidad = +$('pm-cartucho-rendimiento').value || 0;
+    if (material.cantidad <= 0){ showToast('Indica cuántas hojas rendiste con ese lote'); return; }
+  } else if (tipo === 'compuesto'){
+    if (!currentCompComponents.length){ showToast('Agrega al menos un componente'); return; }
+    material.componentes = JSON.parse(JSON.stringify(currentCompComponents));
+  }
+  papMaterials = papMaterials.filter(x => x.id !== material.id);
+  papMaterials.push(material);
+  await savePapMaterialsState();
+  showToast(editingMaterialId ? 'Material actualizado' : 'Material agregado');
+  resetMaterialForm();
+  renderMaterialsList();
+};
+
+async function deleteMaterial(id){
+  const usedByComposite = papMaterials.some(m => m.tipo === 'compuesto' && (m.componentes||[]).some(c => c.materialId === id));
+  if (usedByComposite){ showToast('No puedes eliminarlo — un material compuesto lo está usando'); return; }
+  if (!confirm('¿Eliminar este material?')) return;
+  papMaterials = papMaterials.filter(x => x.id !== id);
+  await savePapMaterialsState();
+  renderMaterialsList();
+}
+
+function renderMaterialsList(){
+  const wrap = $('papMaterialsList');
+  if (!papMaterials.length){
+    wrap.innerHTML = '<div class="empty-state">Aún no tienes materiales registrados. Agrega el primero arriba.</div>';
+    return;
+  }
+  wrap.innerHTML = '';
+  papMaterials.forEach(m => {
+    const unitCost = materialUnitCost(m);
+    const div = document.createElement('div');
+    div.className = 'fil-cat-item';
+    let subLine = '';
+    if (m.tipo === 'pieza') subLine = `${money(m.costo)} total · ${m.cantidad} piezas`;
+    else if (m.tipo === 'metro') subLine = `${money(m.costo)} total · ${m.cantidad} m × ${m.anchoCm}cm ancho`;
+    else if (m.tipo === 'cartucho') subLine = `${money(m.costo)} el lote · rinde ${m.cantidad} hojas`;
+    else if (m.tipo === 'compuesto'){
+      subLine = (m.componentes||[]).map(c => {
+        const comp = papMaterials.find(x => x.id === c.materialId);
+        return comp ? comp.nombre : '(eliminado)';
+      }).join(' + ');
+    }
+    div.innerHTML = `
+      <div>
+        <div class="fc-main">${m.nombre}</div>
+        <div class="fc-sub">${materialTypeLabel(m.tipo)} · ${subLine}</div>
+      </div>
+      <div class="fil-cat-actions">
+        <div class="fc-price">${money(unitCost)}${materialUnitLabel(m)}</div>
+        <button class="btn btn-small" data-act="edit">Editar</button>
+        <button class="remove-btn" data-act="del">✕</button>
+      </div>
+    `;
+    div.querySelector('[data-act=edit]').onclick = () => startEditMaterial(m);
+    div.querySelector('[data-act=del]').onclick = () => deleteMaterial(m.id);
+    wrap.appendChild(div);
+  });
+}
+
+// ---------- PAPELERÍA: COTIZAR ----------
+let papeleriaQuotes = [];
+let currentPpQuoteId = null;
+let ppMaterialsUsed = []; // {materialId, cantidad} o {materialId, anchoCm, altoCm}
+let ppPackaging = []; // mismo formato que quotePackaging: {instanceId, typeId, nombre, costoUnitario}
+
+function populatePpMaterialSelect(){
+  $('noPapMaterialsHint').style.display = papMaterials.length ? 'none' : 'block';
+  $('pp-mat-select').innerHTML = papMaterials.map(m =>
+    `<option value="${m.id}">${m.nombre} (${materialTypeLabel(m.tipo)}) — ${money(materialUnitCost(m))}${materialUnitLabel(m)}</option>`
+  ).join('');
+  updatePpMatQtyFieldVisibility();
+}
+function updatePpMatQtyFieldVisibility(){
+  const selected = papMaterials.find(m => m.id === $('pp-mat-select').value);
+  const isMetro = selected && selected.tipo === 'metro';
+  $('pp-mat-qty-wrap').style.display = isMetro ? 'none' : 'flex';
+  $('pp-mat-area-wrap').style.display = isMetro ? 'flex' : 'none';
+}
+$('pp-mat-select').addEventListener('change', updatePpMatQtyFieldVisibility);
+
+function ppMaterialLineCost(c){
+  const mat = papMaterials.find(x => x.id === c.materialId);
+  if (!mat) return 0;
+  const unitCost = materialUnitCost(mat);
+  if (mat.tipo === 'metro'){
+    const areaM2 = ((c.anchoCm||0) * (c.altoCm||0)) / 10000;
+    return unitCost * areaM2;
+  }
+  return unitCost * (c.cantidad || 0);
+}
+function renderPpMaterialsChips(){
+  const wrap = $('ppMaterialsChips');
+  wrap.innerHTML = '';
+  ppMaterialsUsed.forEach((c, i) => {
+    const mat = papMaterials.find(x => x.id === c.materialId);
+    const label = mat ? mat.nombre : '(material eliminado)';
+    const detail = mat && mat.tipo === 'metro' ? `${c.anchoCm}×${c.altoCm}cm` : `×${c.cantidad}`;
+    const chip = document.createElement('div');
+    chip.className = 'chip';
+    chip.innerHTML = `<span>${label} ${detail}</span> <span class="chip-cost">${money(ppMaterialLineCost(c))}</span> <button class="chip-x" data-i="${i}">✕</button>`;
+    chip.querySelector('.chip-x').onclick = () => { ppMaterialsUsed.splice(i,1); renderPpMaterialsChips(); calculatePapeleria(); };
+    wrap.appendChild(chip);
+  });
+}
+$('addPpMaterialBtn').onclick = () => {
+  const materialId = $('pp-mat-select').value;
+  if (!materialId){ showToast('Agrega primero materiales en la sub-pestaña "Materiales"'); return; }
+  const mat = papMaterials.find(m => m.id === materialId);
+  if (mat.tipo === 'metro'){
+    const anchoCm = +$('pp-mat-ancho').value || 0, altoCm = +$('pp-mat-alto').value || 0;
+    if (anchoCm <= 0 || altoCm <= 0){ showToast('Indica el ancho y alto usados'); return; }
+    ppMaterialsUsed.push({materialId, anchoCm, altoCm});
+    $('pp-mat-ancho').value=''; $('pp-mat-alto').value='';
+  } else {
+    const cantidad = +$('pp-mat-cantidad').value || 0;
+    if (cantidad <= 0){ showToast('Indica la cantidad'); return; }
+    ppMaterialsUsed.push({materialId, cantidad});
+    $('pp-mat-cantidad').value = 1;
+  }
+  renderPpMaterialsChips();
+  calculatePapeleria();
+};
+
+function populatePpPackagingSelect(){
+  if (!settings.packagingTypes.length){
+    $('ppPackagingSelect').innerHTML = '<option value="">— No hay tipos de embalaje, agrégalos en Ajustes —</option>';
+    return;
+  }
+  $('ppPackagingSelect').innerHTML = settings.packagingTypes.map(t => {
+    const unitCost = t.piezasIncluidas > 0 ? (t.precioTotal / t.piezasIncluidas) : 0;
+    return `<option value="${t.id}">${t.nombre || '(sin nombre)'} — ${money(unitCost)}/pieza</option>`;
+  }).join('');
+}
+function renderPpPackagingChips(){
+  const wrap = $('ppPackagingChips');
+  wrap.innerHTML = '';
+  ppPackaging.forEach((p, i) => {
+    const chip = document.createElement('div');
+    chip.className = 'chip';
+    chip.innerHTML = `<span>${p.nombre}</span> <span class="chip-cost">${money(p.costoUnitario)}</span> <button class="chip-x" data-i="${i}">✕</button>`;
+    chip.querySelector('.chip-x').onclick = () => { ppPackaging.splice(i,1); renderPpPackagingChips(); calculatePapeleria(); };
+    wrap.appendChild(chip);
+  });
+}
+$('addPpPackagingBtn').onclick = () => {
+  const typeId = $('ppPackagingSelect').value;
+  const t = settings.packagingTypes.find(x => x.id === typeId);
+  if (!t){ showToast('Agrega primero un tipo de embalaje en Ajustes'); return; }
+  const unitCost = t.piezasIncluidas > 0 ? (t.precioTotal / t.piezasIncluidas) : 0;
+  ppPackaging.push({instanceId: 'pkinst_'+Date.now()+Math.random().toString(36).slice(2,6), typeId: t.id, nombre: t.nombre, costoUnitario: unitCost});
+  renderPpPackagingChips();
+  calculatePapeleria();
+};
+
+function calculatePapeleria(){
+  const matCost = ppMaterialsUsed.reduce((sum,c) => sum + ppMaterialLineCost(c), 0);
+  const packagingCost = ppPackaging.reduce((sum,p) => sum + (p.costoUnitario||0), 0);
+  const directCost = matCost + packagingCost;
+  const labor = +$('ppLaborCost').value || 0;
+  const base = directCost + labor;
+  const riskPct = +$('ppRiskPct').value || 0;
+  const riskAmt = base * riskPct/100;
+  const totalEst = base + riskAmt;
+  const profitPct = +$('ppProfitPct').value || 0;
+  const profitAmt = totalEst * profitPct/100;
+  const priceNoIva = totalEst + profitAmt;
+  const ivaPct = +$('ppIvaPct').value || 0;
+  const ivaAmt = priceNoIva * ivaPct/100;
+  const finalPrice = priceNoIva + ivaAmt;
+
+  $('pp-s-mat').textContent = money(matCost);
+  $('pp-s-packaging').textContent = money(packagingCost);
+  $('pp-s-direct').textContent = money(directCost);
+  $('pp-s-labor').textContent = money(labor);
+  $('pp-s-base').textContent = money(base);
+  $('pp-s-total-est').textContent = money(totalEst);
+  $('pp-s-price-noiva').textContent = money(priceNoIva);
+  $('pp-s-final').textContent = money(finalPrice);
+
+  return {matCost, packagingCost, directCost, labor, base, riskPct, riskAmt, totalEst, profitPct, profitAmt, priceNoIva, ivaPct, ivaAmt, finalPrice};
+}
+['ppLaborCost','ppRiskPct','ppProfitPct','ppIvaPct'].forEach(id => $(id).addEventListener('input', calculatePapeleria));
+
+function computePapeleriaCostBreakdown(q){
+  const matCost = (q.materiales||[]).reduce((sum,c) => sum + ppMaterialLineCost(c), 0);
+  const packagingCost = (q.packaging||[]).reduce((sum,p) => sum + (p.costoUnitario||0), 0);
+  const directCost = matCost + packagingCost;
+  const base = directCost + (q.laborCost||0);
+  const riskAmt = base * (q.riskPct||0)/100;
+  const totalEst = base + riskAmt;
+  return {matCost, packagingCost, directCost, base, riskAmt, totalEst};
+}
+
+async function savePapeleriaQuotesIndex(){
+  await storageSet('papeleria-quotes', papeleriaQuotes);
+  papeleriaDriveQueuePush();
+}
+
+function resetPpForm(){
+  currentPpQuoteId = null;
+  $('ppName').value = ''; $('ppNotes').value = '';
+  ppMaterialsUsed = []; populatePpMaterialSelect(); renderPpMaterialsChips();
+  ppPackaging = []; populatePpPackagingSelect(); renderPpPackagingChips();
+  $('ppLaborCost').value = 0;
+  $('ppRiskPct').value = settings.riskPct;
+  $('ppProfitPct').value = settings.profitPct;
+  $('ppIvaPct').value = settings.ivaPct;
+  calculatePapeleria();
+}
+$('newPpQuoteBtn').onclick = resetPpForm;
+
+$('savePpQuoteBtn').onclick = async () => {
+  const name = $('ppName').value.trim();
+  if (!name){ showToast('Ponle un nombre a la cotización'); return; }
+  const calc = calculatePapeleria();
+  const id = currentPpQuoteId || ('ppq_' + Date.now());
+  const quote = {
+    id, name, notes: $('ppNotes').value,
+    materiales: JSON.parse(JSON.stringify(ppMaterialsUsed)),
+    packaging: JSON.parse(JSON.stringify(ppPackaging)),
+    laborCost: +$('ppLaborCost').value || 0,
+    riskPct: +$('ppRiskPct').value || 0,
+    profitPct: +$('ppProfitPct').value || 0,
+    ivaPct: +$('ppIvaPct').value || 0,
+    finalPrice: calc.finalPrice,
+    updatedAt: new Date().toISOString()
+  };
+  papeleriaQuotes = papeleriaQuotes.filter(q => q.id !== id);
+  papeleriaQuotes.push(quote);
+  await savePapeleriaQuotesIndex();
+  currentPpQuoteId = id;
+  showToast('Cotización de papelería guardada');
+  renderPpHistory();
+};
+
+function loadPpQuote(id){
+  const q = papeleriaQuotes.find(x => x.id === id);
+  if (!q) return;
+  currentPpQuoteId = q.id;
+  $('ppName').value = q.name; $('ppNotes').value = q.notes || '';
+  ppMaterialsUsed = q.materiales ? JSON.parse(JSON.stringify(q.materiales)) : [];
+  populatePpMaterialSelect(); renderPpMaterialsChips();
+  ppPackaging = q.packaging ? JSON.parse(JSON.stringify(q.packaging)) : [];
+  populatePpPackagingSelect(); renderPpPackagingChips();
+  $('ppLaborCost').value = q.laborCost; $('ppRiskPct').value = q.riskPct;
+  $('ppProfitPct').value = q.profitPct; $('ppIvaPct').value = q.ivaPct;
+  calculatePapeleria();
+  document.querySelector('.pap-subtab-btn[data-sub="pap-cotizar"]').click();
+}
+
+async function duplicatePpQuote(id){
+  const q = papeleriaQuotes.find(x => x.id === id);
+  if (!q) return;
+  loadPpQuote(id);
+  currentPpQuoteId = null;
+  $('ppName').value = q.name + ' (copia)';
+  showToast('Duplicada — edita y guarda como nueva');
+}
+
+async function deletePpQuote(id){
+  papeleriaQuotes = papeleriaQuotes.filter(x => x.id !== id);
+  await savePapeleriaQuotesIndex();
+  renderPpHistory();
+}
+
+let ppHistorySortValue = 'fecha_desc';
+function renderPpHistory(filter){
+  const list = $('ppHistoryList');
+  let quotes = papeleriaQuotes;
+  if (filter) quotes = quotes.filter(q => q.name.toLowerCase().includes(filter.toLowerCase()));
+  quotes = [...quotes].sort((a,b) => {
+    if (ppHistorySortValue === 'fecha_asc') return new Date(a.updatedAt) - new Date(b.updatedAt);
+    if (ppHistorySortValue === 'nombre_asc') return a.name.localeCompare(b.name);
+    if (ppHistorySortValue === 'nombre_desc') return b.name.localeCompare(a.name);
+    if (ppHistorySortValue === 'precio_desc') return b.finalPrice - a.finalPrice;
+    if (ppHistorySortValue === 'precio_asc') return a.finalPrice - b.finalPrice;
+    return new Date(b.updatedAt) - new Date(a.updatedAt);
+  });
+  if (!quotes.length){
+    list.innerHTML = '<div class="empty-state">Aún no tienes cotizaciones de papelería guardadas.</div>';
+    return;
+  }
+  list.innerHTML = '';
+  quotes.forEach(q => {
+    const div = document.createElement('div');
+    div.className = 'quote-item';
+    const date = new Date(q.updatedAt);
+    div.innerHTML = `
+      <div class="qi-top">
+        <div>
+          <div class="qi-name">${q.name}</div>
+          <div class="qi-date">${date.toLocaleDateString('es-MX', {day:'2-digit', month:'short', year:'numeric'})}</div>
+        </div>
+        <div class="qi-price">${money(q.finalPrice)}</div>
+      </div>
+      <div class="qi-actions">
+        <button class="btn btn-small" data-act="load">Ver / editar</button>
+        <button class="btn btn-small" data-act="dup">Duplicar</button>
+        <button class="btn btn-small btn-danger" data-act="del">Eliminar</button>
+      </div>
+    `;
+    div.querySelector('[data-act=load]').onclick = () => loadPpQuote(q.id);
+    div.querySelector('[data-act=dup]').onclick = () => duplicatePpQuote(q.id);
+    div.querySelector('[data-act=del]').onclick = () => { if(confirm('¿Eliminar "'+q.name+'"?')) deletePpQuote(q.id); };
+    list.appendChild(div);
+  });
+}
+$('searchPpQuotes').addEventListener('input', (e) => renderPpHistory(e.target.value));
+setupDropdown('ppHistorySortBtn', 'ppHistorySortPanel');
+setupSortPanel('ppHistorySortPanel', (val) => { ppHistorySortValue = val; renderPpHistory($('searchPpQuotes').value); });
+
+// ---------- CARRITO: SUB-TAB SWITCHING ----------
+document.querySelectorAll('.car-subtab-btn').forEach(b => b.onclick = () => {
+  document.querySelectorAll('.car-subtab-btn').forEach(x => x.classList.remove('active'));
+  document.querySelectorAll('.car-sub').forEach(x => x.style.display = 'none');
+  b.classList.add('active');
+  $(b.dataset.sub).style.display = 'block';
+  if (b.dataset.sub === 'car-armar') populateCarProductoSelect();
+  if (b.dataset.sub === 'car-historial') renderCarHistory($('searchCarritos').value);
+});
+
+// ---------- CARRITO ----------
+let carritos = [];
+let currentCarritoId = null;
+let carItems = []; // {source:'3d'|'pap', refId, nombre, precioUnitario, cantidad}
+
+function getCarritoSourceOptions(){
+  const items = [];
+  productsCatalog.forEach(p => items.push({source:'3d', refId:p.id, nombre:p.nombre, precio:p.precioTiktok||0}));
+  papeleriaQuotes.forEach(q => items.push({source:'pap', refId:q.id, nombre:q.name, precio:q.finalPrice||0}));
+  return items;
+}
+function populateCarProductoSelect(){
+  const items = getCarritoSourceOptions();
+  $('noCarProductsHint').style.display = items.length ? 'none' : 'block';
+  $('carProductoSelect').innerHTML = items.map(it =>
+    `<option value="${it.source}:${it.refId}">${it.source === '3d' ? '🖨️' : '✂️'} ${it.nombre} — ${money(it.precio)}</option>`
+  ).join('');
+}
+
+function saveCarritosState(){
+  return storageSet('carritos-list', carritos).then(() => carritoDriveQueuePush());
+}
+
+function renderCarItemsList(){
+  const wrap = $('carItemsList');
+  $('carEmptyHint').style.display = carItems.length ? 'none' : 'block';
+  wrap.innerHTML = '';
+  carItems.forEach((it, i) => {
+    const div = document.createElement('div');
+    div.className = 'product-item';
+    div.innerHTML = `
+      <div class="pi-top">
+        <div>
+          <div class="pi-name">${it.source === '3d' ? '🖨️' : '✂️'} ${it.nombre}</div>
+          <div class="pi-sub">${money(it.precioUnitario)} c/u × ${it.cantidad} = ${money(it.precioUnitario*it.cantidad)}</div>
+        </div>
+        <button class="remove-btn" data-i="${i}">✕</button>
+      </div>
+    `;
+    div.querySelector('.remove-btn').onclick = () => { carItems.splice(i,1); renderCarItemsList(); calculateCarrito(); };
+    wrap.appendChild(div);
+  });
+}
+$('addCarItemBtn').onclick = () => {
+  const val = $('carProductoSelect').value;
+  if (!val){ showToast('No hay productos para agregar'); return; }
+  const [source, refId] = val.split(':');
+  const cantidad = +$('carCantidad').value || 0;
+  if (cantidad <= 0){ showToast('Indica la cantidad'); return; }
+  const items = getCarritoSourceOptions();
+  const found = items.find(it => it.source === source && it.refId === refId);
+  if (!found) return;
+  carItems.push({source, refId, nombre: found.nombre, precioUnitario: found.precio, cantidad});
+  $('carCantidad').value = 1;
+  renderCarItemsList();
+  calculateCarrito();
+};
+
+function calculateCarrito(){
+  const subtotal = carItems.reduce((sum,it) => sum + it.precioUnitario*it.cantidad, 0);
+  const descTipo = $('carDescuentoTipo').value;
+  const descValor = +$('carDescuentoValor').value || 0;
+  const descuento = descTipo === 'pct' ? subtotal * descValor/100 : descValor;
+  const envio = +$('carEnvio').value || 0;
+  const total = Math.max(0, subtotal - descuento) + envio;
+  $('car-subtotal').textContent = money(subtotal);
+  $('car-descuento').textContent = '-' + money(descuento);
+  $('car-total').textContent = money(total);
+  return {subtotal, descuento, envio, total};
+}
+['carDescuentoTipo','carDescuentoValor','carEnvio'].forEach(id => $(id).addEventListener('input', calculateCarrito));
+$('carDescuentoTipo').addEventListener('change', calculateCarrito);
+
+function resetCarritoForm(){
+  currentCarritoId = null;
+  $('carCliente').value=''; $('carNotas').value='';
+  $('carFecha').value = new Date().toISOString().slice(0,10);
+  carItems = []; renderCarItemsList();
+  $('carDescuentoTipo').value = 'pct'; $('carDescuentoValor').value = 0; $('carEnvio').value = 0;
+  populateCarProductoSelect();
+  calculateCarrito();
+}
+$('newCarritoBtn').onclick = resetCarritoForm;
+
+$('saveCarritoBtn').onclick = async () => {
+  const cliente = $('carCliente').value.trim();
+  if (!cliente){ showToast('Indica el nombre del cliente'); return; }
+  if (!carItems.length){ showToast('Agrega al menos un producto al carrito'); return; }
+  const calc = calculateCarrito();
+  const id = currentCarritoId || ('car_' + Date.now());
+  const carrito = {
+    id, cliente, notas: $('carNotas').value,
+    fecha: $('carFecha').value || new Date().toISOString().slice(0,10),
+    items: JSON.parse(JSON.stringify(carItems)),
+    descuentoTipo: $('carDescuentoTipo').value,
+    descuentoValor: +$('carDescuentoValor').value || 0,
+    envio: +$('carEnvio').value || 0,
+    subtotal: calc.subtotal, descuento: calc.descuento, total: calc.total,
+    updatedAt: new Date().toISOString()
+  };
+  carritos = carritos.filter(c => c.id !== id);
+  carritos.push(carrito);
+  await saveCarritosState();
+  currentCarritoId = id;
+  showToast('Pedido guardado');
+  renderCarHistory();
+};
+
+function loadCarrito(id){
+  const c = carritos.find(x => x.id === id);
+  if (!c) return;
+  currentCarritoId = c.id;
+  $('carCliente').value = c.cliente; $('carNotas').value = c.notas || '';
+  $('carFecha').value = c.fecha;
+  carItems = JSON.parse(JSON.stringify(c.items || []));
+  renderCarItemsList();
+  $('carDescuentoTipo').value = c.descuentoTipo || 'pct';
+  $('carDescuentoValor').value = c.descuentoValor || 0;
+  $('carEnvio').value = c.envio || 0;
+  populateCarProductoSelect();
+  calculateCarrito();
+  document.querySelector('.car-subtab-btn[data-sub="car-armar"]').click();
+}
+function duplicateCarrito(id){
+  const c = carritos.find(x => x.id === id);
+  if (!c) return;
+  loadCarrito(id);
+  currentCarritoId = null;
+  $('carCliente').value = c.cliente + ' (copia)';
+  showToast('Duplicado — edita y guarda como nuevo');
+}
+async function deleteCarrito(id){
+  carritos = carritos.filter(x => x.id !== id);
+  await saveCarritosState();
+  renderCarHistory();
+}
+
+let carHistorySortValue = 'fecha_desc';
+function renderCarHistory(filter){
+  const list = $('carHistoryList');
+  let items = carritos;
+  if (filter) items = items.filter(c => c.cliente.toLowerCase().includes(filter.toLowerCase()));
+  items = [...items].sort((a,b) => {
+    if (carHistorySortValue === 'fecha_asc') return new Date(a.updatedAt) - new Date(b.updatedAt);
+    if (carHistorySortValue === 'cliente_asc') return a.cliente.localeCompare(b.cliente);
+    if (carHistorySortValue === 'total_desc') return b.total - a.total;
+    if (carHistorySortValue === 'total_asc') return a.total - b.total;
+    return new Date(b.updatedAt) - new Date(a.updatedAt);
+  });
+  if (!items.length){
+    list.innerHTML = '<div class="empty-state">Aún no tienes pedidos guardados.</div>';
+    return;
+  }
+  list.innerHTML = '';
+  items.forEach(c => {
+    const div = document.createElement('div');
+    div.className = 'quote-item';
+    const date = new Date(c.fecha);
+    div.innerHTML = `
+      <div class="qi-top">
+        <div>
+          <div class="qi-name">${c.cliente}</div>
+          <div class="qi-date">${date.toLocaleDateString('es-MX', {day:'2-digit', month:'short', year:'numeric'})} · ${c.items.length} producto(s)</div>
+        </div>
+        <div class="qi-price">${money(c.total)}</div>
+      </div>
+      <div class="qi-actions">
+        <button class="btn btn-small" data-act="load">Ver / editar</button>
+        <button class="btn btn-small" data-act="dup">Duplicar</button>
+        <button class="btn btn-small btn-danger" data-act="del">Eliminar</button>
+      </div>
+    `;
+    div.querySelector('[data-act=load]').onclick = () => loadCarrito(c.id);
+    div.querySelector('[data-act=dup]').onclick = () => duplicateCarrito(c.id);
+    div.querySelector('[data-act=del]').onclick = () => { if(confirm('¿Eliminar el pedido de "'+c.cliente+'"?')) deleteCarrito(c.id); };
+    list.appendChild(div);
+  });
+}
+$('searchCarritos').addEventListener('input', (e) => renderCarHistory(e.target.value));
+setupDropdown('carHistorySortBtn', 'carHistorySortPanel');
+setupSortPanel('carHistorySortPanel', (val) => { carHistorySortValue = val; renderCarHistory($('searchCarritos').value); });
+
 // ---------- SAVE / LOAD QUOTES ----------
 function resetForm(){
   currentQuoteId = null;
-  $('qName').value = ''; $('qNotes').value = '';
+  $('qName').value = '';
   filaments = []; renderFilaments();
   quotePackaging = []; populatePackagingSelect(); renderPackagingChips();
   $('printHours').value = 0;
@@ -2809,7 +3808,7 @@ $('saveQuoteBtn').onclick = async () => {
   const calc = calculate();
   const id = currentQuoteId || ('q_' + Date.now());
   const quote = {
-    id, name, notes: $('qNotes').value,
+    id, name, notes: '',
     filaments: JSON.parse(JSON.stringify(filaments)),
     packaging: JSON.parse(JSON.stringify(quotePackaging)),
     printHours: +$('printHours').value, printWatts: +$('printWatts').value, kwhPrice: +$('kwhPrice').value, depreciationRate: +$('depreciationRate').value,
@@ -2823,7 +3822,11 @@ $('saveQuoteBtn').onclick = async () => {
   await storageSet('quote:' + id, quote);
   let index = await storageGet('quotes-index', []);
   index = index.filter(q => q.id !== id);
-  index.unshift({id, name: quote.name, finalPrice: quote.finalPrice, updatedAt: quote.updatedAt});
+  index.unshift({
+    id, name: quote.name, finalPrice: quote.finalPrice, updatedAt: quote.updatedAt,
+    mlPrice: quote.mlEnabled ? (quote.mlSimPrice != null ? quote.mlSimPrice : quote.finalPrice) : null,
+    filamentCount: (quote.filaments||[]).length
+  });
   await storageSet('quotes-index', index);
   driveQueuePush();
   currentQuoteId = id;
@@ -2855,7 +3858,7 @@ async function loadQuote(id){
   const q = await storageGet('quote:' + id, null);
   if (!q) return;
   currentQuoteId = q.id;
-  $('qName').value = q.name; $('qNotes').value = q.notes || '';
+  $('qName').value = q.name;
   filaments = q.filaments || []; renderFilaments();
   quotePackaging = q.packaging ? JSON.parse(JSON.stringify(q.packaging)) : []; populatePackagingSelect(); renderPackagingChips();
   $('printHours').value = q.printHours; $('printWatts').value = q.printWatts; $('kwhPrice').value = q.kwhPrice; $('depreciationRate').value = (q.depreciationRate!=null ? q.depreciationRate : settings.depreciationRate);
@@ -2920,8 +3923,12 @@ async function renderHistory(filter){
           <div class="qi-name">${q.name}</div>
           <div class="qi-date">${date.toLocaleDateString('es-MX', {day:'2-digit', month:'short', year:'numeric'})}</div>
         </div>
-        <div class="qi-price">${money(q.finalPrice)}</div>
+        <div style="text-align:right;">
+          <div class="qi-price">${money(q.finalPrice)}</div>
+          ${q.mlPrice != null ? `<div style="font-size:10.5px; color:var(--muted); margin-top:2px;">ML: ${money(q.mlPrice)}</div>` : ''}
+        </div>
       </div>
+      <div style="font-size:11px; color:var(--muted); margin-top:2px;">${q.filamentCount || 0} color${q.filamentCount === 1 ? '' : 'es'} de filamento</div>
       <div class="qi-actions">
         <button class="btn btn-small" data-act="load">Ver / editar</button>
         <button class="btn btn-small" data-act="dup">Duplicar</button>
@@ -3079,6 +4086,8 @@ function switchView(viewId){
     updateVentaPrecioAutofill();
     renderSalesList();
   }
+  if (viewId === 'view-papeleria'){ renderMaterialsList(); }
+  if (viewId === 'view-carrito'){ populateCarProductoSelect(); }
 }
 document.querySelectorAll('.tab-btn').forEach(b => b.onclick = () => switchView(b.dataset.view));
 
@@ -3229,12 +4238,79 @@ $('importSalesFile').onchange = (e) => {
   e.target.value = '';
 };
 
+$('exportPapeleriaBtn').onclick = async () => {
+  await persistSettingsFromForm();
+  const backup = {
+    exportedAt: new Date().toISOString(),
+    materials: await storageGet('papeleria-materials', []),
+    quotes: await storageGet('papeleria-quotes', [])
+  };
+  downloadTextFile('cotiza3d-papeleria-' + new Date().toISOString().slice(0,10) + '.json', JSON.stringify(backup, null, 2), 'application/json');
+  showToast('Papelería descargada');
+};
+
+$('importPapeleriaFile').onchange = (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  if (!confirm('Esto reemplazará tus materiales y cotizaciones de papelería actuales en este dispositivo. ¿Continuar?')) { e.target.value=''; return; }
+  const reader = new FileReader();
+  reader.onload = async (ev) => {
+    try{
+      const backup = JSON.parse(ev.target.result);
+      papMaterials = backup.materials || [];
+      papeleriaQuotes = backup.quotes || [];
+      await storageSet('papeleria-materials', papMaterials);
+      await storageSet('papeleria-quotes', papeleriaQuotes);
+      markLocalChange('papeleria');
+      showToast('Papelería importada');
+      if (document.getElementById('view-papeleria').classList.contains('active')) { renderMaterialsList(); renderPpHistory(); }
+    }catch(err){
+      showToast('El archivo no es un respaldo de papelería válido');
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+};
+
+$('exportCarritoBtn').onclick = async () => {
+  await persistSettingsFromForm();
+  const backup = {
+    exportedAt: new Date().toISOString(),
+    carritos: await storageGet('carritos-list', [])
+  };
+  downloadTextFile('cotiza3d-carrito-' + new Date().toISOString().slice(0,10) + '.json', JSON.stringify(backup, null, 2), 'application/json');
+  showToast('Pedidos descargados');
+};
+
+$('importCarritoFile').onchange = (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  if (!confirm('Esto reemplazará tus pedidos actuales en este dispositivo. ¿Continuar?')) { e.target.value=''; return; }
+  const reader = new FileReader();
+  reader.onload = async (ev) => {
+    try{
+      const backup = JSON.parse(ev.target.result);
+      carritos = backup.carritos || [];
+      await storageSet('carritos-list', carritos);
+      markLocalChange('carrito');
+      showToast('Pedidos importados');
+      if (document.getElementById('view-carrito').classList.contains('active')) renderCarHistory();
+    }catch(err){
+      showToast('El archivo no es un respaldo de carrito válido');
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+};
+
 // ---------- GOOGLE DRIVE SYNC ----------
 const DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.file';
 const DRIVE_FILENAME = 'cotiza3d-data.json';
 const DRIVE_PRODUCTS_FILENAME = 'cotiza3d-productos.json';
 const DRIVE_FULFILLMENT_FILENAME = 'cotiza3d-full.json';
 const DRIVE_SALES_FILENAME = 'cotiza3d-ventas.json';
+const DRIVE_PAPELERIA_FILENAME = 'cotiza3d-papeleria.json';
+const DRIVE_CARRITO_FILENAME = 'cotiza3d-carrito.json';
 let googleClientId = localStorage.getItem('cotiza3d_google_client_id') || '';
 let driveTokenClient = null;
 let driveAccessToken = null;
@@ -3242,6 +4318,8 @@ let driveFileId = localStorage.getItem('cotiza3d_drive_file_id') || null;
 let productsDriveFileId = localStorage.getItem('cotiza3d_drive_products_file_id') || null;
 let fulfillmentDriveFileId = localStorage.getItem('cotiza3d_drive_full_file_id') || null;
 let salesDriveFileId = localStorage.getItem('cotiza3d_drive_sales_file_id') || null;
+let papeleriaDriveFileId = localStorage.getItem('cotiza3d_drive_papeleria_file_id') || null;
+let carritoDriveFileId = localStorage.getItem('cotiza3d_drive_carrito_file_id') || null;
 let driveConnected = false;
 
 function driveSetStatus(text){
@@ -3320,6 +4398,8 @@ async function onDriveTokenResponse(resp){
   await productsDrivePull();
   await fulfillmentDrivePull();
   await salesDrivePull();
+  await papeleriaDrivePull();
+  await carritoDrivePull();
 }
 
 async function driveFindFile(filename){
@@ -3572,6 +4652,103 @@ function salesDriveQueuePush(){
   salesDrivePushTimer = setTimeout(salesDrivePush, 1200);
 }
 
+// ---------- DRIVE SYNC: PAPELERÍA (archivo propio) ----------
+async function papeleriaDrivePull(){
+  try{
+    if (!papeleriaDriveFileId) papeleriaDriveFileId = await driveFindFile(DRIVE_PAPELERIA_FILENAME);
+    if (papeleriaDriveFileId){
+      localStorage.setItem('cotiza3d_drive_papeleria_file_id', papeleriaDriveFileId);
+      const text = await driveReadFile(papeleriaDriveFileId);
+      if (text && text.trim()){
+        const data = JSON.parse(text);
+        if (localIsNewer('papeleria', data.exportedAt)){
+          await papeleriaDrivePush();
+        } else {
+          papMaterials = data.materials || [];
+          papeleriaQuotes = data.quotes || [];
+          await storageSet('papeleria-materials', papMaterials);
+          await storageSet('papeleria-quotes', papeleriaQuotes);
+        }
+      }
+    } else {
+      papMaterials = await storageGet('papeleria-materials', []);
+      papeleriaQuotes = await storageGet('papeleria-quotes', []);
+      const payload = JSON.stringify({exportedAt: new Date().toISOString(), materials: papMaterials, quotes: papeleriaQuotes}, null, 2);
+      papeleriaDriveFileId = await driveCreateFile(payload, DRIVE_PAPELERIA_FILENAME);
+      localStorage.setItem('cotiza3d_drive_papeleria_file_id', papeleriaDriveFileId);
+    }
+    if (document.getElementById('view-papeleria').classList.contains('active')) renderMaterialsList();
+  }catch(e){ console.error('papeleria drive pull error', e); }
+}
+
+async function papeleriaDrivePush(){
+  if (!driveConnected || !driveAccessToken) return;
+  try{
+    const payload = JSON.stringify({exportedAt: new Date().toISOString(), materials: papMaterials, quotes: papeleriaQuotes}, null, 2);
+    if (!papeleriaDriveFileId) papeleriaDriveFileId = await driveFindFile(DRIVE_PAPELERIA_FILENAME);
+    if (!papeleriaDriveFileId){
+      papeleriaDriveFileId = await driveCreateFile(payload, DRIVE_PAPELERIA_FILENAME);
+      localStorage.setItem('cotiza3d_drive_papeleria_file_id', papeleriaDriveFileId);
+    } else {
+      await driveWriteFile(papeleriaDriveFileId, payload);
+    }
+  }catch(e){ console.error('papeleria drive push error', e); }
+}
+let papeleriaDrivePushTimer = null;
+function papeleriaDriveQueuePush(){
+  markLocalChange('papeleria');
+  if (!driveConnected) return;
+  clearTimeout(papeleriaDrivePushTimer);
+  papeleriaDrivePushTimer = setTimeout(papeleriaDrivePush, 1200);
+}
+
+// ---------- DRIVE SYNC: CARRITO (archivo propio) ----------
+async function carritoDrivePull(){
+  try{
+    if (!carritoDriveFileId) carritoDriveFileId = await driveFindFile(DRIVE_CARRITO_FILENAME);
+    if (carritoDriveFileId){
+      localStorage.setItem('cotiza3d_drive_carrito_file_id', carritoDriveFileId);
+      const text = await driveReadFile(carritoDriveFileId);
+      if (text && text.trim()){
+        const data = JSON.parse(text);
+        if (localIsNewer('carrito', data.exportedAt)){
+          await carritoDrivePush();
+        } else {
+          carritos = data.carritos || [];
+          await storageSet('carritos-list', carritos);
+        }
+      }
+    } else {
+      carritos = await storageGet('carritos-list', []);
+      const payload = JSON.stringify({exportedAt: new Date().toISOString(), carritos}, null, 2);
+      carritoDriveFileId = await driveCreateFile(payload, DRIVE_CARRITO_FILENAME);
+      localStorage.setItem('cotiza3d_drive_carrito_file_id', carritoDriveFileId);
+    }
+    if (document.getElementById('view-carrito').classList.contains('active')) renderCarHistory();
+  }catch(e){ console.error('carrito drive pull error', e); }
+}
+
+async function carritoDrivePush(){
+  if (!driveConnected || !driveAccessToken) return;
+  try{
+    const payload = JSON.stringify({exportedAt: new Date().toISOString(), carritos}, null, 2);
+    if (!carritoDriveFileId) carritoDriveFileId = await driveFindFile(DRIVE_CARRITO_FILENAME);
+    if (!carritoDriveFileId){
+      carritoDriveFileId = await driveCreateFile(payload, DRIVE_CARRITO_FILENAME);
+      localStorage.setItem('cotiza3d_drive_carrito_file_id', carritoDriveFileId);
+    } else {
+      await driveWriteFile(carritoDriveFileId, payload);
+    }
+  }catch(e){ console.error('carrito drive push error', e); }
+}
+let carritoDrivePushTimer = null;
+function carritoDriveQueuePush(){
+  markLocalChange('carrito');
+  if (!driveConnected) return;
+  clearTimeout(carritoDrivePushTimer);
+  carritoDrivePushTimer = setTimeout(carritoDrivePush, 1200);
+}
+
 $('saveClientIdBtn').onclick = () => {
   const val = $('googleClientId').value.trim();
   if (!val.endsWith('.apps.googleusercontent.com')){ showToast('Ese Client ID no se ve completo'); return; }
@@ -3585,8 +4762,8 @@ $('driveConnectBtn').onclick = () => {
   if (!driveTokenClient){ showToast('Primero guarda tu Client ID'); return; }
   driveTokenClient.requestAccessToken({prompt: driveAccessToken ? '' : 'consent'});
 };
-$('drivePullBtn').onclick = () => drivePull(false).then(() => productsDrivePull()).then(() => fulfillmentDrivePull()).then(() => salesDrivePull());
-$('drivePushBtn').onclick = () => Promise.all([drivePush(), productsDrivePush(), fulfillmentDrivePush(), salesDrivePush()]).then(() => showToast('Cambios subidos a Drive'));
+$('drivePullBtn').onclick = () => drivePull(false).then(() => productsDrivePull()).then(() => fulfillmentDrivePull()).then(() => salesDrivePull()).then(() => papeleriaDrivePull()).then(() => carritoDrivePull());
+$('drivePushBtn').onclick = () => Promise.all([drivePush(), productsDrivePush(), fulfillmentDrivePush(), salesDrivePush(), papeleriaDrivePush(), carritoDrivePush()]).then(() => showToast('Cambios subidos a Drive'));
 $('driveDisconnectBtn').onclick = () => {
   driveConnected = false; driveAccessToken = null;
   $('driveConnectBtn').style.display = 'block';
@@ -3610,8 +4787,13 @@ $('driveDisconnectBtn').onclick = () => {
   fullShipments = await storageGet('full-shipments', []);
   fullProjections = await storageGet('full-projections', []);
   salesList = await storageGet('ventas-list', []);
+  papMaterials = await storageGet('papeleria-materials', []);
+  papeleriaQuotes = await storageGet('papeleria-quotes', []);
+  carritos = await storageGet('carritos-list', []);
   fillSettingsForm();
   resetForm();
+  resetPpForm();
+  resetCarritoForm();
   renderHistory();
   renderFilamentCatalog();
 
