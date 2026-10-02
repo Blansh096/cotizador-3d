@@ -525,6 +525,91 @@ textarea{
       </div>
     </div>
 
+    <div class="card">
+      <div class="ml-toggle-wrap" id="ttToggleWrap">
+        <div class="section-head" style="margin-bottom:0">
+          <div class="section-num">8</div>
+          <div class="section-title">TikTok Shop (opcional)</div>
+        </div>
+        <div class="switch" id="ttSwitch"></div>
+      </div>
+      <div class="ml-body" id="ttBody">
+        <div class="row">
+          <div><label>% Comisión de plataforma</label><input type="number" step="0.1" id="ttComisionPct"></div>
+          <div><label>% Tarifa de servicio (SFP)</label><input type="number" step="0.1" id="ttSfpPct"></div>
+        </div>
+        <div class="row">
+          <div><label>Tarifa fija por artículo vendido ($)</label><input type="number" step="0.1" id="ttFixedFee"></div>
+          <div><label>% de envío cubierto por TikTok</label><input type="number" step="1" id="ttShipCoveragePct"></div>
+        </div>
+        <div class="hint">Comisión, SFP, tarifa fija y % de envío cubierto editables en Ajustes → TikTok Shop. Usa el mismo peso/dimensiones del paso 6, y el mismo costo de envío nominal que Mercado Libre.</div>
+        <div class="summary-line"><span class="lbl">Costo de envío nominal</span><span id="tt-nominalship">$0.00</span></div>
+
+        <div class="subsection">
+          <label>Precio a simular en TikTok Shop <button class="btn btn-small" id="ttUseSuggestedBtn" style="float:right; padding:3px 8px;">usar precio sugerido</button></label>
+          <div class="row">
+            <div><input type="number" step="0.01" id="ttSimPrice" placeholder="Precio"></div>
+            <div><input type="number" step="1" id="ttDiscountPct" placeholder="% desc." value="0"></div>
+            <div><input type="text" id="ttDiscountedPriceView" readonly placeholder="Precio c/desc." style="opacity:0.85;"></div>
+          </div>
+        </div>
+
+        <div class="ml-compare-grid" id="ttCompareGrid">
+          <div></div>
+          <div class="mlc-head">Sin descuento</div>
+          <div class="mlc-head">Con descuento</div>
+
+          <div class="mlc-label">Precio</div>
+          <div id="tt-precio-nd">$0.00</div>
+          <div id="tt-precio-cd">$0.00</div>
+
+          <div class="mlc-label">Descuento vendedor</div>
+          <div id="tt-vendordesc-nd">-$0.00</div>
+          <div id="tt-vendordesc-cd">-$0.00</div>
+
+          <div class="mlc-label">Comisión de plataforma</div>
+          <div id="tt-comision-nd">-$0.00</div>
+          <div id="tt-comision-cd">-$0.00</div>
+
+          <div class="mlc-label">Tarifa de servicio (SFP)</div>
+          <div id="tt-sfp-nd">-$0.00</div>
+          <div id="tt-sfp-cd">-$0.00</div>
+
+          <div class="mlc-label">Tarifa por artículo vendido</div>
+          <div id="tt-fixedfee-nd">-$0.00</div>
+          <div id="tt-fixedfee-cd">-$0.00</div>
+
+          <div class="mlc-label">Costo de envío</div>
+          <div id="tt-ship-nd">-$0.00</div>
+          <div id="tt-ship-cd">-$0.00</div>
+
+          <div class="mlc-label">Impuestos</div>
+          <div id="tt-taxes-nd">-$0.00</div>
+          <div id="tt-taxes-cd">-$0.00</div>
+
+          <div class="mlc-label" style="padding-left:10px;">IVA retenido (<span id="tt-ivaret-view">-</span>%)</div>
+          <div id="tt-ivaret-nd">-$0.00</div>
+          <div id="tt-ivaret-cd">-$0.00</div>
+
+          <div class="mlc-label" style="padding-left:10px;">ISR retenido (<span id="tt-isr-view">-</span>%)</div>
+          <div id="tt-isr-nd">-$0.00</div>
+          <div id="tt-isr-cd">-$0.00</div>
+
+          <div class="mlc-label mlc-total">= Importe de la liquidación</div>
+          <div class="mlc-total mlc-recibes" id="tt-net-nd">$0.00</div>
+          <div class="mlc-total mlc-recibes" id="tt-net-cd">$0.00</div>
+
+          <div class="mlc-label" style="margin-top:6px;">Costo de producción</div>
+          <div id="tt-costoprod-nd" style="margin-top:6px;">-$0.00</div>
+          <div id="tt-costoprod-cd" style="margin-top:6px;">-$0.00</div>
+
+          <div class="mlc-label mlc-total">= Ganancia neta</div>
+          <div class="mlc-total mlc-ganancia" id="tt-gananciantea-nd">$0.00</div>
+          <div class="mlc-total mlc-ganancia" id="tt-gananciantea-cd">$0.00</div>
+        </div>
+      </div>
+    </div>
+
     <button class="btn btn-accent btn-block" id="saveQuoteBtn" style="padding:13px; font-size:14px;">Guardar cotización</button>
     <button class="btn btn-block" id="newQuoteBtn" style="margin-top:8px;">Limpiar / nueva cotización</button>
     </div>
@@ -1092,6 +1177,190 @@ textarea{
         <div class="summary-line total"><span class="lbl">= PRECIO FINAL SUGERIDO</span><span id="pp-s-final">$0.00</span></div>
       </div>
 
+      <div class="card">
+        <div class="section-head">
+          <div class="section-num">5</div>
+          <div class="section-title">Peso y dimensiones del paquete</div>
+        </div>
+        <label>Peso (g)</label>
+        <input type="number" step="1" id="ppPkgPeso">
+        <label>Dimensiones del paquete (cm) — largo × ancho × alto</label>
+        <div class="row">
+          <div><input type="number" step="0.1" id="ppPkgLargo" placeholder="largo"></div>
+          <div><input type="number" step="0.1" id="ppPkgAncho" placeholder="ancho"></div>
+          <div><input type="number" step="0.1" id="ppPkgAlto" placeholder="alto"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="ml-toggle-wrap" id="ppMlToggleWrap">
+          <div class="section-head" style="margin-bottom:0">
+            <div class="section-num">6</div>
+            <div class="section-title">Mercado Libre (opcional)</div>
+          </div>
+          <div class="switch" id="ppMlSwitch"></div>
+        </div>
+        <div class="ml-body" id="ppMlBody">
+          <label>Categoría del producto (define la comisión)</label>
+          <select id="ppMlCategory"></select>
+          <div class="row">
+            <div>
+              <label>Modalidad</label>
+              <select id="ppMlMode">
+                <option value="normal">Mercado Envíos (por mí)</option>
+                <option value="full">FULL</option>
+              </select>
+            </div>
+          </div>
+          <label>¿Quién paga el envío?</label>
+          <select id="ppMlQuienPaga">
+            <option value="gratis">Ofreces envío gratis</option>
+            <option value="comprador">Lo paga el comprador</option>
+          </select>
+          <div id="ppMlRepDiscountWrap" style="display:flex; align-items:center; gap:8px; margin-top:10px;">
+            <input type="checkbox" id="ppMlApplyRepDiscount" checked style="width:18px; height:18px; accent-color:var(--accent); margin:0;">
+            <label style="margin:0; font-size:12.5px;" for="ppMlApplyRepDiscount">Aplicar mi % de descuento por reputación (<span id="ppMlRepDiscountPctView">50</span>%, editable en Ajustes)</label>
+          </div>
+          <div class="summary-line"><span class="lbl">Peso volumétrico</span><span id="pp-ml-volw">0.00 kg</span></div>
+          <div class="summary-line"><span class="lbl">Peso facturable (mayor de los dos)</span><span id="pp-ml-billw">0.00 kg</span></div>
+
+          <div class="subsection">
+            <label>Precio a simular en ML <button class="btn btn-small" id="ppMlUseSuggestedBtn" style="float:right; padding:3px 8px;">usar precio sugerido</button></label>
+            <div class="row">
+              <div><input type="number" step="0.01" id="ppMlSimPrice" placeholder="Precio"></div>
+              <div><input type="number" step="1" id="ppMlDiscountPct" placeholder="% desc." value="0"></div>
+              <div><input type="text" id="ppMlDiscountedPriceView" readonly placeholder="Precio c/desc." style="opacity:0.85;"></div>
+            </div>
+          </div>
+
+          <div class="ml-compare-grid">
+            <div></div>
+            <div class="mlc-head">Sin descuento</div>
+            <div class="mlc-head">Con descuento</div>
+
+            <div class="mlc-label">Precio</div>
+            <div id="pp-ml-precio-nd">$0.00</div>
+            <div id="pp-ml-precio-cd">$0.00</div>
+
+            <div class="mlc-label">Cargo por venta (<span id="pp-ml-feepct-view">-</span>%)</div>
+            <div id="pp-ml-fee-nd">-$0.00</div>
+            <div id="pp-ml-fee-cd">-$0.00</div>
+
+            <div class="mlc-label">Costo por envío</div>
+            <div id="pp-ml-ship-nd">-$0.00</div>
+            <div id="pp-ml-ship-cd">-$0.00</div>
+
+            <div class="mlc-label">Impuestos</div>
+            <div id="pp-ml-taxes-nd">-$0.00</div>
+            <div id="pp-ml-taxes-cd">-$0.00</div>
+
+            <div class="mlc-label" style="padding-left:10px;">IVA retenido (<span id="pp-ml-ivaret-view">-</span>%)</div>
+            <div id="pp-ml-ivaret-nd">-$0.00</div>
+            <div id="pp-ml-ivaret-cd">-$0.00</div>
+
+            <div class="mlc-label" style="padding-left:10px;">ISR retenido (<span id="pp-ml-isr-view">-</span>%)</div>
+            <div id="pp-ml-isr-nd">-$0.00</div>
+            <div id="pp-ml-isr-cd">-$0.00</div>
+
+            <div class="mlc-label mlc-total">= Recibes</div>
+            <div class="mlc-total mlc-recibes" id="pp-ml-net-nd">$0.00</div>
+            <div class="mlc-total mlc-recibes" id="pp-ml-net-cd">$0.00</div>
+
+            <div class="mlc-label" style="margin-top:6px;">Costo de producción</div>
+            <div id="pp-ml-costoprod-nd" style="margin-top:6px;">-$0.00</div>
+            <div id="pp-ml-costoprod-cd" style="margin-top:6px;">-$0.00</div>
+
+            <div class="mlc-label mlc-total">= Ganancia neta</div>
+            <div class="mlc-total mlc-ganancia" id="pp-ml-gananciantea-nd">$0.00</div>
+            <div class="mlc-total mlc-ganancia" id="pp-ml-gananciantea-cd">$0.00</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="ml-toggle-wrap" id="ppTtToggleWrap">
+          <div class="section-head" style="margin-bottom:0">
+            <div class="section-num">7</div>
+            <div class="section-title">TikTok Shop (opcional)</div>
+          </div>
+          <div class="switch" id="ppTtSwitch"></div>
+        </div>
+        <div class="ml-body" id="ppTtBody">
+          <div class="row">
+            <div><label>% Comisión de plataforma</label><input type="number" step="0.1" id="ppTtComisionPct"></div>
+            <div><label>% Tarifa de servicio (SFP)</label><input type="number" step="0.1" id="ppTtSfpPct"></div>
+          </div>
+          <div class="row">
+            <div><label>Tarifa fija por artículo vendido ($)</label><input type="number" step="0.1" id="ppTtFixedFee"></div>
+            <div><label>% de envío cubierto por TikTok</label><input type="number" step="1" id="ppTtShipCoveragePct"></div>
+          </div>
+          <div class="summary-line"><span class="lbl">Costo de envío nominal</span><span id="pp-tt-nominalship">$0.00</span></div>
+
+          <div class="subsection">
+            <label>Precio a simular en TikTok Shop <button class="btn btn-small" id="ppTtUseSuggestedBtn" style="float:right; padding:3px 8px;">usar precio sugerido</button></label>
+            <div class="row">
+              <div><input type="number" step="0.01" id="ppTtSimPrice" placeholder="Precio"></div>
+              <div><input type="number" step="1" id="ppTtDiscountPct" placeholder="% desc." value="0"></div>
+              <div><input type="text" id="ppTtDiscountedPriceView" readonly placeholder="Precio c/desc." style="opacity:0.85;"></div>
+            </div>
+          </div>
+
+          <div class="ml-compare-grid">
+            <div></div>
+            <div class="mlc-head">Sin descuento</div>
+            <div class="mlc-head">Con descuento</div>
+
+            <div class="mlc-label">Precio</div>
+            <div id="pp-tt-precio-nd">$0.00</div>
+            <div id="pp-tt-precio-cd">$0.00</div>
+
+            <div class="mlc-label">Descuento vendedor</div>
+            <div id="pp-tt-vendordesc-nd">-$0.00</div>
+            <div id="pp-tt-vendordesc-cd">-$0.00</div>
+
+            <div class="mlc-label">Comisión de plataforma</div>
+            <div id="pp-tt-comision-nd">-$0.00</div>
+            <div id="pp-tt-comision-cd">-$0.00</div>
+
+            <div class="mlc-label">Tarifa de servicio (SFP)</div>
+            <div id="pp-tt-sfp-nd">-$0.00</div>
+            <div id="pp-tt-sfp-cd">-$0.00</div>
+
+            <div class="mlc-label">Tarifa por artículo vendido</div>
+            <div id="pp-tt-fixedfee-nd">-$0.00</div>
+            <div id="pp-tt-fixedfee-cd">-$0.00</div>
+
+            <div class="mlc-label">Costo de envío</div>
+            <div id="pp-tt-ship-nd">-$0.00</div>
+            <div id="pp-tt-ship-cd">-$0.00</div>
+
+            <div class="mlc-label">Impuestos</div>
+            <div id="pp-tt-taxes-nd">-$0.00</div>
+            <div id="pp-tt-taxes-cd">-$0.00</div>
+
+            <div class="mlc-label" style="padding-left:10px;">IVA retenido (<span id="pp-tt-ivaret-view">-</span>%)</div>
+            <div id="pp-tt-ivaret-nd">-$0.00</div>
+            <div id="pp-tt-ivaret-cd">-$0.00</div>
+
+            <div class="mlc-label" style="padding-left:10px;">ISR retenido (<span id="pp-tt-isr-view">-</span>%)</div>
+            <div id="pp-tt-isr-nd">-$0.00</div>
+            <div id="pp-tt-isr-cd">-$0.00</div>
+
+            <div class="mlc-label mlc-total">= Importe de la liquidación</div>
+            <div class="mlc-total mlc-recibes" id="pp-tt-net-nd">$0.00</div>
+            <div class="mlc-total mlc-recibes" id="pp-tt-net-cd">$0.00</div>
+
+            <div class="mlc-label" style="margin-top:6px;">Costo de producción</div>
+            <div id="pp-tt-costoprod-nd" style="margin-top:6px;">-$0.00</div>
+            <div id="pp-tt-costoprod-cd" style="margin-top:6px;">-$0.00</div>
+
+            <div class="mlc-label mlc-total">= Ganancia neta</div>
+            <div class="mlc-total mlc-ganancia" id="pp-tt-gananciantea-nd">$0.00</div>
+            <div class="mlc-total mlc-ganancia" id="pp-tt-gananciantea-cd">$0.00</div>
+          </div>
+        </div>
+      </div>
+
       <button class="btn btn-accent btn-block" id="savePpQuoteBtn" style="padding:13px; font-size:14px;">Guardar cotización</button>
       <button class="btn btn-block" id="newPpQuoteBtn" style="margin-top:8px;">Limpiar / nueva cotización</button>
     </div>
@@ -1202,6 +1471,7 @@ textarea{
     <div class="subtab-bar">
       <button class="settings-subtab-btn active" data-sub="settings-general">General</button>
       <button class="settings-subtab-btn" data-sub="settings-ml">Mercado Libre</button>
+      <button class="settings-subtab-btn" data-sub="settings-tiktok">TikTok Shop</button>
       <button class="settings-subtab-btn" data-sub="settings-sync">Sincronización</button>
     </div>
 
@@ -1268,6 +1538,23 @@ textarea{
         <div class="section-title" style="margin-bottom:6px;">Tarifas de FULL</div>
         <div class="hint" style="margin-bottom:10px;">Según las tablas oficiales de ML. Los tamaños y umbrales son fijos, pero puedes actualizar las tarifas si ML las cambia.</div>
         <div id="fullRatesList"></div>
+      </div>
+    </div>
+
+    <!-- Sub: TikTok Shop -->
+    <div class="settings-sub" id="settings-tiktok" style="display:none;">
+      <div class="card">
+        <div class="section-title" style="margin-bottom:6px;">Tarifas de TikTok Shop</div>
+        <div class="hint" style="margin-bottom:10px;">Según tu "Análisis de la liquidación" de TikTok Shop Seller Center. Ajústalas si tus tarifas reales cambian.</div>
+        <label>% Comisión de plataforma</label>
+        <input type="number" step="0.1" id="def-tt-comision">
+        <label>% Tarifa de servicio (SFP)</label>
+        <input type="number" step="0.1" id="def-tt-sfp">
+        <label>Tarifa fija por artículo vendido ($)</label>
+        <input type="number" step="0.1" id="def-tt-fixedfee">
+        <label>% de envío cubierto por TikTok Shop</label>
+        <input type="number" step="1" id="def-tt-shipcoverage">
+        <div class="hint" style="margin-top:4px;">Las retenciones de ISR/IVA, el divisor volumétrico y la tabla de envíos se comparten con Mercado Libre (mismo paquete, misma transportadora).</div>
       </div>
     </div>
 
@@ -1371,6 +1658,7 @@ let settings = {
     {id:'extragrande', label:'Extragrande (más de 50×60×60cm o 18kg)', dailyRate:0.500, oldStock:{m4_6:66, m6_12:219, m12plus:459}}
   ],
   isrPct: 2.5, ivaRetPct: 8, ivaEmbebidoPct: 16, mlShippingDiscountPct: 50, mlDivisor: 5000,
+  ttComisionPct: 6, ttSfpPct: 8, ttFixedFee: 6, ttShipCoveragePct: 100,
   packagingTypes: [],
   mlCategories: [
     {id:'cat_1', name:'Hogar, Muebles y Jardín', feePct: 13},
@@ -1761,6 +2049,7 @@ function calculate(){
 
   lastCalc = {matCost, energyCost, depreciationCost, directCost, labor, base, riskPct, riskAmt, totalEst, profitPct, profitAmt, priceNoIva, ivaPct, ivaAmt, finalPrice};
   calculateML(finalPrice);
+  calculateTikTok(finalPrice);
 
   return lastCalc;
 }
@@ -1772,6 +2061,7 @@ function populateMlCategorySelect(selectedId){
   ).join('');
 }
 
+let mlSimPriceManual = false;
 function calculateML(finalPrice){
   if (!$('mlBody').classList.contains('show')) return;
   const weightG = +$('pkgPeso').value || 0;
@@ -1781,12 +2071,6 @@ function calculateML(finalPrice){
   const billW = Math.max(realKg, volW);
   const mode = $('mlMode').value;
   const quienPaga = $('mlQuienPaga').value;
-
-  if (!$('mlSimPrice').value) $('mlSimPrice').value = finalPrice.toFixed(2);
-  const simPrice = +$('mlSimPrice').value || 0;
-  const discountPct = +$('mlDiscountPct').value || 0;
-  const discountedPrice = simPrice * (1 - discountPct/100);
-  $('mlDiscountedPriceView').value = money(discountedPrice);
 
   const catId = $('mlCategory').value;
   const cat = settings.mlCategories.find(c => c.id === catId) || {feePct:0};
@@ -1809,6 +2093,20 @@ function calculateML(finalPrice){
     if (quienPaga === 'gratis') shipCost = nominalShip * (applyRepDiscount ? (1 - (settings.mlShippingDiscountPct||0)/100) : 1);
     else shipCost = 0; // lo paga el comprador: no le cuesta al vendedor (misma en ambos escenarios, no depende del precio)
   }
+
+  // Si no se ha editado a mano, calculamos hacia atrás el precio de ML para que "Recibes"
+  // alcance tu costo total estimado + margen de ganancia (precio de venta sin IVA, lo que realmente te quedas).
+  if (!mlSimPriceManual){
+    const effectiveTaxRate = (isrPct + ivaRetPct)/100 / (1 + ivaEmbebidoPct/100);
+    const factor = 1 - feePct/100 - effectiveTaxRate;
+    const targetNet = lastCalc ? lastCalc.priceNoIva : finalPrice;
+    const autoPrice = factor > 0 ? (targetNet + shipCost) / factor : 0;
+    $('mlSimPrice').value = autoPrice.toFixed(2);
+  }
+  const simPrice = +$('mlSimPrice').value || 0;
+  const discountPct = +$('mlDiscountPct').value || 0;
+  const discountedPrice = simPrice * (1 - discountPct/100);
+  $('mlDiscountedPriceView').value = money(discountedPrice);
 
   const costoProduccion = lastCalc ? lastCalc.totalEst : 0;
 
@@ -1852,10 +2150,11 @@ function calculateML(finalPrice){
 }
 $('mlUseSuggestedBtn').addEventListener('click', (e) => {
   e.preventDefault();
+  mlSimPriceManual = true;
   $('mlSimPrice').value = (lastCalc ? lastCalc.finalPrice : 0).toFixed(2);
   calculate();
 });
-$('mlSimPrice').addEventListener('input', () => calculateML(lastCalc ? lastCalc.finalPrice : 0));
+$('mlSimPrice').addEventListener('input', () => { mlSimPriceManual = true; calculateML(lastCalc ? lastCalc.finalPrice : 0); });
 $('mlDiscountPct').addEventListener('input', () => calculateML(lastCalc ? lastCalc.finalPrice : 0));
 $('mlQuienPaga').addEventListener('change', () => calculateML(lastCalc ? lastCalc.finalPrice : 0));
 $('mlApplyRepDiscount').addEventListener('change', () => calculateML(lastCalc ? lastCalc.finalPrice : 0));
@@ -1869,6 +2168,106 @@ $('mlCategory').addEventListener('change', calculate);
 $('mlToggleWrap').onclick = (e) => {
   if (e.target.tagName === 'SELECT' || e.target.tagName === 'INPUT') return;
   const sw = $('mlSwitch'); const body = $('mlBody');
+  sw.classList.toggle('on'); body.classList.toggle('show');
+  calculate();
+};
+
+// ---------- TIKTOK SHOP ----------
+let ttSimPriceManual = false;
+function calculateTikTok(finalPrice){
+  if (!$('ttBody').classList.contains('show')) return;
+  const weightG = +$('pkgPeso').value || 0;
+  const l = +$('pkgLargo').value || 0, a = +$('pkgAncho').value || 0, h = +$('pkgAlto').value || 0;
+  const volW = (l*a*h) / (settings.mlDivisor || 5000);
+  const billW = Math.max(weightG/1000, volW);
+
+  const comisionPct = +$('ttComisionPct').value || 0;
+  const sfpPct = +$('ttSfpPct').value || 0;
+  const fixedFee = +$('ttFixedFee').value || 0;
+  const shipCoveragePct = +$('ttShipCoveragePct').value || 0;
+
+  const isrPct = settings.isrPct || 0;
+  const ivaRetPct = settings.ivaRetPct || 0;
+  const ivaEmbebidoPct = settings.ivaEmbebidoPct != null ? settings.ivaEmbebidoPct : 16;
+
+  let nominalShip = 0;
+  const sortedTiers = [...settings.tiers].sort((x,y)=>x.max-y.max);
+  for (const t of sortedTiers){ if (billW <= t.max){ nominalShip = t.cost; break; } }
+  if (sortedTiers.length && billW > sortedTiers[sortedTiers.length-1].max) nominalShip = sortedTiers[sortedTiers.length-1].cost;
+  const shipCost = nominalShip * (1 - shipCoveragePct/100);
+  $('tt-nominalship').textContent = money(nominalShip);
+
+  if (!ttSimPriceManual){
+    const effectiveTaxRate = (isrPct + ivaRetPct)/100 / (1 + ivaEmbebidoPct/100);
+    const factor = 1 - comisionPct/100 - sfpPct/100 - effectiveTaxRate;
+    const targetNet = lastCalc ? lastCalc.priceNoIva : finalPrice;
+    const autoPrice = factor > 0 ? (targetNet + shipCost + fixedFee) / factor : 0;
+    $('ttSimPrice').value = autoPrice.toFixed(2);
+  }
+  const simPrice = +$('ttSimPrice').value || 0;
+  const discountPct = +$('ttDiscountPct').value || 0;
+  const discountedPrice = simPrice * (1 - discountPct/100);
+  $('ttDiscountedPriceView').value = money(discountedPrice);
+
+  const costoProduccion = lastCalc ? lastCalc.totalEst : 0;
+
+  function scenario(precioOriginal, precioConDescuento){
+    const vendorDesc = precioOriginal - precioConDescuento;
+    const ventasNetas = precioConDescuento; // TikTok cobra comisión/tarifas sobre el precio ya con descuento de vendedor
+    const comision = ventasNetas * comisionPct/100;
+    const sfp = ventasNetas * sfpPct/100;
+    const taxBase = ventasNetas / (1 + ivaEmbebidoPct/100);
+    const isrAmt = taxBase * isrPct/100;
+    const ivaRetAmt = taxBase * ivaRetPct/100;
+    const taxesTotal = isrAmt + ivaRetAmt;
+    const liquidacion = ventasNetas - comision - sfp - fixedFee - shipCost - taxesTotal;
+    const gananciaNeta = liquidacion - costoProduccion;
+    return {vendorDesc, comision, sfp, isrAmt, ivaRetAmt, taxesTotal, liquidacion, gananciaNeta};
+  }
+  const nd = scenario(simPrice, simPrice); // "sin descuento": no hay descuento de vendedor aplicado
+  const cd = scenario(simPrice, discountedPrice); // "con descuento": el % de descuento sí se aplica
+
+  $('tt-ivaret-view').textContent = ivaRetPct;
+  $('tt-isr-view').textContent = isrPct;
+
+  $('tt-precio-nd').textContent = money(simPrice);
+  $('tt-precio-cd').textContent = money(simPrice);
+  $('tt-vendordesc-nd').textContent = '-' + money(nd.vendorDesc);
+  $('tt-vendordesc-cd').textContent = '-' + money(cd.vendorDesc);
+  $('tt-comision-nd').textContent = '-' + money(nd.comision);
+  $('tt-comision-cd').textContent = '-' + money(cd.comision);
+  $('tt-sfp-nd').textContent = '-' + money(nd.sfp);
+  $('tt-sfp-cd').textContent = '-' + money(cd.sfp);
+  $('tt-fixedfee-nd').textContent = '-' + money(fixedFee);
+  $('tt-fixedfee-cd').textContent = '-' + money(fixedFee);
+  $('tt-ship-nd').textContent = '-' + money(shipCost);
+  $('tt-ship-cd').textContent = '-' + money(shipCost);
+  $('tt-taxes-nd').textContent = '-' + money(nd.taxesTotal);
+  $('tt-taxes-cd').textContent = '-' + money(cd.taxesTotal);
+  $('tt-ivaret-nd').textContent = '-' + money(nd.ivaRetAmt);
+  $('tt-ivaret-cd').textContent = '-' + money(cd.ivaRetAmt);
+  $('tt-isr-nd').textContent = '-' + money(nd.isrAmt);
+  $('tt-isr-cd').textContent = '-' + money(cd.isrAmt);
+  $('tt-net-nd').textContent = money(nd.liquidacion);
+  $('tt-net-cd').textContent = money(cd.liquidacion);
+  $('tt-costoprod-nd').textContent = '-' + money(costoProduccion);
+  $('tt-costoprod-cd').textContent = '-' + money(costoProduccion);
+  $('tt-gananciantea-nd').textContent = money(nd.gananciaNeta);
+  $('tt-gananciantea-cd').textContent = money(cd.gananciaNeta);
+}
+$('ttUseSuggestedBtn').addEventListener('click', (e) => {
+  e.preventDefault();
+  ttSimPriceManual = true;
+  $('ttSimPrice').value = (lastCalc ? lastCalc.finalPrice : 0).toFixed(2);
+  calculate();
+});
+$('ttSimPrice').addEventListener('input', () => { ttSimPriceManual = true; calculateTikTok(lastCalc ? lastCalc.finalPrice : 0); });
+$('ttDiscountPct').addEventListener('input', () => calculateTikTok(lastCalc ? lastCalc.finalPrice : 0));
+['ttComisionPct','ttSfpPct','ttFixedFee','ttShipCoveragePct'].forEach(id => $(id).addEventListener('input', () => calculateTikTok(lastCalc ? lastCalc.finalPrice : 0)));
+
+$('ttToggleWrap').onclick = (e) => {
+  if (e.target.tagName === 'SELECT' || e.target.tagName === 'INPUT') return;
+  const sw = $('ttSwitch'); const body = $('ttBody');
   sw.classList.toggle('on'); body.classList.toggle('show');
   calculate();
 };
@@ -3336,6 +3735,9 @@ let papeleriaQuotes = [];
 let currentPpQuoteId = null;
 let ppMaterialsUsed = []; // {materialId, cantidad} o {materialId, anchoCm, altoCm}
 let ppPackaging = []; // mismo formato que quotePackaging: {instanceId, typeId, nombre, costoUnitario}
+let lastPpCalc = null;
+let ppMlSimPriceManual = false;
+let ppTtSimPriceManual = false;
 
 function populatePpMaterialSelect(){
   $('noPapMaterialsHint').style.display = papMaterials.length ? 'none' : 'block';
@@ -3451,9 +3853,217 @@ function calculatePapeleria(){
   $('pp-s-price-noiva').textContent = money(priceNoIva);
   $('pp-s-final').textContent = money(finalPrice);
 
-  return {matCost, packagingCost, directCost, labor, base, riskPct, riskAmt, totalEst, profitPct, profitAmt, priceNoIva, ivaPct, ivaAmt, finalPrice};
+  lastPpCalc = {matCost, packagingCost, directCost, labor, base, riskPct, riskAmt, totalEst, profitPct, profitAmt, priceNoIva, ivaPct, ivaAmt, finalPrice};
+  calculatePpML(finalPrice);
+  calculatePpTikTok(finalPrice);
+
+  return lastPpCalc;
 }
 ['ppLaborCost','ppRiskPct','ppProfitPct','ppIvaPct'].forEach(id => $(id).addEventListener('input', calculatePapeleria));
+
+function populatePpMlCategorySelect(selectedId){
+  const sel = $('ppMlCategory');
+  sel.innerHTML = settings.mlCategories.map(c =>
+    `<option value="${c.id}" ${c.id===selectedId?'selected':''}>${c.name} — ${c.feePct}%</option>`
+  ).join('');
+}
+
+function calculatePpML(finalPrice){
+  if (!$('ppMlBody').classList.contains('show')) return;
+  const weightG = +$('ppPkgPeso').value || 0;
+  const l = +$('ppPkgLargo').value || 0, a = +$('ppPkgAncho').value || 0, h = +$('ppPkgAlto').value || 0;
+  const volW = (l*a*h) / (settings.mlDivisor || 5000);
+  const billW = Math.max(weightG/1000, volW);
+  const mode = $('ppMlMode').value;
+  const quienPaga = $('ppMlQuienPaga').value;
+
+  const catId = $('ppMlCategory').value;
+  const cat = settings.mlCategories.find(c => c.id === catId) || {feePct:0};
+  const feePct = cat.feePct;
+
+  const isrPct = settings.isrPct || 0;
+  const ivaRetPct = settings.ivaRetPct || 0;
+  const ivaEmbebidoPct = settings.ivaEmbebidoPct != null ? settings.ivaEmbebidoPct : 16;
+
+  let nominalShip = 0;
+  const sortedTiers = [...settings.tiers].sort((x,y)=>x.max-y.max);
+  for (const t of sortedTiers){ if (billW <= t.max){ nominalShip = t.cost; break; } }
+  if (sortedTiers.length && billW > sortedTiers[sortedTiers.length-1].max) nominalShip = sortedTiers[sortedTiers.length-1].cost;
+
+  const applyRepDiscount = $('ppMlApplyRepDiscount').checked;
+  $('ppMlRepDiscountPctView').textContent = settings.mlShippingDiscountPct || 0;
+  $('ppMlRepDiscountWrap').style.display = (mode !== 'full' && quienPaga === 'gratis') ? 'flex' : 'none';
+  let shipCost = 0;
+  if (mode !== 'full' && quienPaga === 'gratis'){
+    shipCost = nominalShip * (applyRepDiscount ? (1 - (settings.mlShippingDiscountPct||0)/100) : 1);
+  }
+
+  if (!ppMlSimPriceManual){
+    const effectiveTaxRate = (isrPct + ivaRetPct)/100 / (1 + ivaEmbebidoPct/100);
+    const factor = 1 - feePct/100 - effectiveTaxRate;
+    const targetNet = lastPpCalc ? lastPpCalc.priceNoIva : finalPrice;
+    const autoPrice = factor > 0 ? (targetNet + shipCost) / factor : 0;
+    $('ppMlSimPrice').value = autoPrice.toFixed(2);
+  }
+  const simPrice = +$('ppMlSimPrice').value || 0;
+  const discountPct = +$('ppMlDiscountPct').value || 0;
+  const discountedPrice = simPrice * (1 - discountPct/100);
+  $('ppMlDiscountedPriceView').value = money(discountedPrice);
+
+  const costoProduccion = lastPpCalc ? lastPpCalc.totalEst : 0;
+
+  function scenario(price){
+    const fee = price * feePct/100;
+    const taxBase = price / (1 + ivaEmbebidoPct/100);
+    const isrAmt = taxBase * isrPct/100;
+    const ivaRetAmt = taxBase * ivaRetPct/100;
+    const taxesTotal = isrAmt + ivaRetAmt;
+    const recibes = price - fee - shipCost - taxesTotal;
+    const gananciaNeta = recibes - costoProduccion;
+    return {price, fee, isrAmt, ivaRetAmt, taxesTotal, recibes, gananciaNeta};
+  }
+  const nd = scenario(simPrice);
+  const cd = scenario(discountedPrice);
+
+  $('pp-ml-volw').textContent = volW.toFixed(2) + ' kg';
+  $('pp-ml-billw').textContent = billW.toFixed(2) + ' kg';
+  $('pp-ml-feepct-view').textContent = feePct;
+  $('pp-ml-ivaret-view').textContent = ivaRetPct;
+  $('pp-ml-isr-view').textContent = isrPct;
+  $('pp-ml-precio-nd').textContent = money(nd.price);
+  $('pp-ml-precio-cd').textContent = money(cd.price);
+  $('pp-ml-fee-nd').textContent = '-' + money(nd.fee);
+  $('pp-ml-fee-cd').textContent = '-' + money(cd.fee);
+  $('pp-ml-ship-nd').textContent = '-' + money(shipCost);
+  $('pp-ml-ship-cd').textContent = '-' + money(shipCost);
+  $('pp-ml-taxes-nd').textContent = '-' + money(nd.taxesTotal);
+  $('pp-ml-taxes-cd').textContent = '-' + money(cd.taxesTotal);
+  $('pp-ml-ivaret-nd').textContent = '-' + money(nd.ivaRetAmt);
+  $('pp-ml-ivaret-cd').textContent = '-' + money(cd.ivaRetAmt);
+  $('pp-ml-isr-nd').textContent = '-' + money(nd.isrAmt);
+  $('pp-ml-isr-cd').textContent = '-' + money(cd.isrAmt);
+  $('pp-ml-net-nd').textContent = money(nd.recibes);
+  $('pp-ml-net-cd').textContent = money(cd.recibes);
+  $('pp-ml-costoprod-nd').textContent = '-' + money(costoProduccion);
+  $('pp-ml-costoprod-cd').textContent = '-' + money(costoProduccion);
+  $('pp-ml-gananciantea-nd').textContent = money(nd.gananciaNeta);
+  $('pp-ml-gananciantea-cd').textContent = money(cd.gananciaNeta);
+}
+$('ppMlUseSuggestedBtn').addEventListener('click', (e) => {
+  e.preventDefault();
+  ppMlSimPriceManual = true;
+  $('ppMlSimPrice').value = (lastPpCalc ? lastPpCalc.finalPrice : 0).toFixed(2);
+  calculatePapeleria();
+});
+$('ppMlSimPrice').addEventListener('input', () => { ppMlSimPriceManual = true; calculatePpML(lastPpCalc ? lastPpCalc.finalPrice : 0); });
+$('ppMlDiscountPct').addEventListener('input', () => calculatePpML(lastPpCalc ? lastPpCalc.finalPrice : 0));
+$('ppMlQuienPaga').addEventListener('change', () => calculatePpML(lastPpCalc ? lastPpCalc.finalPrice : 0));
+$('ppMlApplyRepDiscount').addEventListener('change', () => calculatePpML(lastPpCalc ? lastPpCalc.finalPrice : 0));
+$('ppMlMode').addEventListener('change', calculatePapeleria);
+$('ppMlCategory').addEventListener('change', calculatePapeleria);
+['ppPkgPeso','ppPkgLargo','ppPkgAncho','ppPkgAlto'].forEach(id => $(id).addEventListener('input', calculatePapeleria));
+$('ppMlToggleWrap').onclick = (e) => {
+  if (e.target.tagName === 'SELECT' || e.target.tagName === 'INPUT') return;
+  const sw = $('ppMlSwitch'); const body = $('ppMlBody');
+  sw.classList.toggle('on'); body.classList.toggle('show');
+  calculatePapeleria();
+};
+
+function calculatePpTikTok(finalPrice){
+  if (!$('ppTtBody').classList.contains('show')) return;
+  const weightG = +$('ppPkgPeso').value || 0;
+  const l = +$('ppPkgLargo').value || 0, a = +$('ppPkgAncho').value || 0, h = +$('ppPkgAlto').value || 0;
+  const volW = (l*a*h) / (settings.mlDivisor || 5000);
+  const billW = Math.max(weightG/1000, volW);
+
+  const comisionPct = +$('ppTtComisionPct').value || 0;
+  const sfpPct = +$('ppTtSfpPct').value || 0;
+  const fixedFee = +$('ppTtFixedFee').value || 0;
+  const shipCoveragePct = +$('ppTtShipCoveragePct').value || 0;
+
+  const isrPct = settings.isrPct || 0;
+  const ivaRetPct = settings.ivaRetPct || 0;
+  const ivaEmbebidoPct = settings.ivaEmbebidoPct != null ? settings.ivaEmbebidoPct : 16;
+
+  let nominalShip = 0;
+  const sortedTiers = [...settings.tiers].sort((x,y)=>x.max-y.max);
+  for (const t of sortedTiers){ if (billW <= t.max){ nominalShip = t.cost; break; } }
+  if (sortedTiers.length && billW > sortedTiers[sortedTiers.length-1].max) nominalShip = sortedTiers[sortedTiers.length-1].cost;
+  const shipCost = nominalShip * (1 - shipCoveragePct/100);
+  $('pp-tt-nominalship').textContent = money(nominalShip);
+
+  if (!ppTtSimPriceManual){
+    const effectiveTaxRate = (isrPct + ivaRetPct)/100 / (1 + ivaEmbebidoPct/100);
+    const factor = 1 - comisionPct/100 - sfpPct/100 - effectiveTaxRate;
+    const targetNet = lastPpCalc ? lastPpCalc.priceNoIva : finalPrice;
+    const autoPrice = factor > 0 ? (targetNet + shipCost + fixedFee) / factor : 0;
+    $('ppTtSimPrice').value = autoPrice.toFixed(2);
+  }
+  const simPrice = +$('ppTtSimPrice').value || 0;
+  const discountPct = +$('ppTtDiscountPct').value || 0;
+  const discountedPrice = simPrice * (1 - discountPct/100);
+  $('ppTtDiscountedPriceView').value = money(discountedPrice);
+
+  const costoProduccion = lastPpCalc ? lastPpCalc.totalEst : 0;
+
+  function scenario(precioOriginal, precioConDescuento){
+    const vendorDesc = precioOriginal - precioConDescuento;
+    const ventasNetas = precioConDescuento;
+    const comision = ventasNetas * comisionPct/100;
+    const sfp = ventasNetas * sfpPct/100;
+    const taxBase = ventasNetas / (1 + ivaEmbebidoPct/100);
+    const isrAmt = taxBase * isrPct/100;
+    const ivaRetAmt = taxBase * ivaRetPct/100;
+    const taxesTotal = isrAmt + ivaRetAmt;
+    const liquidacion = ventasNetas - comision - sfp - fixedFee - shipCost - taxesTotal;
+    const gananciaNeta = liquidacion - costoProduccion;
+    return {vendorDesc, comision, sfp, isrAmt, ivaRetAmt, taxesTotal, liquidacion, gananciaNeta};
+  }
+  const nd = scenario(simPrice, simPrice);
+  const cd = scenario(simPrice, discountedPrice);
+
+  $('pp-tt-ivaret-view').textContent = ivaRetPct;
+  $('pp-tt-isr-view').textContent = isrPct;
+  $('pp-tt-precio-nd').textContent = money(simPrice);
+  $('pp-tt-precio-cd').textContent = money(simPrice);
+  $('pp-tt-vendordesc-nd').textContent = '-' + money(nd.vendorDesc);
+  $('pp-tt-vendordesc-cd').textContent = '-' + money(cd.vendorDesc);
+  $('pp-tt-comision-nd').textContent = '-' + money(nd.comision);
+  $('pp-tt-comision-cd').textContent = '-' + money(cd.comision);
+  $('pp-tt-sfp-nd').textContent = '-' + money(nd.sfp);
+  $('pp-tt-sfp-cd').textContent = '-' + money(cd.sfp);
+  $('pp-tt-fixedfee-nd').textContent = '-' + money(fixedFee);
+  $('pp-tt-fixedfee-cd').textContent = '-' + money(fixedFee);
+  $('pp-tt-ship-nd').textContent = '-' + money(shipCost);
+  $('pp-tt-ship-cd').textContent = '-' + money(shipCost);
+  $('pp-tt-taxes-nd').textContent = '-' + money(nd.taxesTotal);
+  $('pp-tt-taxes-cd').textContent = '-' + money(cd.taxesTotal);
+  $('pp-tt-ivaret-nd').textContent = '-' + money(nd.ivaRetAmt);
+  $('pp-tt-ivaret-cd').textContent = '-' + money(cd.ivaRetAmt);
+  $('pp-tt-isr-nd').textContent = '-' + money(nd.isrAmt);
+  $('pp-tt-isr-cd').textContent = '-' + money(cd.isrAmt);
+  $('pp-tt-net-nd').textContent = money(nd.liquidacion);
+  $('pp-tt-net-cd').textContent = money(cd.liquidacion);
+  $('pp-tt-costoprod-nd').textContent = '-' + money(costoProduccion);
+  $('pp-tt-costoprod-cd').textContent = '-' + money(costoProduccion);
+  $('pp-tt-gananciantea-nd').textContent = money(nd.gananciaNeta);
+  $('pp-tt-gananciantea-cd').textContent = money(cd.gananciaNeta);
+}
+$('ppTtUseSuggestedBtn').addEventListener('click', (e) => {
+  e.preventDefault();
+  ppTtSimPriceManual = true;
+  $('ppTtSimPrice').value = (lastPpCalc ? lastPpCalc.finalPrice : 0).toFixed(2);
+  calculatePapeleria();
+});
+$('ppTtSimPrice').addEventListener('input', () => { ppTtSimPriceManual = true; calculatePpTikTok(lastPpCalc ? lastPpCalc.finalPrice : 0); });
+$('ppTtDiscountPct').addEventListener('input', () => calculatePpTikTok(lastPpCalc ? lastPpCalc.finalPrice : 0));
+['ppTtComisionPct','ppTtSfpPct','ppTtFixedFee','ppTtShipCoveragePct'].forEach(id => $(id).addEventListener('input', () => calculatePpTikTok(lastPpCalc ? lastPpCalc.finalPrice : 0)));
+$('ppTtToggleWrap').onclick = (e) => {
+  if (e.target.tagName === 'SELECT' || e.target.tagName === 'INPUT') return;
+  const sw = $('ppTtSwitch'); const body = $('ppTtBody');
+  sw.classList.toggle('on'); body.classList.toggle('show');
+  calculatePapeleria();
+};
 
 function computePapeleriaCostBreakdown(q){
   const matCost = (q.materiales||[]).reduce((sum,c) => sum + ppMaterialLineCost(c), 0);
@@ -3479,6 +4089,23 @@ function resetPpForm(){
   $('ppRiskPct').value = settings.riskPct;
   $('ppProfitPct').value = settings.profitPct;
   $('ppIvaPct').value = settings.ivaPct;
+  $('ppPkgPeso').value=''; $('ppPkgLargo').value=''; $('ppPkgAncho').value=''; $('ppPkgAlto').value='';
+  $('ppMlSwitch').classList.remove('on'); $('ppMlBody').classList.remove('show');
+  $('ppMlMode').value = 'normal';
+  $('ppMlQuienPaga').value = 'gratis';
+  $('ppMlApplyRepDiscount').checked = true;
+  ppMlSimPriceManual = false;
+  $('ppMlSimPrice').value = '';
+  $('ppMlDiscountPct').value = 0;
+  populatePpMlCategorySelect(settings.mlCategories[0] ? settings.mlCategories[0].id : null);
+  $('ppTtSwitch').classList.remove('on'); $('ppTtBody').classList.remove('show');
+  $('ppTtComisionPct').value = settings.ttComisionPct;
+  $('ppTtSfpPct').value = settings.ttSfpPct;
+  $('ppTtFixedFee').value = settings.ttFixedFee;
+  $('ppTtShipCoveragePct').value = settings.ttShipCoveragePct;
+  ppTtSimPriceManual = false;
+  $('ppTtSimPrice').value = '';
+  $('ppTtDiscountPct').value = 0;
   calculatePapeleria();
 }
 $('newPpQuoteBtn').onclick = resetPpForm;
@@ -3496,6 +4123,17 @@ $('savePpQuoteBtn').onclick = async () => {
     riskPct: +$('ppRiskPct').value || 0,
     profitPct: +$('ppProfitPct').value || 0,
     ivaPct: +$('ppIvaPct').value || 0,
+    pesoG: +$('ppPkgPeso').value || 0, largoCm: +$('ppPkgLargo').value||0, anchoCm: +$('ppPkgAncho').value||0, altoCm: +$('ppPkgAlto').value||0,
+    mlEnabled: $('ppMlBody').classList.contains('show'),
+    mlCategory: $('ppMlCategory').value, mlMode: $('ppMlMode').value, mlQuienPaga: $('ppMlQuienPaga').value,
+    mlApplyRepDiscount: $('ppMlApplyRepDiscount').checked,
+    mlSimPrice: $('ppMlSimPrice').value ? (+$('ppMlSimPrice').value) : null, mlSimPriceManual: ppMlSimPriceManual,
+    mlDiscountPct: +$('ppMlDiscountPct').value || 0,
+    ttEnabled: $('ppTtBody').classList.contains('show'),
+    ttComisionPct: +$('ppTtComisionPct').value || 0, ttSfpPct: +$('ppTtSfpPct').value || 0,
+    ttFixedFee: +$('ppTtFixedFee').value || 0, ttShipCoveragePct: +$('ppTtShipCoveragePct').value || 0,
+    ttSimPrice: $('ppTtSimPrice').value ? (+$('ppTtSimPrice').value) : null, ttSimPriceManual: ppTtSimPriceManual,
+    ttDiscountPct: +$('ppTtDiscountPct').value || 0,
     finalPrice: calc.finalPrice,
     updatedAt: new Date().toISOString()
   };
@@ -3518,6 +4156,25 @@ function loadPpQuote(id){
   populatePpPackagingSelect(); renderPpPackagingChips();
   $('ppLaborCost').value = q.laborCost; $('ppRiskPct').value = q.riskPct;
   $('ppProfitPct').value = q.profitPct; $('ppIvaPct').value = q.ivaPct;
+  $('ppPkgPeso').value = q.pesoG || ''; $('ppPkgLargo').value = q.largoCm||''; $('ppPkgAncho').value = q.anchoCm||''; $('ppPkgAlto').value = q.altoCm||'';
+  $('ppMlMode').value = q.mlMode || 'normal';
+  $('ppMlQuienPaga').value = q.mlQuienPaga || 'gratis';
+  $('ppMlApplyRepDiscount').checked = q.mlApplyRepDiscount != null ? q.mlApplyRepDiscount : true;
+  ppMlSimPriceManual = !!q.mlSimPriceManual;
+  $('ppMlSimPrice').value = q.mlSimPrice != null ? q.mlSimPrice : '';
+  $('ppMlDiscountPct').value = q.mlDiscountPct || 0;
+  populatePpMlCategorySelect(q.mlCategory);
+  if (q.mlEnabled){ $('ppMlSwitch').classList.add('on'); $('ppMlBody').classList.add('show'); }
+  else { $('ppMlSwitch').classList.remove('on'); $('ppMlBody').classList.remove('show'); }
+  $('ppTtComisionPct').value = q.ttComisionPct != null ? q.ttComisionPct : settings.ttComisionPct;
+  $('ppTtSfpPct').value = q.ttSfpPct != null ? q.ttSfpPct : settings.ttSfpPct;
+  $('ppTtFixedFee').value = q.ttFixedFee != null ? q.ttFixedFee : settings.ttFixedFee;
+  $('ppTtShipCoveragePct').value = q.ttShipCoveragePct != null ? q.ttShipCoveragePct : settings.ttShipCoveragePct;
+  ppTtSimPriceManual = !!q.ttSimPriceManual;
+  $('ppTtSimPrice').value = q.ttSimPrice != null ? q.ttSimPrice : '';
+  $('ppTtDiscountPct').value = q.ttDiscountPct || 0;
+  if (q.ttEnabled){ $('ppTtSwitch').classList.add('on'); $('ppTtBody').classList.add('show'); }
+  else { $('ppTtSwitch').classList.remove('on'); $('ppTtBody').classList.remove('show'); }
   calculatePapeleria();
   document.querySelector('.pap-subtab-btn[data-sub="pap-cotizar"]').click();
 }
@@ -3795,9 +4452,18 @@ function resetForm(){
   $('mlMode').value = 'normal';
   $('mlQuienPaga').value = 'gratis';
   $('mlApplyRepDiscount').checked = true;
+  mlSimPriceManual = false;
   $('mlSimPrice').value = '';
   $('mlDiscountPct').value = 0;
   populateMlCategorySelect(settings.mlCategories[0] ? settings.mlCategories[0].id : null);
+  $('ttSwitch').classList.remove('on'); $('ttBody').classList.remove('show');
+  $('ttComisionPct').value = settings.ttComisionPct;
+  $('ttSfpPct').value = settings.ttSfpPct;
+  $('ttFixedFee').value = settings.ttFixedFee;
+  $('ttShipCoveragePct').value = settings.ttShipCoveragePct;
+  ttSimPriceManual = false;
+  $('ttSimPrice').value = '';
+  $('ttDiscountPct').value = 0;
   calculate();
 }
 
@@ -3816,7 +4482,10 @@ $('saveQuoteBtn').onclick = async () => {
     laborCost: +$('laborCost').value, riskPct: +$('riskPct').value, profitPct: +$('profitPct').value, ivaPct: +$('ivaPct').value,
     mlEnabled: $('mlBody').classList.contains('show'),
     mlCategory: $('mlCategory').value,
-    pesoG: +$('pkgPeso').value || 0, largoCm: +$('pkgLargo').value||0, anchoCm: +$('pkgAncho').value||0, altoCm: +$('pkgAlto').value||0, mlMode: $('mlMode').value, mlQuienPaga: $('mlQuienPaga').value, mlApplyRepDiscount: $('mlApplyRepDiscount').checked, mlSimPrice: $('mlSimPrice').value ? (+$('mlSimPrice').value) : null, mlDiscountPct: +$('mlDiscountPct').value || 0,
+    pesoG: +$('pkgPeso').value || 0, largoCm: +$('pkgLargo').value||0, anchoCm: +$('pkgAncho').value||0, altoCm: +$('pkgAlto').value||0, mlMode: $('mlMode').value, mlQuienPaga: $('mlQuienPaga').value, mlApplyRepDiscount: $('mlApplyRepDiscount').checked, mlSimPrice: $('mlSimPrice').value ? (+$('mlSimPrice').value) : null, mlSimPriceManual: mlSimPriceManual, mlDiscountPct: +$('mlDiscountPct').value || 0,
+    ttEnabled: $('ttBody').classList.contains('show'),
+    ttComisionPct: +$('ttComisionPct').value || 0, ttSfpPct: +$('ttSfpPct').value || 0, ttFixedFee: +$('ttFixedFee').value || 0, ttShipCoveragePct: +$('ttShipCoveragePct').value || 0,
+    ttSimPrice: $('ttSimPrice').value ? (+$('ttSimPrice').value) : null, ttSimPriceManual: ttSimPriceManual, ttDiscountPct: +$('ttDiscountPct').value || 0,
     finalPrice: calc.finalPrice,
     updatedAt: new Date().toISOString()
   };
@@ -3868,11 +4537,21 @@ async function loadQuote(id){
   $('mlMode').value = q.mlMode || 'normal';
   $('mlQuienPaga').value = q.mlQuienPaga || 'gratis';
   $('mlApplyRepDiscount').checked = q.mlApplyRepDiscount != null ? q.mlApplyRepDiscount : true;
+  mlSimPriceManual = !!q.mlSimPriceManual;
   $('mlSimPrice').value = q.mlSimPrice != null ? q.mlSimPrice : '';
   $('mlDiscountPct').value = q.mlDiscountPct || 0;
   populateMlCategorySelect(q.mlCategory);
   if (q.mlEnabled){ $('mlSwitch').classList.add('on'); $('mlBody').classList.add('show'); }
   else { $('mlSwitch').classList.remove('on'); $('mlBody').classList.remove('show'); }
+  $('ttComisionPct').value = q.ttComisionPct != null ? q.ttComisionPct : settings.ttComisionPct;
+  $('ttSfpPct').value = q.ttSfpPct != null ? q.ttSfpPct : settings.ttSfpPct;
+  $('ttFixedFee').value = q.ttFixedFee != null ? q.ttFixedFee : settings.ttFixedFee;
+  $('ttShipCoveragePct').value = q.ttShipCoveragePct != null ? q.ttShipCoveragePct : settings.ttShipCoveragePct;
+  ttSimPriceManual = !!q.ttSimPriceManual;
+  $('ttSimPrice').value = q.ttSimPrice != null ? q.ttSimPrice : '';
+  $('ttDiscountPct').value = q.ttDiscountPct || 0;
+  if (q.ttEnabled){ $('ttSwitch').classList.add('on'); $('ttBody').classList.add('show'); }
+  else { $('ttSwitch').classList.remove('on'); $('ttBody').classList.remove('show'); }
   calculate();
   switchView('view-new');
 }
@@ -4038,6 +4717,10 @@ function fillSettingsForm(){
   $('def-ivaret').value = settings.ivaRetPct;
   $('def-iva-embebido').value = settings.ivaEmbebidoPct;
   $('def-ml-ship-discount').value = settings.mlShippingDiscountPct;
+  $('def-tt-comision').value = settings.ttComisionPct;
+  $('def-tt-sfp').value = settings.ttSfpPct;
+  $('def-tt-fixedfee').value = settings.ttFixedFee;
+  $('def-tt-shipcoverage').value = settings.ttShipCoveragePct;
   $('def-ml-divisor').value = settings.mlDivisor;
   renderTiers();
   renderCategories();
@@ -4057,6 +4740,10 @@ async function persistSettingsFromForm(){
   settings.ivaRetPct = +$('def-ivaret').value || 0;
   settings.ivaEmbebidoPct = +$('def-iva-embebido').value || 0;
   settings.mlShippingDiscountPct = +$('def-ml-ship-discount').value || 0;
+  settings.ttComisionPct = +$('def-tt-comision').value || 0;
+  settings.ttSfpPct = +$('def-tt-sfp').value || 0;
+  settings.ttFixedFee = +$('def-tt-fixedfee').value || 0;
+  settings.ttShipCoveragePct = +$('def-tt-shipcoverage').value || 0;
   settings.mlDivisor = +$('def-ml-divisor').value || 5000;
   await storageSet('settings', settings);
   driveQueuePush();
