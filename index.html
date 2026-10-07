@@ -4160,7 +4160,7 @@ function loadPpQuote(id){
   $('ppMlMode').value = q.mlMode || 'normal';
   $('ppMlQuienPaga').value = q.mlQuienPaga || 'gratis';
   $('ppMlApplyRepDiscount').checked = q.mlApplyRepDiscount != null ? q.mlApplyRepDiscount : true;
-  ppMlSimPriceManual = !!q.mlSimPriceManual;
+  ppMlSimPriceManual = (q.mlSimPrice != null); // al abrir una guardada, respeta el precio tal cual se guardó
   $('ppMlSimPrice').value = q.mlSimPrice != null ? q.mlSimPrice : '';
   $('ppMlDiscountPct').value = q.mlDiscountPct || 0;
   populatePpMlCategorySelect(q.mlCategory);
@@ -4170,7 +4170,7 @@ function loadPpQuote(id){
   $('ppTtSfpPct').value = q.ttSfpPct != null ? q.ttSfpPct : settings.ttSfpPct;
   $('ppTtFixedFee').value = q.ttFixedFee != null ? q.ttFixedFee : settings.ttFixedFee;
   $('ppTtShipCoveragePct').value = q.ttShipCoveragePct != null ? q.ttShipCoveragePct : settings.ttShipCoveragePct;
-  ppTtSimPriceManual = !!q.ttSimPriceManual;
+  ppTtSimPriceManual = (q.ttSimPrice != null); // al abrir una guardada, respeta el precio tal cual se guardó
   $('ppTtSimPrice').value = q.ttSimPrice != null ? q.ttSimPrice : '';
   $('ppTtDiscountPct').value = q.ttDiscountPct || 0;
   if (q.ttEnabled){ $('ppTtSwitch').classList.add('on'); $('ppTtBody').classList.add('show'); }
@@ -4537,7 +4537,7 @@ async function loadQuote(id){
   $('mlMode').value = q.mlMode || 'normal';
   $('mlQuienPaga').value = q.mlQuienPaga || 'gratis';
   $('mlApplyRepDiscount').checked = q.mlApplyRepDiscount != null ? q.mlApplyRepDiscount : true;
-  mlSimPriceManual = !!q.mlSimPriceManual;
+  mlSimPriceManual = (q.mlSimPrice != null); // al abrir una guardada, respeta el precio tal cual se guardó
   $('mlSimPrice').value = q.mlSimPrice != null ? q.mlSimPrice : '';
   $('mlDiscountPct').value = q.mlDiscountPct || 0;
   populateMlCategorySelect(q.mlCategory);
@@ -4547,7 +4547,7 @@ async function loadQuote(id){
   $('ttSfpPct').value = q.ttSfpPct != null ? q.ttSfpPct : settings.ttSfpPct;
   $('ttFixedFee').value = q.ttFixedFee != null ? q.ttFixedFee : settings.ttFixedFee;
   $('ttShipCoveragePct').value = q.ttShipCoveragePct != null ? q.ttShipCoveragePct : settings.ttShipCoveragePct;
-  ttSimPriceManual = !!q.ttSimPriceManual;
+  ttSimPriceManual = (q.ttSimPrice != null); // al abrir una guardada, respeta el precio tal cual se guardó
   $('ttSimPrice').value = q.ttSimPrice != null ? q.ttSimPrice : '';
   $('ttDiscountPct').value = q.ttDiscountPct || 0;
   if (q.ttEnabled){ $('ttSwitch').classList.add('on'); $('ttBody').classList.add('show'); }
