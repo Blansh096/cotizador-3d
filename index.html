@@ -213,11 +213,20 @@ textarea{
 .generate-card .gc-title{font-family:'Fredoka'; font-weight:600; font-size:13.5px; margin-bottom:6px;}
 
 .subtab-bar{display:flex; gap:6px; margin-bottom:14px; flex-wrap:wrap;}
-.subtab-btn, .settings-subtab-btn, .quote-subtab-btn, .pap-subtab-btn, .car-subtab-btn{
+.subtab-btn, .settings-subtab-btn, .quote-subtab-btn, .pap-subtab-btn, .car-subtab-btn, .sales-subtab-btn{
   flex:1; min-width:90px; border:1px solid var(--line); background:var(--panel-alt); color:var(--muted);
   padding:9px 6px; border-radius:20px; font-family:'Fredoka'; font-weight:600; font-size:11.5px; cursor:pointer; text-align:center;
 }
-.subtab-btn.active, .settings-subtab-btn.active, .quote-subtab-btn.active, .pap-subtab-btn.active, .car-subtab-btn.active{background:var(--accent); color:var(--bg); border-color:var(--accent);}
+.subtab-btn.active, .settings-subtab-btn.active, .quote-subtab-btn.active, .pap-subtab-btn.active, .car-subtab-btn.active, .sales-subtab-btn.active{background:var(--accent); color:var(--bg); border-color:var(--accent);}
+
+.resumen-table{width:100%; border-collapse:collapse; margin-top:8px; font-size:12px;}
+.resumen-table th{text-align:left; color:var(--muted); font-size:10.5px; font-weight:600; padding:6px 4px; border-bottom:1px solid var(--line);}
+.resumen-table td{padding:7px 4px; border-bottom:1px dashed var(--line-soft);}
+.resumen-table td.num, .resumen-table th.num{text-align:right;}
+.resumen-stats{display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin-top:8px;}
+.resumen-stat{background:var(--panel-alt); border:1px solid var(--line-soft); border-radius:12px; padding:12px; text-align:center;}
+.resumen-stat .rs-label{font-size:10.5px; color:var(--muted); font-weight:600; margin-bottom:4px;}
+.resumen-stat .rs-val{font-family:'Fredoka'; font-weight:700; font-size:16px; color:var(--money);}
 .full-item{
   background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
   padding:14px; margin-bottom:10px; box-shadow:0 4px 14px rgba(214,51,108,0.10);
@@ -998,63 +1007,109 @@ textarea{
 
   <!-- VENTAS -->
   <div class="view" id="view-sales">
-    <div class="card">
-      <div class="section-title" style="margin-bottom:10px;">Registrar venta</div>
-      <label>Plataforma</label>
-      <select id="v-plataforma">
-        <option value="tiktok">TikTok Shop</option>
-        <option value="ml">MercadoLibre</option>
-        <option value="tiendanube">Tienda Nube</option>
-        <option value="otro">Otra</option>
-      </select>
-      <label>ID de la venta</label>
-      <input type="text" id="v-ventaId" placeholder="ej. 2000012345678">
-      <div class="row">
-        <div><label>Fecha de venta</label><input type="date" id="v-fecha"></div>
-        <div><label>Fecha de pago</label><input type="date" id="v-fechaPago"></div>
-      </div>
-
-      <label>Productos de esta venta</label>
-      <div id="v-items-list"></div>
-      <div class="empty-state" id="v-items-empty" style="padding:16px 10px;">Aún no agregas productos a esta venta.</div>
-      <button class="btn btn-block" id="addSaleItemBtn" type="button" style="margin-top:4px;">+ Agregar producto</button>
-
-      <label>Total recibido (de toda la venta)</label>
-      <input type="number" step="0.01" id="v-totalRecibido">
-
-      <button class="btn btn-accent btn-block" id="addSaleBtn" style="margin-top:10px;">Registrar venta</button>
-      <button class="btn btn-block" id="cancelSaleEditBtn" style="margin-top:8px; display:none;">Cancelar edición</button>
+    <div class="subtab-bar">
+      <button class="sales-subtab-btn active" data-sub="sales-registrar">Registrar</button>
+      <button class="sales-subtab-btn" data-sub="sales-resumen">Resumen</button>
     </div>
 
-    <div class="card">
-      <input type="text" id="searchSales" placeholder="Buscar por producto o ID de venta..." style="margin-bottom:10px;">
-      <div class="dropdown-row">
-        <div class="dropdown-wrap">
-          <button class="dropdown-btn" id="salesFiltersBtn">Filtros <span class="caret">▾</span></button>
-          <div class="dropdown-panel hidden" id="salesFiltersPanel">
-            <div class="filter-group-title">Plataforma</div>
-            <label class="filter-check-row"><input type="checkbox" class="sf-plataforma" value="tiktok"> TikTok Shop</label>
-            <label class="filter-check-row"><input type="checkbox" class="sf-plataforma" value="ml"> MercadoLibre</label>
-            <label class="filter-check-row"><input type="checkbox" class="sf-plataforma" value="tiendanube"> Tienda Nube</label>
-            <label class="filter-check-row"><input type="checkbox" class="sf-plataforma" value="otro"> Otra</label>
-            <div class="filter-group-title">Estado</div>
-            <label class="filter-check-row"><input type="checkbox" class="sf-estado" value="completada"> Completada</label>
-            <label class="filter-check-row"><input type="checkbox" class="sf-estado" value="cancelada"> Cancelada</label>
-            <label class="filter-check-row"><input type="checkbox" class="sf-estado" value="devuelta"> Devuelta</label>
-          </div>
+    <div class="sales-sub" id="sales-registrar">
+      <div class="card">
+        <div class="section-title" style="margin-bottom:10px;">Registrar venta</div>
+        <label>Plataforma</label>
+        <select id="v-plataforma">
+          <option value="tiktok">TikTok Shop</option>
+          <option value="ml">MercadoLibre</option>
+          <option value="tiendanube">Tienda Nube</option>
+          <option value="otro">Otra</option>
+        </select>
+        <label>ID de la venta</label>
+        <input type="text" id="v-ventaId" placeholder="ej. 2000012345678">
+        <div class="row">
+          <div><label>Fecha de venta</label><input type="date" id="v-fecha"></div>
+          <div><label>Fecha de pago</label><input type="date" id="v-fechaPago"></div>
         </div>
-        <div class="dropdown-wrap">
-          <button class="dropdown-btn" id="salesSortBtn">Ordenar <span class="caret">▾</span></button>
-          <div class="dropdown-panel hidden" id="salesSortPanel">
-            <div class="sort-option active" data-sort="fecha_desc">Más reciente</div>
-            <div class="sort-option" data-sort="fecha_asc">Más antigua</div>
-            <div class="sort-option" data-sort="ganancia_desc">Mayor ganancia</div>
-            <div class="sort-option" data-sort="ganancia_asc">Menor ganancia</div>
+
+        <label>Productos de esta venta</label>
+        <div id="v-items-list"></div>
+        <div class="empty-state" id="v-items-empty" style="padding:16px 10px;">Aún no agregas productos a esta venta.</div>
+        <button class="btn btn-block" id="addSaleItemBtn" type="button" style="margin-top:4px;">+ Agregar producto</button>
+
+        <label>Total recibido (de toda la venta)</label>
+        <input type="number" step="0.01" id="v-totalRecibido">
+
+        <button class="btn btn-accent btn-block" id="addSaleBtn" style="margin-top:10px;">Registrar venta</button>
+        <button class="btn btn-block" id="cancelSaleEditBtn" style="margin-top:8px; display:none;">Cancelar edición</button>
+      </div>
+
+      <div class="card">
+        <input type="text" id="searchSales" placeholder="Buscar por producto o ID de venta..." style="margin-bottom:10px;">
+        <div class="dropdown-row">
+          <div class="dropdown-wrap">
+            <button class="dropdown-btn" id="salesFiltersBtn">Filtros <span class="caret">▾</span></button>
+            <div class="dropdown-panel hidden" id="salesFiltersPanel">
+              <div class="filter-group-title">Plataforma</div>
+              <label class="filter-check-row"><input type="checkbox" class="sf-plataforma" value="tiktok"> TikTok Shop</label>
+              <label class="filter-check-row"><input type="checkbox" class="sf-plataforma" value="ml"> MercadoLibre</label>
+              <label class="filter-check-row"><input type="checkbox" class="sf-plataforma" value="tiendanube"> Tienda Nube</label>
+              <label class="filter-check-row"><input type="checkbox" class="sf-plataforma" value="otro"> Otra</label>
+              <div class="filter-group-title">Estado</div>
+              <label class="filter-check-row"><input type="checkbox" class="sf-estado" value="completada"> Completada</label>
+              <label class="filter-check-row"><input type="checkbox" class="sf-estado" value="pagada"> Pagada</label>
+              <label class="filter-check-row"><input type="checkbox" class="sf-estado" value="cancelada"> Cancelada</label>
+              <label class="filter-check-row"><input type="checkbox" class="sf-estado" value="devuelta"> Devuelta</label>
+            </div>
+          </div>
+          <div class="dropdown-wrap">
+            <button class="dropdown-btn" id="salesSortBtn">Ordenar <span class="caret">▾</span></button>
+            <div class="dropdown-panel hidden" id="salesSortPanel">
+              <div class="sort-option active" data-sort="fecha_desc">Más reciente</div>
+              <div class="sort-option" data-sort="fecha_asc">Más antigua</div>
+              <div class="sort-option" data-sort="ganancia_desc">Mayor ganancia</div>
+              <div class="sort-option" data-sort="ganancia_asc">Menor ganancia</div>
+            </div>
           </div>
         </div>
       </div>
+      <div id="salesList"></div>
     </div>
-    <div id="salesList"></div>
+
+    <div class="sales-sub" id="sales-resumen" style="display:none;">
+      <div class="card">
+        <div class="section-title" style="margin-bottom:10px;">Filtrar resumen</div>
+        <div class="row">
+          <div><label>Fecha desde</label><input type="date" id="rs-fechaDesde"></div>
+          <div><label>Fecha hasta</label><input type="date" id="rs-fechaHasta"></div>
+        </div>
+        <label>Estado</label>
+        <div style="display:flex; flex-wrap:wrap; gap:10px; margin-top:4px;">
+          <label class="filter-check-row" style="padding:0;"><input type="checkbox" class="rs-estado" value="completada"> Completada</label>
+          <label class="filter-check-row" style="padding:0;"><input type="checkbox" class="rs-estado" value="pagada"> Pagada</label>
+          <label class="filter-check-row" style="padding:0;"><input type="checkbox" class="rs-estado" value="cancelada"> Cancelada</label>
+          <label class="filter-check-row" style="padding:0;"><input type="checkbox" class="rs-estado" value="devuelta"> Devuelta</label>
+        </div>
+        <div class="hint">Si no marcas ningún estado, se incluyen todas las ventas del rango de fechas.</div>
+      </div>
+
+      <div class="card">
+        <div class="section-title" style="margin-bottom:6px;">Por producto</div>
+        <table class="resumen-table" id="rs-productosTable">
+          <thead><tr><th>Producto</th><th class="num">Piezas</th><th class="num">Total vendido</th><th class="num">Ganancia</th></tr></thead>
+          <tbody id="rs-productosBody"></tbody>
+        </table>
+        <div class="empty-state" id="rs-productosEmpty" style="display:none;">No hay ventas que coincidan con el filtro.</div>
+      </div>
+
+      <div class="card">
+        <div class="section-title" style="margin-bottom:6px;">Totales</div>
+        <div class="resumen-stats">
+          <div class="resumen-stat"><div class="rs-label">Ganancias totales</div><div class="rs-val" id="rs-gananciasTotales">$0.00</div></div>
+          <div class="resumen-stat"><div class="rs-label">Total vendido</div><div class="rs-val" id="rs-totalVendido">$0.00</div></div>
+          <div class="resumen-stat"><div class="rs-label">Total comisiones</div><div class="rs-val" id="rs-totalComisiones">$0.00</div></div>
+          <div class="resumen-stat"><div class="rs-label">Costo de producción</div><div class="rs-val" id="rs-totalCosto">$0.00</div></div>
+        </div>
+        <div class="hint">"Total comisiones" es lo que las plataformas retuvieron en comisiones, tarifas e impuestos (precio de venta total − total recibido) de las ventas filtradas.</div>
+      </div>
+    </div>
   </div>
 
   <!-- PAPELERÍA -->
@@ -2454,6 +2509,35 @@ function computeQuoteCostBreakdown(q){
   return {matCost, packagingCost, energyCost, depreciationCost, directCost, base, riskAmt, totalEst};
 }
 
+// Igual que computeQuoteCostBreakdown pero para una cotización de Papelería (usa q.materiales
+// en vez de q.filaments, con el costo por línea de ppMaterialLineCost — pieza/metro/cartucho/compuesto).
+function computePpQuoteCostBreakdown(q){
+  const matCost = (q.materiales||[]).reduce((sum,c) => sum + ppMaterialLineCost(c), 0);
+  const packagingCost = (q.packaging||[]).reduce((sum,p) => sum + (p.costoUnitario||0), 0);
+  const directCost = matCost + packagingCost;
+  const base = directCost + (q.laborCost||0);
+  const riskAmt = base * (q.riskPct||0)/100;
+  const totalEst = base + riskAmt;
+  return {matCost, packagingCost, energyCost:0, depreciationCost:0, directCost, base, riskAmt, totalEst};
+}
+
+// Una cotización puede venir del cotizador 3D (tiene "filaments") o de Papelería (tiene
+// "materiales") — este helper detecta cuál es y usa el breakdown de costo correcto.
+function computeAnyQuoteCostBreakdown(q){
+  if (q && q.materiales) return computePpQuoteCostBreakdown(q);
+  return computeQuoteCostBreakdown(q||{});
+}
+
+// Una cotización vinculada a un producto puede ser del cotizador 3D (guardada bajo 'quote:'+id)
+// o de Papelería (viven solo dentro del arreglo papeleriaQuotes, nunca bajo esa llave). Este
+// helper intenta primero la 3D y si no existe, busca en papeleriaQuotes.
+async function resolveLinkedQuote(linkedQuoteId){
+  if (!linkedQuoteId) return null;
+  const q = await storageGet('quote:' + linkedQuoteId, null);
+  if (q) return q;
+  return papeleriaQuotes.find(x => x.id === linkedQuoteId) || null;
+}
+
 function computeMLRecibes(q){
   if (!q || !q.mlEnabled) return null;
   const weightG = q.pesoG || 0;
@@ -2551,10 +2635,11 @@ let availableQuotesForLink = [];
 
 async function populateLinkedQuoteOptions(selectedId){
   const index = await storageGet('quotes-index', []);
+  const papIndex = papeleriaQuotes.map(q => ({id:q.id, name:'✂️ ' + q.name, finalPrice:q.finalPrice}));
   const usedByOtherProduct = new Set(
     productsCatalog.filter(p => p.linkedQuoteId && p.id !== currentProductId).map(p => p.linkedQuoteId)
   );
-  availableQuotesForLink = index.filter(q => !usedByOtherProduct.has(q.id) || q.id === selectedId);
+  availableQuotesForLink = [...index, ...papIndex].filter(q => !usedByOtherProduct.has(q.id) || q.id === selectedId);
   if (selectedId){
     const sel = availableQuotesForLink.find(q => q.id === selectedId);
     $('p-linkedQuote').value = selectedId;
@@ -2581,10 +2666,11 @@ function renderLinkedQuotePanel(filterText){
 async function selectLinkedQuote(id){
   $('p-linkedQuote').value = id;
   $('p-linkedQuote-panel').classList.add('hidden');
-  const q = await storageGet('quote:' + id, null);
+  const q = await resolveLinkedQuote(id);
   if (q){
-    $('p-linkedQuote-search').value = `${q.name} (${money(q.finalPrice)})`;
-    const breakdown = computeQuoteCostBreakdown(q);
+    const sel = availableQuotesForLink.find(x => x.id === id);
+    $('p-linkedQuote-search').value = sel ? `${sel.name} (${money(sel.finalPrice)})` : `${q.name} (${money(q.finalPrice)})`;
+    const breakdown = computeAnyQuoteCostBreakdown(q);
     $('p-costo').value = breakdown.totalEst.toFixed(2);
     $('p-precio-tiktok').value = q.finalPrice.toFixed(2);
     $('p-precio-ml').value = (q.mlSimPrice != null ? q.mlSimPrice : q.finalPrice).toFixed(2);
@@ -3319,8 +3405,8 @@ async function renderFullProjectionList(){
       wrap.appendChild(div);
       continue;
     }
-    const quote = p.linkedQuoteId ? await storageGet('quote:' + p.linkedQuoteId, null) : null;
-    const breakdown = quote ? computeQuoteCostBreakdown(quote) : null;
+    const quote = await resolveLinkedQuote(p.linkedQuoteId);
+    const breakdown = quote ? computeAnyQuoteCostBreakdown(quote) : null;
     const costoUnitario = breakdown ? breakdown.totalEst : 0;
     const inversionProduccion = costoUnitario * proj.stockAConsiderar;
     const horasTotales = (quote?.printHours || 0) * proj.stockAConsiderar;
@@ -3432,7 +3518,7 @@ async function updateSimDetail(prefillFromQuote){
   $('sim-plataforma-label').textContent = PLATFORM_LABELS[plataforma] || '';
   if (!product){ $('simQuoteDetail').style.display='none'; $('simNoQuoteHint').style.display='block'; return; }
 
-  const q = product.linkedQuoteId ? await storageGet('quote:' + product.linkedQuoteId, null) : null;
+  const q = await resolveLinkedQuote(product.linkedQuoteId);
   let scenarioData = null;
   if (q && plataforma === 'ml' && q.mlEnabled){
     if (prefillFromQuote){ $('simDescuentoPct').value = q.mlDiscountPct || 0; $('simDescuentoAplicado').checked = !!(q.mlDiscountPct); }
@@ -3660,9 +3746,13 @@ $('addSaleBtn').onclick = async () => {
   renderSalesList();
 };
 
+// "Completada" y "Pagada" ambas dejan el stock descontado (la diferencia es solo si la
+// plataforma ya liberó el pago o no); "Cancelada"/"Devuelta" devuelven el stock.
+const SALE_STOCK_DEDUCTING_STATES = ['completada', 'pagada'];
+
 async function setSaleEstado(sale, nuevoEstado){
-  const wasDeducted = (sale.estado === 'completada');
-  const willDeduct = (nuevoEstado === 'completada');
+  const wasDeducted = SALE_STOCK_DEDUCTING_STATES.includes(sale.estado);
+  const willDeduct = SALE_STOCK_DEDUCTING_STATES.includes(nuevoEstado);
   if (wasDeducted && !willDeduct){
     await reverseStockDeduction(sale);
   } else if (!wasDeducted && willDeduct){
@@ -3674,7 +3764,7 @@ async function setSaleEstado(sale, nuevoEstado){
 }
 
 async function deleteSale(sale){
-  if (sale.estado === 'completada'){
+  if (SALE_STOCK_DEDUCTING_STATES.includes(sale.estado)){
     await reverseStockDeduction(sale);
   }
   salesList = salesList.filter(s => s.id !== sale.id);
@@ -3737,6 +3827,7 @@ function renderSalesList(){
       <label style="margin-top:8px;">Estado</label>
       <select class="sale-estado">
         <option value="completada" ${sale.estado==='completada'?'selected':''}>Completada</option>
+        <option value="pagada" ${sale.estado==='pagada'?'selected':''}>Pagada</option>
         <option value="cancelada" ${sale.estado==='cancelada'?'selected':''}>Cancelada</option>
         <option value="devuelta" ${sale.estado==='devuelta'?'selected':''}>Devuelta</option>
       </select>
@@ -3767,6 +3858,84 @@ document.querySelectorAll('.sf-estado').forEach(el => el.onchange = () => {
   el.checked ? salesSelectedEstados.add(el.value) : salesSelectedEstados.delete(el.value);
   updateSalesFiltersBtnState();
   renderSalesList();
+});
+
+// ---------- VENTAS: SUB-TABS ----------
+document.querySelectorAll('.sales-subtab-btn').forEach(b => b.onclick = () => {
+  document.querySelectorAll('.sales-subtab-btn').forEach(x => x.classList.remove('active'));
+  document.querySelectorAll('.sales-sub').forEach(x => x.style.display = 'none');
+  b.classList.add('active');
+  $(b.dataset.sub).style.display = 'block';
+  if (b.dataset.sub === 'sales-resumen') renderSalesResumen();
+});
+
+// ---------- VENTAS: RESUMEN ----------
+const ESTADO_LABELS = {completada:'Completada', pagada:'Pagada', cancelada:'Cancelada', devuelta:'Devuelta'};
+let rsSelectedEstados = new Set();
+
+function renderSalesResumen(){
+  const desde = $('rs-fechaDesde').value;
+  const hasta = $('rs-fechaHasta').value;
+  const list = salesList.filter(s => {
+    if (desde && s.fechaVenta < desde) return false;
+    if (hasta && s.fechaVenta > hasta) return false;
+    if (rsSelectedEstados.size > 0 && !rsSelectedEstados.has(s.estado)) return false;
+    return true;
+  });
+
+  // Agrupado por producto
+  const porProducto = new Map(); // productId -> {nombre, piezas, totalVendido, totalRecibidoAsignado, costoAsignado}
+  list.forEach(sale => {
+    const ventaTotalSale = salePrecioVentaTotal(sale);
+    (sale.items||[]).forEach(it => {
+      const p = productsCatalog.find(x => x.id === it.productId);
+      const nombre = p ? p.nombre : '(producto eliminado)';
+      const key = it.productId || ('_sin_id_' + nombre);
+      if (!porProducto.has(key)) porProducto.set(key, {nombre, piezas:0, totalVendido:0, totalRecibidoAsignado:0, costoAsignado:0});
+      const row = porProducto.get(key);
+      const itemVenta = it.precioVenta * it.cantidad;
+      // La "ganancia" por producto reparte el Total recibido de la venta proporcionalmente
+      // al peso de cada producto dentro de esa venta (estimado, ya que el total recibido es por venta completa).
+      const itemRecibidoAsignado = ventaTotalSale > 0 ? (itemVenta / ventaTotalSale) * (sale.totalRecibido||0) : 0;
+      const itemCosto = (p ? (p.costo||0) : 0) * it.cantidad;
+      row.piezas += it.cantidad;
+      row.totalVendido += itemVenta;
+      row.totalRecibidoAsignado += itemRecibidoAsignado;
+      row.costoAsignado += itemCosto;
+    });
+  });
+
+  const body = $('rs-productosBody');
+  const rows = [...porProducto.values()].sort((a,b) => b.totalVendido - a.totalVendido);
+  if (!rows.length){
+    body.innerHTML = '';
+    $('rs-productosEmpty').style.display = 'block';
+  } else {
+    $('rs-productosEmpty').style.display = 'none';
+    body.innerHTML = rows.map(r => {
+      const ganancia = r.totalRecibidoAsignado - r.costoAsignado;
+      return `<tr><td>${r.nombre}</td><td class="num">${r.piezas}</td><td class="num">${money(r.totalVendido)}</td><td class="num" style="color:${ganancia>=0?'var(--ok)':'var(--danger)'}">${money(ganancia)}</td></tr>`;
+    }).join('');
+  }
+
+  // Totales generales
+  const totalVendido = list.reduce((sum,s) => sum + salePrecioVentaTotal(s), 0);
+  const totalRecibido = list.reduce((sum,s) => sum + (s.totalRecibido||0), 0);
+  const totalCosto = list.reduce((sum,s) => sum + saleCostoProduccion(s), 0);
+  const gananciasTotales = totalRecibido - totalCosto;
+  const totalComisiones = totalVendido - totalRecibido;
+
+  $('rs-gananciasTotales').textContent = money(gananciasTotales);
+  $('rs-gananciasTotales').style.color = gananciasTotales >= 0 ? 'var(--ok)' : 'var(--danger)';
+  $('rs-totalVendido').textContent = money(totalVendido);
+  $('rs-totalComisiones').textContent = money(totalComisiones);
+  $('rs-totalCosto').textContent = money(totalCosto);
+}
+$('rs-fechaDesde').addEventListener('input', renderSalesResumen);
+$('rs-fechaHasta').addEventListener('input', renderSalesResumen);
+document.querySelectorAll('.rs-estado').forEach(el => el.onchange = () => {
+  el.checked ? rsSelectedEstados.add(el.value) : rsSelectedEstados.delete(el.value);
+  renderSalesResumen();
 });
 
 // ---------- PAPELERÍA: MATERIALES ----------
@@ -4454,7 +4623,8 @@ $('savePpQuoteBtn').onclick = async () => {
   papeleriaQuotes.push(quote);
   await savePapeleriaQuotesIndex();
   currentPpQuoteId = id;
-  showToast('Cotización de papelería guardada');
+  const syncedProductName = await syncLinkedProductFromQuote(id, quote);
+  showToast(syncedProductName ? `Cotización guardada — se actualizó "${syncedProductName}" en e-commerce` : 'Cotización de papelería guardada');
   renderPpHistory();
 };
 
@@ -4821,7 +4991,7 @@ $('saveQuoteBtn').onclick = async () => {
 async function syncLinkedProductFromQuote(quoteId, quote){
   const product = productsCatalog.find(p => p.linkedQuoteId === quoteId);
   if (!product) return null;
-  const breakdown = computeQuoteCostBreakdown(quote);
+  const breakdown = computeAnyQuoteCostBreakdown(quote);
   product.costo = breakdown.totalEst;
   product.precioTiktok = quote.finalPrice;
   product.precioMl = quote.mlSimPrice != null ? quote.mlSimPrice : quote.finalPrice;
