@@ -1746,10 +1746,12 @@ textarea{
     <select id="simProducto"></select>
     <div class="hint" id="simNoQuoteHint" style="display:none;">Este producto no tiene cotización vinculada — no se puede validar el precio ni el descuento automáticamente; captura el precio manualmente.</div>
     <div class="sim-detail" id="simQuoteDetail" style="display:none;">
+      <div class="fi-row"><span>Cotización vinculada</span><b id="sim-quote-name">—</b></div>
       <div class="fi-row"><span>Costo de producción (unitario)</span><b id="sim-costo">$0.00</b></div>
       <div class="fi-row"><span>Precio sugerido (<span id="sim-plataforma-label"></span>)</span><b id="sim-sugerido">$0.00</b></div>
       <div class="fi-row" id="sim-recibes-nd-row"><span id="sim-recibes-nd-label">Recibes sin descuento</span><b id="sim-recibes-nd">$0.00</b></div>
       <div class="fi-row" id="sim-recibes-cd-row"><span id="sim-recibes-cd-label">Recibes con descuento</span><b id="sim-recibes-cd">$0.00</b></div>
+      <div class="hint" id="simPlataformaWarning" style="display:none; color:var(--danger);"></div>
     </div>
     <div style="display:flex; align-items:center; gap:8px; margin-top:12px;">
       <input type="checkbox" id="simDescuentoAplicado" style="width:18px; height:18px; accent-color:var(--accent); margin:0;">
@@ -3534,21 +3536,27 @@ async function updateSimDetail(prefillFromQuote){
   if (scenarioData){
     $('simQuoteDetail').style.display = 'block';
     $('simNoQuoteHint').style.display = 'none';
+    $('sim-quote-name').textContent = q.name || '(sin nombre)';
     $('sim-costo').textContent = money(product.costo||0);
     $('sim-sugerido').textContent = money(scenarioData.simPrice);
     $('sim-recibes-nd-label').textContent = (plataforma === 'tiktok' ? 'Liquidación sin descuento' : 'Recibes sin descuento');
     $('sim-recibes-cd-label').textContent = (plataforma === 'tiktok' ? 'Liquidación con descuento' : 'Recibes con descuento');
     $('sim-recibes-nd').textContent = money(scenarioData.nd.recibes);
     $('sim-recibes-cd').textContent = money(scenarioData.cd.recibes);
+    $('simPlataformaWarning').style.display = 'none';
   } else if (q){
     $('simQuoteDetail').style.display = 'block';
     $('simNoQuoteHint').style.display = 'none';
+    $('sim-quote-name').textContent = q.name || '(sin nombre)';
     $('sim-costo').textContent = money(product.costo||0);
     $('sim-sugerido').textContent = money(q.finalPrice||0);
     $('sim-recibes-nd-label').textContent = 'Recibes sin descuento';
     $('sim-recibes-cd-label').textContent = 'Recibes con descuento';
     $('sim-recibes-nd').textContent = '—';
     $('sim-recibes-cd').textContent = '—';
+    const plataformaNombre = plataforma === 'tiktok' ? 'TikTok Shop' : (plataforma === 'ml' ? 'Mercado Libre' : PLATFORM_LABELS[plataforma]);
+    $('simPlataformaWarning').style.display = 'block';
+    $('simPlataformaWarning').textContent = `⚠️ La cotización "${q.name}" no tiene ${plataformaNombre} activado (o no se ha guardado así) — por eso se usa el precio sugerido base en vez del precio/descuento simulado para esa plataforma.`;
   } else {
     $('simQuoteDetail').style.display = 'none';
     $('simNoQuoteHint').style.display = 'block';
